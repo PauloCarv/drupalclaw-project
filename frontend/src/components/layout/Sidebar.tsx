@@ -1,10 +1,13 @@
-import { FolderTree, Zap, MessageSquare, Settings, Plus } from 'lucide-react'
+import { FolderTree, Zap, MessageSquare, Settings, Plus, Pencil, Trash2, Check, X, Archive, ArchiveRestore } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLayoutStore, type SidebarSection } from '@/stores/layoutStore'
 import { FileTree } from '@/components/files/FileTree'
 import { SkillsList } from '@/components/skills/SkillsList'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { getAgentContext, getSystemMetrics } from '@/api/providers'
+import { useSession } from '@/hooks/useSession'
+import type { Session } from '@/api/sessions'
 
 const sections: { id: SidebarSection; icon: typeof FolderTree; label: string }[] = [
   { id: 'explorer', icon: FolderTree, label: 'Explorer' },
@@ -186,19 +189,169 @@ function ContextStats() {
 }
 
 function ChatsList() {
+  const { sessions, activeSessionId, currentSession, createNewSession, switchSession, renameSession, archiveSession, unarchiveSession, deleteSessionById } = useSession()
+  const { setSidebarSection } = useLayoutStore()
+  const [creating, setCreating] = useState(false)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
+  const renameInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (renamingId) renameInputRef.current?.focus()
+  }, [renamingId])
+
+  const handleNew = useCallback(async () => {
+    if (creating) return
+    setCreating(true)
+    try {
+      await createNewSession()
+      setSidebarSection('chats')
+    } finally {
+      setCreating(false)
+    }
+  }, [creating, createNewSession, setSidebarSection])
+
+  const handleRenameStart = (session: Session, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setRenamingId(session.id)
+    setRenameValue(session.name)
+    setDeletingId(null)
+  }
+
+  const handleRenameSubmit = (id: string) => {
+    const trimmed = renameValue.trim()
+    if (trimmed) renameSession(id, trimmed)
+    setRenamingId(null)
+  }
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (deletingId === id) {
+      deleteSessionById(id)
+      setDeletingId(null)
+    } else {
+      setDeletingId(id)
+    }
+  }
+
+  const sorted = [...sessions].sort((a, b) => a.createdAt - b.createdAt)
+  const active = sorted.filter((s) => !s.archived)
+  const archived = sorted.filter((s) => s.archived)
+
+  const renderSession = (session: Session) => {
+    const isActive = session.id === activeSessionId
+    const isCurrent = session.id === currentSession?.id
+    const isRenaming = renamingId === session.id
+    const isDeleting = deletingId === session.id
+
+    if (isRenaming) {
+      return (
+        <div key={session.id} className="flex items-center gap-1 px-2 py-1.5 rounded bg-navy-600">
+          <input
+            ref={renameInputRef}
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleRenameSubmit(session.id)
+              if (e.key === 'Escape') setRenamingId(null)
+            }}
+            className="flex-1 min-w-0 bg-navy-700 text-white text-xs rounded px-1.5 py-0.5 outline-none border border-navy-400 focus:border-ai-teal"
+          />
+          <button onClick={() => handleRenameSubmit(session.id)} className="text-accent-green hover:text-white flex-shrink-0"><Check size={12} /></button>
+          <button onClick={() => setRenamingId(null)} className="text-navy-300 hover:text-white flex-shrink-0"><X size={12} /></button>
+        </div>
+      )
+    }
+
+    return (
+      <div
+        key={session.id}
+        className={`group flex items-center gap-1 px-2 py-1.5 rounded cursor-pointer text-xs transition-colors ${
+          isActive ? 'bg-navy-600 text-white' : 'text-navy-300 hover:bg-navy-600 hover:text-gray-200'
+        } ${session.archived ? 'opacity-60' : ''}`}
+        onClick={() => switchSession(session.id)}
+      >
+        <span className="flex-1 min-w-0 truncate">{session.name}</span>
+        {isCurrent && !session.archived && (
+          <span className="w-1.5 h-1.5 rounded-full bg-ai-teal flex-shrink-0" title="Novas mensagens aqui" />
+        )}
+        <div className="flex-shrink-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => handleRenameStart(session, e)}
+            className="text-gray-400 hover:text-white p-0.5"
+            title="Renomear"
+          >
+            <Pencil size={11} />
+          </button>
+          {session.archived ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); unarchiveSession(session.id) }}
+              className="text-gray-400 hover:text-ai-teal p-0.5"
+              title="Restaurar"
+            >
+              <ArchiveRestore size={11} />
+            </button>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); archiveSession(session.id) }}
+              className="text-gray-400 hover:text-yellow-400 p-0.5"
+              title="Arquivar"
+            >
+              <Archive size={11} />
+            </button>
+          )}
+          {sessions.length > 1 && (
+            <button
+              onClick={(e) => handleDelete(session.id, e)}
+              className={`p-0.5 ${isDeleting ? 'text-accent-red' : 'text-gray-400 hover:text-accent-red'}`}
+              title={isDeleting ? 'Clica de novo para confirmar' : 'Eliminar'}
+            >
+              <Trash2 size={11} />
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-3">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs uppercase tracking-wider text-navy-300">Chat sessions</h3>
-        <button className="text-navy-300 hover:text-ai-teal">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-navy-500">
+        <h3 className="text-[10px] uppercase tracking-wider text-navy-400">Conversas</h3>
+        <button
+          onClick={handleNew}
+          disabled={creating}
+          className="text-gray-400 hover:text-white disabled:opacity-40"
+          title="Nova conversa"
+        >
           <Plus size={14} />
         </button>
       </div>
-      <div className="space-y-1">
-        <div className="sidebar-item sidebar-item-active">Module dev</div>
-        <div className="sidebar-item">Theme setup</div>
-        <div className="sidebar-item">Deploy config</div>
+
+      <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
+        {active.map(renderSession)}
+
+        {archived.length > 0 && (
+          <>
+            <button
+              onClick={() => setShowArchived((v) => !v)}
+              className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[10px] text-navy-400 hover:text-navy-300 transition-colors"
+            >
+              <Archive size={10} />
+              <span>Arquivadas ({archived.length})</span>
+            </button>
+            {showArchived && archived.map(renderSession)}
+          </>
+        )}
       </div>
+
+      {creating && (
+        <div className="px-3 py-2 text-[10px] text-navy-400 border-t border-navy-500">
+          A criar nova conversa...
+        </div>
+      )}
     </div>
   )
 }

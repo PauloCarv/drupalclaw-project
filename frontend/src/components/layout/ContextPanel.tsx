@@ -8,6 +8,7 @@ import { readFile } from '@/api/files'
 import { useLayoutStore } from '@/stores/layoutStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useChatStore } from '@/stores/chatStore'
+import { useSession } from '@/hooks/useSession'
 
 function fmtElapsed(s: number): string {
   if (s < 60) return `${s}s`
@@ -78,6 +79,7 @@ export function ContextPanel() {
   }
 
   const queryClient = useQueryClient()
+  const { activeSession, getSessionBounds } = useSession()
 
   const { data: ctx } = useQuery({
     queryKey: ['agent-context'],
@@ -95,12 +97,24 @@ export function ContextPanel() {
   // Force a re-render when the timeline cache updates
   useQuery({ queryKey: ['timeline'], enabled: false })
 
-  const TIMELINE_LIMIT = 50
-  const msgCount = timeline.length
-  const firstMsg = timeline.length > 0 ? timeline[timeline.length - 1] : null
-  const sessionStart = firstMsg?.timestamp
-    ? new Date(firstMsg.timestamp).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const TIMELINE_LIMIT = 100
+  const sessionBounds = activeSession ? getSessionBounds(activeSession) : null
+  const sessionMessages = sessionBounds
+    ? timeline.filter((p) => {
+        const id = Number(p.id ?? p.rowid ?? 0)
+        if (id < sessionBounds.start) return false
+        if (sessionBounds.end !== undefined && id >= sessionBounds.end) return false
+        return true
+      })
+    : timeline
+  const msgCount = sessionMessages.length
+  const hasMore = sessionBounds
+    ? timeline.filter((p) => Number(p.id ?? p.rowid ?? 0) < sessionBounds.start).length > 0
+    : timeline.length >= TIMELINE_LIMIT
+  const sessionStart = activeSession
+    ? new Date(activeSession.createdAt).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     : '—'
+  const sessionName = activeSession?.name ?? 'web:default'
 
   const providerName = currentModel?.provider
     ? currentModel.provider.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
@@ -151,8 +165,8 @@ export function ContextPanel() {
 
       {/* Session */}
       <Section icon={MessageSquare} title="Sessão">
-        <Row label="Chat" value="web:default" />
-        <Row label="Mensagens" value={msgCount > 0 ? `${msgCount}${msgCount >= TIMELINE_LIMIT ? '+' : ''}` : '—'} />
+        <Row label="Chat" value={sessionName} />
+        <Row label="Mensagens" value={msgCount > 0 ? `${msgCount}${hasMore ? '+' : ''}` : '—'} />
         <Row label="Início" value={sessionStart} />
         {tokens > 0 && (
           <div className="mt-1.5 pt-1.5 border-t border-navy-600">
@@ -166,6 +180,7 @@ export function ContextPanel() {
                 style={{ width: `${Math.min(percent, 100)}%`, backgroundColor: percent > 90 ? '#ef4444' : percent > 70 ? '#f59e0b' : '#2dd4bf' }}
               />
             </div>
+            <div className="mt-0.5 text-[9px] text-navy-500 italic">contexto global do agente</div>
             <div className="flex justify-between mt-0.5">
               <span className="text-[9px] text-navy-400">{fmt(tokens)}</span>
               <span className="text-[9px] text-navy-400">{fmt(ctxWindow)}</span>
