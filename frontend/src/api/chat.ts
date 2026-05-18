@@ -78,9 +78,10 @@ export async function getSessions(): Promise<ChatSession[]> {
   return []
 }
 
-export async function getTimeline(limit = 50, chatJid?: string): Promise<TimelinePost[]> {
+export async function getTimeline(limit = 100, chatJid?: string, before?: number): Promise<TimelinePost[]> {
   const params = new URLSearchParams({ limit: String(limit) })
   if (chatJid) params.set('chat_jid', chatJid)
+  if (before !== undefined) params.set('before', String(before))
   const data = await apiGet<{ posts: TimelinePost[] } | TimelinePost[]>(`/timeline?${params}`)
   if (data && !Array.isArray(data) && Array.isArray(data.posts)) return data.posts
   if (Array.isArray(data)) return data
@@ -101,6 +102,11 @@ export async function postMessage(content: string, media: MediaUpload[] = []): P
   const body: Record<string, unknown> = { content: fullContent }
   if (media.length > 0) body.media_ids = media.map((m) => m.id)
   return apiPost('/agent/default/message', body)
+}
+
+/** Restart the agent for a clean-slate context. */
+export async function restartAgent(): Promise<void> {
+  await apiPost('/agent/default/message', { content: '/restart' }).catch(() => {})
 }
 
 /**

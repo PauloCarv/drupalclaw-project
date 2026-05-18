@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useChat } from '@/hooks/useChat'
+import { useSession } from '@/hooks/useSession'
 import { OobeSetup } from '@/components/oobe/OobeSetup'
 import { MarkdownContent } from './MarkdownContent'
 import { getAllCommands, type Skill } from '@/api/skills'
@@ -49,7 +50,24 @@ export function ChatPanel() {
   const prevAssistantCountRef = useRef(0)
   const programmaticScrollRef = useRef(false)
 
-  const { messages, isStreaming, isAgentRunning, streamingContent, sendMessage, cancelStreaming } = useChat()
+  const { messages: allMessages, isStreaming, isAgentRunning, streamingContent, sendMessage, cancelStreaming } = useChat()
+  const { activeSession, currentSession, isCurrentSession, getSessionBounds, switchSession } = useSession()
+
+  // Filter messages to the active session's boundaries.
+  // Local optimistic messages (local-*) only show in the current (live) session.
+  const messages = activeSession
+    ? (() => {
+        const { start, end } = getSessionBounds(activeSession)
+        return allMessages.filter((m) => {
+          if (m.id.startsWith('local-')) return isCurrentSession
+          const id = Number(m.id)
+          if (isNaN(id)) return true
+          if (id < start) return false
+          if (end !== undefined && id >= end) return false
+          return true
+        })
+      })()
+    : allMessages
 
   const { data: allCommands = [] } = useQuery({
     queryKey: ['commands'],
@@ -127,6 +145,9 @@ export function ChatPanel() {
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
     if ((!input.trim() && attachments.length === 0) || isStreaming || isAgentRunning || uploading) return
+    // If viewing a historical session, switch to the current one before sending
+    // so the response appears where the user will see it.
+    if (!isCurrentSession && currentSession) switchSession(currentSession.id)
 
     if (showSuggestions && suggestions.length > 0) {
       const exact = allCommands.find((c) => c.name === input.trim())
@@ -227,6 +248,15 @@ export function ChatPanel() {
             </button>
             <OobeSetup embedded reconfigure onComplete={() => setShowLoginDialog(false)} />
           </div>
+        </div>
+      )}
+
+      {activeSession && (
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-navy-500 flex-shrink-0">
+          <span className="text-[10px] text-navy-400 truncate flex-1">{activeSession.name}</span>
+          {!isCurrentSession && (
+            <span className="text-[10px] text-navy-400">histórico</span>
+          )}
         </div>
       )}
 
