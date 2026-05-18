@@ -1,0 +1,18 @@
+services:
+  drupalclaw:
+    image: drupalclaw:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8090:8080"
+    volumes:
+      - ../config:/config
+      - ../workspace:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PICLAW_DOCKER_ENABLED=1
+      - PICLAW_ASSISTANT_NAME=DrupalClaw
+    group_add:
+      - "0"
+    restart: unless-stopped

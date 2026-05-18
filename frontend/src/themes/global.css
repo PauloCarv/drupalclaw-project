@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* FiraCode Nerd Font Mono — served by PiClaw, needed for terminal Nerd Font icons */
+@font-face {
+  font-family: 'FiraCode Nerd Font Mono';
+  src: url('/static/fonts/vendor/firacode-nerd-font-mono-regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --color-navy-900: #0D1B2A;
+    --color-navy-800: #0A1525;
+    --color-navy-700: #0E1E30;
+    --color-navy-600: #122236;
+    --color-navy-500: #1A2D44;
+    --color-navy-400: #2A4060;
+    --color-navy-300: #5A7A9A;
+    --color-drupal-blue: #0678BE;
+    --color-ai-teal: #00B4D8;
+    --color-accent-orange: #F77F00;
+    --color-accent-green: #06D6A0;
+    --color-accent-red: #EF476F;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-navy-500) transparent;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow: hidden;
+  }
+}
+
+@layer components {
+  .tab-active {
+    @apply text-ai-teal border-b-2 border-ai-teal bg-navy-900;
+  }
+
+  .tab-inactive {
+    @apply text-navy-300 hover:text-gray-300 border-b-2 border-transparent;
+  }
+
+  .sidebar-item {
+    @apply px-3 py-1.5 text-sm rounded-md cursor-pointer transition-colors;
+  }
+
+  .sidebar-item:hover {
+    @apply bg-navy-500 text-gray-200;
+  }
+
+  .sidebar-item-active {
+    @apply bg-navy-500 text-ai-teal;
+  }
+
+  .panel-border {
+    @apply border-navy-500;
+  }
+
+  .btn-primary {
+    @apply px-3 py-1.5 bg-drupal-blue text-white text-sm rounded-md hover:bg-drupal-blue/90 transition-colors;
+  }
+
+  .btn-ghost {
+    @apply px-3 py-1.5 text-navy-300 text-sm rounded-md hover:bg-navy-600 hover:text-gray-200 transition-colors;
+  }
+}

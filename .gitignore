@@ -1,0 +1,20 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Workspace volume — Drupal project files (large, managed separately)
+workspace/drupal/
+workspace/node_modules/
+workspace/logs/
+workspace/tmp/
+workspace/.piclaw/
+
+# Sensitive / generated at runtime
+config/.pi/agent/auth.json
+config/.pi/agent/messages.db
+
+# Docker
+docker/.env
+
+# OS
+.DS_Store

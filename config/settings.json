@@ -1,0 +1,8 @@
+{
+  "compaction": {
+    "enabled": false
+  },
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-sonnet-4-6",
+  "defaultThinkingLevel": "medium"
+}

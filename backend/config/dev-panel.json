@@ -1,0 +1,48 @@
+{
+  "title": "Drupal Dev Panel",
+  "subtitle": "Atalhos para desenvolvimento Drupal. Clique para executar.",
+  "groups": [
+    {
+      "label": "Stack",
+      "buttons": [
+        { "label": "🚀 Start Stack",   "command": "drupal-serve",          "hint": "Inicia PHP + nginx + BD (escolhe BD)" },
+        { "label": "⏹ Stop",           "command": "drupal-stack stop",     "hint": "Para containers (preserva dados)" },
+        { "label": "🔄 Restart",       "command": "drupal-stack restart",  "hint": "Reinicia containers" },
+        { "label": "📊 Status",        "command": "drupal-stack status",   "hint": "Estado dos containers" }
+      ]
+    },
+    {
+      "label": "Projecto",
+      "buttons": [
+        { "label": "🚀 Init",          "command": "drupal-init",     "hint": "Cria projecto Drupal via Composer" },
+        { "label": "🔄 Cache Rebuild", "command": "drupal-cr",       "hint": "Limpa caches (drush cr)" },
+        { "label": "📋 Status",        "command": "drupal-status",   "hint": "Estado do projecto e módulos" }
+      ]
+    },
+    {
+      "label": "Código",
+      "buttons": [
+        { "label": "📦 New Module",    "command": "drupal-module",   "hint": "Scaffolda módulo custom" },
+        { "label": "🧪 Analyze",       "command": "drupal-analyze",  "hint": "PHPStan + PHPCS no código custom" },
+        { "label": "🔧 Fix",           "command": "drupal-fix",      "hint": "Corrige erros detectados" },
+        { "label": "🧩 Install Module","command": "drupal-install",  "hint": "Instala módulo contrib" }
+      ]
+    },
+    {
+      "label": "Base de Dados",
+      "buttons": [
+        { "label": "💾 DB Export",     "command": "drupal-db-export", "hint": "Exporta DB para ficheiro SQL" },
+        { "label": "📥 DB Import",     "command": "drupal-db-import", "hint": "Importa DB de ficheiro SQL" },
+        { "label": "🔍 DB Query",      "command": "drupal-db-query",  "hint": "Executa query SQL" }
+      ]
+    },
+    {
+      "label": "Diagnóstico",
+      "buttons": [
+        { "label": "📋 Logs",          "command": "drupal-logs",     "hint": "Mostra últimos logs do watchdog" },
+        { "label": "🐛 Debug",         "command": "drupal-debug",    "hint": "Analisa e diagnostica erros" },
+        { "label": "⚡ Performance",    "command": "drupal-perf",     "hint": "Analisa performance e bottlenecks" }
+      ]
+    }
+  ]
+}
