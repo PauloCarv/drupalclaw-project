@@ -39,3 +39,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Drupal project (has its own git repo)
 drupal/
+
+# Institutional website (local only)
+site/
