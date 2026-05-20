@@ -27,8 +27,10 @@ workspace/.pi/skills/
 # Docker
 docker/.env
 
-# Claude Code project settings (local only)
+# Claude Code project settings and private docs (local only)
 .claude/
+CLAUDE.md
+PLAN.md
 
 # OS
 .DS_Store
