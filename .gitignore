@@ -32,5 +32,8 @@ docker/.env
 CLAUDE.md
 PLAN.md
 
+# Institutional website (managed separately)
+site/
+
 # OS
 .DS_Store
