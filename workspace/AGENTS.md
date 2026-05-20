@@ -11,6 +11,34 @@ When a user triggers a command (e.g. `drupal-serve`, `drupal-stack`, `drupal-ini
 4. If a step fails, show the error and attempt to fix it
 5. Docker IS available in this container (socket mounted from host)
 
+## ABSOLUTE RULE: Never assume Docker status
+
+NEVER state that Docker is unavailable without FIRST running `docker info` via bash.
+NEVER carry over Docker availability beliefs from previous messages — always re-verify.
+If `docker info` succeeds → Docker is available. Full stop.
+If a previous message said Docker was unavailable, that information is STALE — verify again.
+The socket IS mounted: `-v /var/run/docker.sock:/var/run/docker.sock` is confirmed in docker-compose.yml.
+
+## Primeiro Uso — Onboarding
+
+Quando um utilizador abre o workspace pela primeira vez (sem projecto Drupal criado), guia-o nesta ordem:
+
+1. **Iniciar a stack** — `drupal-serve` (ou `drupal-stack start`)
+   - Arranca os containers Docker: nginx + PHP-FPM + base de dados
+   - A stack pode e deve ser iniciada ANTES de existir um projecto Drupal
+   - Perguntar que BD quer: mariadb (recomendado) | postgres | sqlite
+2. **Criar o projecto Drupal** — `drupal-init`
+   - Cria o projecto via Composer dentro da stack já activa
+   - A base de dados já está pronta — não é necessário reconfigurá-la
+3. **Instalar o Drupal** — via browser no URL da stack, ou:
+   ```bash
+   vendor/bin/drush site:install --db-url=mysql://drupal:drupal@db/drupal -y
+   ```
+
+**Regra**: Se o utilizador pede `drupal-init` sem a stack activa, executa `drupal-serve` primeiro e só depois `drupal-init`. Nunca instalar Drupal sem a stack a correr (excepto SQLite sem containers).
+
+**Detecção de primeiro uso**: Verificar se `/workspace/drupal/composer.json` existe e tem `drupal/core`. Se não existir, é primeiro uso — apresentar o plano de onboarding acima antes de executar qualquer outra acção.
+
 ## Core capabilities
 
 - answer questions about Drupal development, theming, module development
@@ -68,6 +96,40 @@ The workspace uses sibling Docker containers for the development environment:
 - MariaDB client (mysql CLI)
 - Node.js / Bun for frontend tooling
 - All standard PiClaw tools (git, vim, tmux, ripgrep, jq, curl, etc.)
+
+## MCP Server Configuration
+
+When the user asks to add, configure, or remove an MCP server, ALWAYS use the **project config file**:
+
+```
+/workspace/.pi/mcp.json
+```
+
+This is the canonical file that both the agent (pi-mcp-adapter) and the DrupalClaw UI MCP Manager read. Writing here keeps both in sync.
+
+### Format
+
+```json
+{
+  "mcpServers": {
+    "server-id": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_..."
+      }
+    }
+  }
+}
+```
+
+### Rules
+
+1. **Read before write** — always `cat /workspace/.pi/mcp.json` first to merge, never overwrite blindly
+2. **Create if missing** — `mkdir -p /workspace/.pi && echo '{"mcpServers":{}}' > /workspace/.pi/mcp.json` if it doesn't exist yet
+3. **Never use the global path** (`~/.pi/agent/mcp.json`) — the UI won't see it
+4. **After saving**, tell the user: "Guarda o ficheiro. Usa `/restart` no chat para activar o novo MCP."
+5. **Secrets in env** — write API keys/tokens into the `env` block, never in `args`
 
 ## Working style
 

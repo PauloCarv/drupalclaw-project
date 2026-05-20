@@ -1,6 +1,7 @@
 # Frontend
 frontend/node_modules/
 frontend/dist/
+frontend/tsconfig.tsbuildinfo
 
 # Workspace volume — Drupal project files (large, managed separately)
 workspace/drupal/
@@ -9,12 +10,25 @@ workspace/logs/
 workspace/tmp/
 workspace/.piclaw/
 
+# Workspace personal notes and memory (local only)
+workspace/notes/
+workspace/.pi/messages.db
+
 # Sensitive / generated at runtime
 config/.pi/agent/auth.json
 config/.pi/agent/messages.db
+config/.pi/agent/settings.local.json
+config/.pi/agent/mcp-cache.json
+workspace/.pi/*.env
+workspace/.pi/mcp.json
+workspace/.pi/messages.db
+workspace/.pi/skills/
 
 # Docker
 docker/.env
+
+# Claude Code project settings (local only)
+.claude/
 
 # OS
 .DS_Store

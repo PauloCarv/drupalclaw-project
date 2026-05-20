@@ -3,6 +3,7 @@ import {
   Send, Square, X, Loader2, Paperclip, FileText, ImageIcon,
   Check, AlertCircle, RotateCw,
 } from 'lucide-react'
+import drupalclawIcon from '@/assets/icon.png'
 import { useQuery } from '@tanstack/react-query'
 import { useChat } from '@/hooks/useChat'
 import { useSession } from '@/hooks/useSession'
@@ -313,7 +314,7 @@ export function ChatPanel() {
 
         {isStreaming && !streamingContent && (
           <div className="flex gap-2 items-start">
-            <div className="w-7 h-7 rounded-full bg-drupal-blue flex items-center justify-center text-[10px] text-white flex-shrink-0 mt-0.5">AI</div>
+            <img src={drupalclawIcon} alt="DrupalClaw" className="w-7 h-7 rounded-full object-contain flex-shrink-0 mt-0.5" />
             <div className="bg-navy-700 border border-navy-500 rounded-lg px-4 py-3">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
@@ -449,7 +450,7 @@ function MessageBubble({
   return (
     <div className={`flex gap-2 ${isUser ? 'justify-end' : 'items-start'}`}>
       {!isUser && (
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] text-white flex-shrink-0 mt-0.5 ${streaming ? 'bg-ai-teal/70' : 'bg-drupal-blue'}`}>AI</div>
+        <img src={drupalclawIcon} alt="DrupalClaw" className="w-7 h-7 rounded-full object-contain flex-shrink-0 mt-0.5" />
       )}
       <div className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'} max-w-[80%]`}>
         <div

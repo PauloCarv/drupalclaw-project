@@ -13,7 +13,7 @@ function stripAnsi(s: string): string {
 
 // Run a shell command in the workspace container and resolve when done.
 // Uses a dedicated headless PTY session (never shown in terminal UI).
-export async function runWorkspaceCommand(cmd: string, timeoutMs = 15000): Promise<void> {
+export async function runWorkspaceCommand(cmd: string, timeoutMs = 15000, storageKey = FS_CLIENT_KEY): Promise<void> {
   const MARKER = `__DC_FS_${Date.now()}_${Math.random().toString(36).slice(2)}__`
   let buffer = ''
   let settled = false
@@ -45,7 +45,7 @@ export async function runWorkspaceCommand(cmd: string, timeoutMs = 15000): Promi
     (send) => {
       send(`${cmd} && echo "${MARKER}"\r`)
     },
-    FS_CLIENT_KEY,
+    storageKey,
   )
 
   return promise

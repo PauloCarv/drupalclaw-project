@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { PanelLeft, PanelRight, Terminal, ChevronDown, Check, Loader2 } from 'lucide-react'
+import drupalclawIcon from '@/assets/icon.png'
 import { useLayoutStore } from '@/stores/layoutStore'
 import { useProviders } from '@/hooks/useProviders'
 import type { ModelOption } from '@/api/providers'
@@ -55,9 +56,7 @@ export function TopBar() {
           <PanelLeft size={16} />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-drupal-blue flex items-center justify-center text-[11px] font-bold text-white">
-            DC
-          </div>
+          <img src={drupalclawIcon} alt="DrupalClaw" className="w-7 h-7 rounded-lg object-contain" />
           <span className="text-sm font-semibold text-drupal-blue-light">DrupalClaw</span>
         </div>
       </div>
