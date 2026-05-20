@@ -11,7 +11,7 @@ const HIDDEN_PROBE_PATHS = ['.pi', '.piclaw', '.env.sh', '.gitignore', '.git']
 
 // Paths that cannot be deleted — agent memory, PiClaw internals, git history
 const PROTECTED_PREFIXES = ['.pi', '.piclaw', '.git']
-const PROTECTED_EXACT = ['AGENTS.md']
+const PROTECTED_EXACT = ['AGENTS.md', 'drupal']
 
 function isProtectedPath(path: string): boolean {
   const p = path.replace(/^\/+/, '')

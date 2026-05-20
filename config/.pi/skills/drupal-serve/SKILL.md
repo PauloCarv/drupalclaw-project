@@ -15,7 +15,7 @@ Inicia a stack de desenvolvimento Drupal usando containers Docker (nginx + PHP-F
 
 ## Steps
 
-### 1. Verificar que estamos num projecto Drupal
+### 1. Verificar se existe projecto Drupal (aviso suave)
 
 ```bash
 WORKSPACE_DIR="/workspace"
@@ -24,11 +24,15 @@ if [[ ! -d "$DRUPAL_DIR" ]]; then
   DRUPAL_DIR="$WORKSPACE_DIR"
 fi
 
-if [[ ! -f "${DRUPAL_DIR}/composer.json" ]] || ! grep -q "drupal/core" "${DRUPAL_DIR}/composer.json"; then
-  echo "❌ Não encontrei projecto Drupal. Usa 'drupal-init' primeiro."
-  exit 1
+DRUPAL_EXISTS=false
+if [[ -f "${DRUPAL_DIR}/composer.json" ]] && grep -q "drupal/core" "${DRUPAL_DIR}/composer.json"; then
+  DRUPAL_EXISTS=true
+  echo "✅ Projecto Drupal encontrado: $DRUPAL_DIR"
+else
+  echo "ℹ️  Nenhum projecto Drupal encontrado — a stack vai arrancar na mesma."
+  echo "   Após a stack iniciar, usa 'drupal-init' para criar o projecto Drupal."
+  echo ""
 fi
-echo "✅ Projecto Drupal encontrado: $DRUPAL_DIR"
 ```
 
 ### 2. Verificar Docker socket
@@ -95,12 +99,21 @@ if [[ -f "$STATE_FILE" ]]; then
   DB=$(jq -r '.db_type' "$STATE_FILE")
   echo ""
   echo "═══════════════════════════════════════════════"
-  echo "✅ Drupal a correr!"
-  echo "  🌐 Site: $URL"
+  if [[ "$DRUPAL_EXISTS" == "true" ]]; then
+    echo "✅ Stack Drupal a correr!"
+    echo "  🌐 Site: $URL"
+  else
+    echo "✅ Stack a correr! Próximo passo: criar o projecto Drupal."
+    echo "  🗄️  Base de dados disponível em: $URL"
+  fi
   echo "  🗄️  BD: $DB"
-  echo "  📁 Ficheiros: $DRUPAL_DIR (alterações reflectem imediatamente)"
   echo "═══════════════════════════════════════════════"
   echo ""
+  if [[ "$DRUPAL_EXISTS" == "false" ]]; then
+    echo "👉 Próximo passo: usa 'drupal-init' para criar o projecto Drupal."
+    echo "   A base de dados já está pronta e será usada automaticamente."
+    echo ""
+  fi
   echo "Comandos úteis:"
   echo "  drupal-stack stop     — parar stack"
   echo "  drupal-stack restart  — reiniciar"

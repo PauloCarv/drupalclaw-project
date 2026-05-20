@@ -13,6 +13,7 @@ services:
     environment:
       - PICLAW_DOCKER_ENABLED=1
       - PICLAW_ASSISTANT_NAME=DrupalClaw
+      - TZ=Europe/Lisbon
     group_add:
       - "0"
     restart: unless-stopped

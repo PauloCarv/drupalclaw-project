@@ -8,6 +8,7 @@ import { ChatPanel } from '@/components/chat/ChatPanel'
 import { EditorPanel } from '@/components/editor/EditorPanel'
 import { DevPanel } from '@/components/devpanel/DevPanel'
 import { WatchdogPanel } from '@/components/watchdog/WatchdogPanel'
+import { FlowsPanel } from '@/components/flows/FlowsPanel'
 import { useLayoutStore } from '@/stores/layoutStore'
 
 export function MainLayout() {
@@ -46,7 +47,7 @@ export function MainLayout() {
       case 'watchdog':
         return <WatchdogPanel />
       case 'flows':
-        return <div className="flex-1 flex items-center justify-center text-navy-300 text-sm">Flows — coming soon</div>
+        return <FlowsPanel />
       default:
         return <ChatPanel />
     }

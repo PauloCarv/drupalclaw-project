@@ -13,13 +13,13 @@
 
 @layer base {
   :root {
-    --color-navy-900: #0D1B2A;
-    --color-navy-800: #0A1525;
-    --color-navy-700: #0E1E30;
-    --color-navy-600: #122236;
-    --color-navy-500: #1A2D44;
-    --color-navy-400: #2A4060;
-    --color-navy-300: #5A7A9A;
+    --color-navy-900: #0D1F30;
+    --color-navy-800: #162C42;
+    --color-navy-700: #1F3A54;
+    --color-navy-600: #274867;
+    --color-navy-500: #305878;
+    --color-navy-400: #4A7295;
+    --color-navy-300: #7FA0BE;
     --color-drupal-blue: #0678BE;
     --color-ai-teal: #00B4D8;
     --color-accent-orange: #F77F00;
