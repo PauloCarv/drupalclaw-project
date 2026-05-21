@@ -16,10 +16,10 @@ const MAX_CONSECUTIVE_FAILS = 5
 
 function fmtRelative(ts: number): string {
   const diff = Math.floor((Date.now() - ts) / 1000)
-  if (diff < 60) return 'há pouco'
-  if (diff < 3600) return `há ${Math.floor(diff / 60)}m`
-  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
-  return new Date(ts).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
+  if (diff < 60) return 'just now'
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
 function fmtDuration(ms: number): string {
@@ -50,7 +50,7 @@ function RunStatusBadge({ run, flowName, onSendToChat }: RunStatusBadgeProps) {
   const handleSendToChat = (e: React.MouseEvent) => {
     e.stopPropagation()
     const output = run.error ? `ERRO:\n${run.error}\n\n${run.result ?? ''}` : (run.result ?? '')
-    onSendToChat(`Analisa os resultados do flow "${flowName}":\n\n${output}`)
+    onSendToChat(`Analyse the results of flow "${flowName}":\n\n${output}`)
   }
 
   return (
@@ -67,11 +67,11 @@ function RunStatusBadge({ run, flowName, onSendToChat }: RunStatusBadgeProps) {
           isManual ? 'bg-drupal-blue/20 text-drupal-blue-light' : 'bg-ai-teal/15 text-ai-teal'
         }`}>
           {isManual ? <MousePointerClick size={8} /> : <Calendar size={8} />}
-          <span>{isManual ? 'Manual' : 'Agendado'}</span>
+          <span>{isManual ? 'Manual' : 'Scheduled'}</span>
         </div>
         <span className="text-[10px] text-navy-200">{fmtRelative(new Date(run.runAt).getTime())}</span>
         {run.durationMs > 0 && <span className="text-[10px] text-navy-300">{fmtDuration(run.durationMs)}</span>}
-        {isRunningStatus && <span className="text-[10px] text-ai-teal">A executar...</span>}
+        {isRunningStatus && <span className="text-[10px] text-ai-teal">Running...</span>}
         {run.error && !expanded && <span className="text-[10px] text-accent-red truncate max-w-[100px]">{run.error}</span>}
         {hasOutput && <ChevronDown size={10} className={`ml-auto text-navy-400 transition-transform flex-shrink-0 ${expanded ? 'rotate-180' : ''}`} />}
       </button>
@@ -79,7 +79,7 @@ function RunStatusBadge({ run, flowName, onSendToChat }: RunStatusBadgeProps) {
         <div className="mb-2">
           <div className="rounded bg-navy-900/60 border border-navy-600/40 p-2 max-h-48 overflow-y-auto">
             <pre className="text-[10px] text-navy-200 whitespace-pre-wrap font-mono leading-relaxed">
-              {run.error ? `ERRO:\n${run.error}\n\n${run.result ?? ''}` : (run.result ?? 'Sem output')}
+              {run.error ? `ERROR:\n${run.error}\n\n${run.result ?? ''}` : (run.result ?? 'No output')}
             </pre>
           </div>
           {(run.result || run.error) && (
@@ -87,7 +87,7 @@ function RunStatusBadge({ run, flowName, onSendToChat }: RunStatusBadgeProps) {
               onClick={handleSendToChat}
               className="mt-1.5 flex items-center gap-1.5 px-2.5 py-1 text-[10px] text-navy-300 hover:text-white border border-navy-600 hover:border-navy-400 rounded-lg transition-colors"
             >
-              <Send size={9} /> Analisar no chat
+              <Send size={9} /> Analyse in chat
             </button>
           )}
         </div>
@@ -126,16 +126,16 @@ function RunModal({ flow, onRun, onClose }: RunModalProps) {
             </div>
           ))}
           {flow.params.length === 0 && (
-            <p className="text-xs text-navy-300">Este flow não tem parâmetros.</p>
+            <p className="text-xs text-navy-300">This flow has no parameters.</p>
           )}
         </div>
         <div className="flex gap-2 px-5 pb-4">
-          <button onClick={onClose} className="flex-1 py-1.5 text-xs text-navy-300 hover:text-white border border-navy-600 rounded-lg">Cancelar</button>
+          <button onClick={onClose} className="flex-1 py-1.5 text-xs text-navy-300 hover:text-white border border-navy-600 rounded-lg">Cancel</button>
           <button
             onClick={() => onRun(values)}
             className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs bg-drupal-blue hover:bg-drupal-blue-light text-white rounded-lg"
           >
-            <Play size={11} /> Executar
+            <Play size={11} /> Run
           </button>
         </div>
       </div>
@@ -194,7 +194,7 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
           setRunsCache(prev => ({
             ...prev,
             [executingId]: [
-              { id: 0, runAt: new Date().toISOString(), status: 'error', durationMs: 0, result: null, error: 'Timeout: sem resposta após 5 minutos.', scheduleType: 'once' },
+              { id: 0, runAt: new Date().toISOString(), status: 'error', durationMs: 0, result: null, error: 'Timeout: no response after 5 minutes.', scheduleType: 'once' },
               ...(prev[executingId] ?? []).filter(r => r.status !== 'running'),
             ],
           }))
@@ -222,7 +222,7 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
           setRunsCache(prev => ({
             ...prev,
             [executingId]: [
-              { id: 0, runAt: new Date().toISOString(), status: 'error', durationMs: 0, result: null, error: 'Erro ao ler histórico da BD. Verifica os logs do container.', scheduleType: 'once' },
+              { id: 0, runAt: new Date().toISOString(), status: 'error', durationMs: 0, result: null, error: 'Error reading run history from DB. Check the container logs.', scheduleType: 'once' },
               ...(prev[executingId] ?? []).filter(r => r.status !== 'running'),
             ],
           }))
@@ -303,8 +303,8 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
         <div className="w-12 h-12 rounded-xl bg-navy-700 border border-navy-500 flex items-center justify-center mb-3">
           <Zap size={20} className="text-navy-300" />
         </div>
-        <p className="text-sm text-navy-300 font-medium">Sem flows</p>
-        <p className="text-xs text-navy-500 mt-1 max-w-xs">Cria o teu primeiro flow para automatizar tarefas com skills e MCP tools.</p>
+        <p className="text-sm text-navy-300 font-medium">No flows</p>
+        <p className="text-xs text-navy-500 mt-1 max-w-xs">Create your first flow to automate tasks with skills and MCP tools.</p>
       </div>
     )
   }
@@ -339,7 +339,7 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
                     {isExecuting && (
                       <div className="flex items-center gap-1 text-ai-teal">
                         <Loader2 size={11} className="animate-spin" />
-                        <span className="text-[10px]">A executar</span>
+                        <span className="text-[10px]">Running</span>
                       </div>
                     )}
                     {isTriggering && !isExecuting && <Loader2 size={12} className="text-navy-300 animate-spin flex-shrink-0" />}
@@ -355,7 +355,7 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
                   <button
                     onClick={() => isDeleting ? (onDelete(flow.id), setConfirmDelete(null)) : setConfirmDelete(flow.id)}
                     className={`p-1.5 rounded transition-colors ${isDeleting ? 'text-accent-red' : 'text-navy-300 hover:text-accent-red'}`}
-                    title={isDeleting ? 'Clica de novo para confirmar' : 'Eliminar'}
+                    title={isDeleting ? 'Click again to confirm' : 'Delete'}
                   >
                     <Trash2 size={13} />
                   </button>
@@ -367,7 +367,7 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
                   <div className="flex items-center gap-1 bg-navy-700 border border-navy-600 rounded-md px-2 py-1 flex-shrink-0">
                     {flow.trigger === 'schedule'
-                      ? <><Calendar size={9} className="text-ai-teal" /><span className="text-[9px] text-ai-teal">{flow.schedule?.label ?? 'Agendado'}</span></>
+                      ? <><Calendar size={9} className="text-ai-teal" /><span className="text-[9px] text-ai-teal">{flow.schedule?.label ?? 'Scheduled'}</span></>
                       : <><Clock size={9} className="text-navy-300" /><span className="text-[9px] text-navy-300">Manual</span></>
                     }
                   </div>
@@ -403,15 +403,15 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
               <div className="flex items-center justify-between px-4 py-2 border-t border-navy-700">
                 <span className="text-[10px] text-navy-300">
                   {isDeleting
-                    ? <span className="text-accent-red">Clica novamente para confirmar</span>
-                    : <>{flow.lastRunAt ? `Último run ${fmtRelative(flow.lastRunAt)}` : 'Nunca executado'}{' · '}{flow.steps.length} step{flow.steps.length !== 1 ? 's' : ''}</>
+                    ? <span className="text-accent-red">Click again to confirm</span>
+                    : <>{flow.lastRunAt ? `Last run ${fmtRelative(flow.lastRunAt)}` : 'Never run'}{' · '}{flow.steps.length} step{flow.steps.length !== 1 ? 's' : ''}</>
                   }
                 </span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => toggleHistory(flow.id)}
                     className="p-1.5 text-navy-300 hover:text-white rounded transition-colors"
-                    title="Histórico de execuções"
+                    title="Run history"
                   >
                     {loadingRuns === flow.id
                       ? <Loader2 size={11} className="animate-spin" />
@@ -426,9 +426,9 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
                     className="flex items-center gap-1.5 px-3 py-1 text-xs bg-drupal-blue hover:bg-drupal-blue-light disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                   >
                     {isTriggering
-                      ? <><Loader2 size={10} className="animate-spin" /> A enviar...</>
+                      ? <><Loader2 size={10} className="animate-spin" /> Sending...</>
                       : isExecuting
-                        ? <><Loader2 size={10} className="animate-spin" /> A executar...</>
+                        ? <><Loader2 size={10} className="animate-spin" /> Running...</>
                         : <><Play size={10} /> Run</>
                     }
                   </button>
@@ -438,12 +438,12 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
               {/* Run history panel */}
               {expandedId === flow.id && (
                 <div className="px-4 pb-3 border-t border-navy-600 bg-navy-700/30">
-                  <p className="text-[9px] text-navy-300 uppercase tracking-wider pt-2 pb-1.5">Últimas execuções</p>
+                  <p className="text-[9px] text-navy-300 uppercase tracking-wider pt-2 pb-1.5">Recent runs</p>
                   {runsCache[flow.id]?.length > 0
                     ? runsCache[flow.id].map((run, i) => (
                         <RunStatusBadge key={i} run={run} flowName={flow.name} onSendToChat={handleSendToChat} />
                       ))
-                    : <p className="text-[10px] text-navy-300 py-1">Sem histórico disponível</p>
+                    : <p className="text-[10px] text-navy-300 py-1">No history available</p>
                   }
                 </div>
               )}

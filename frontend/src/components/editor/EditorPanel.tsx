@@ -124,7 +124,7 @@ export function EditorPanel() {
             {file.modified && (
               <span
                 className="w-1.5 h-1.5 rounded-full bg-accent-orange flex-shrink-0"
-                title="Alterações não guardadas"
+                title="Unsaved changes"
               />
             )}
             {file.loading && <Loader2 size={10} className="animate-spin" />}

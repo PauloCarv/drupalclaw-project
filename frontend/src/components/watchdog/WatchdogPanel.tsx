@@ -97,7 +97,7 @@ export function WatchdogPanel() {
       const data = await loadWatchdogCache()
       setEntries(data)
     } catch {
-      setError('Cache não encontrada. Clica em "Atualizar" para gerar os dados.')
+      setError('Cache not found. Click "Refresh" to generate the data.')
       setEntries(null)
     } finally {
       setLoading(false)
@@ -124,7 +124,7 @@ export function WatchdogPanel() {
         const env = await res.json()
         if (env.truncated) {
           // File still too large — keep polling in case skill re-runs; give up after timeout
-          if (polls >= 15) { stopPolling(); setError('Ficheiro watchdog demasiado grande para a API. Aguarda nova execução.'); setUpdating(false) }
+          if (polls >= 15) { stopPolling(); setError('Watchdog file too large for the API. Wait for the next run.'); setUpdating(false) }
           return
         }
         if (env.mtime && new Date(env.mtime).getTime() >= sendTime) {
@@ -224,7 +224,7 @@ export function WatchdogPanel() {
           title="Executar drupal-watchdog-cache e recarregar"
         >
           <RefreshCw size={10} className={updating ? 'animate-spin' : ''} />
-          Atualizar
+          Refresh
         </button>
       </div>
 

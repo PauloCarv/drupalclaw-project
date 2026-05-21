@@ -8,7 +8,7 @@ import type { Flow, FlowStep, FlowParam, FlowSchedule } from '@/api/flows'
 
 function uid() { return crypto.randomUUID() }
 
-const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 // Returns UTC offset in minutes for an IANA timezone (positive = UTC+)
 function getUtcOffsetMinutes(timezone: string): number {
@@ -77,18 +77,18 @@ function buildCronExpression(hour: string, minute: string, preset: CronPreset, c
 
 function buildScheduleLabel(type: 'interval' | 'cron', intervalMinutes: number, hour: string, minute: string, preset: CronPreset, customDays: number[], timezone: string): string {
   if (type === 'interval') {
-    if (intervalMinutes < 60) return `A cada ${intervalMinutes} minutos`
-    if (intervalMinutes === 60) return 'A cada hora'
-    if (intervalMinutes % 1440 === 0) return `A cada ${intervalMinutes / 1440} dia${intervalMinutes / 1440 > 1 ? 's' : ''}`
-    return `A cada ${intervalMinutes / 60} horas`
+    if (intervalMinutes < 60) return `Every ${intervalMinutes} minutes`
+    if (intervalMinutes === 60) return 'Every hour'
+    if (intervalMinutes % 1440 === 0) return `Every ${intervalMinutes / 1440} day${intervalMinutes / 1440 > 1 ? 's' : ''}`
+    return `Every ${intervalMinutes / 60} hours`
   }
   const time = `${hour}:${minute}`
   const tzShort = TIMEZONES.find(t => t.value === timezone)?.label.replace(/ \(.*\)/, '') ?? timezone
-  if (preset === 'daily') return `Todos os dias às ${time} (${tzShort})`
-  if (preset === 'weekdays') return `Seg-Sex às ${time} (${tzShort})`
-  if (preset === 'weekends') return `Sáb-Dom às ${time} (${tzShort})`
+  if (preset === 'daily') return `Every day at ${time} (${tzShort})`
+  if (preset === 'weekdays') return `Mon-Fri at ${time} (${tzShort})`
+  if (preset === 'weekends') return `Sat-Sun at ${time} (${tzShort})`
   const names = customDays.sort((a, b) => a - b).map(d => DAY_LABELS[d]).join(', ')
-  return `${names || 'Nenhum dia'} às ${time} (${tzShort})`
+  return `${names || 'No days'} at ${time} (${tzShort})`
 }
 
 function parseCronPreset(expr: string): { hour: string; minute: string; preset: CronPreset; customDays: number[] } {
@@ -220,7 +220,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
       <div className="bg-navy-800 border border-navy-500 rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-navy-500 flex-shrink-0">
-          <h2 className="text-sm font-semibold text-white">{initial ? 'Editar flow' : 'Novo flow'}</h2>
+          <h2 className="text-sm font-semibold text-white">{initial ? 'Edit flow' : 'New flow'}</h2>
           <button onClick={onClose} className="text-navy-300 hover:text-white"><X size={16} /></button>
         </div>
 
@@ -230,13 +230,13 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
             <input
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Nome do flow"
+              placeholder="Flow name"
               className="w-full bg-navy-700 border border-navy-500 focus:border-ai-teal rounded-lg px-3 py-2 text-sm text-white outline-none placeholder:text-navy-400"
             />
             <input
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Descrição (opcional)"
+              placeholder="Description (optional)"
               className="w-full bg-navy-700 border border-navy-500 focus:border-ai-teal rounded-lg px-3 py-2 text-xs text-gray-300 outline-none placeholder:text-navy-400"
             />
           </div>
@@ -251,7 +251,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
               </button>
               <button type="button" onClick={() => setTrigger('schedule')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border transition-colors ${trigger === 'schedule' ? 'bg-drupal-blue border-drupal-blue text-white' : 'bg-navy-700 border-navy-600 text-navy-300 hover:border-navy-400'}`}>
-                <Calendar size={11} /> Agendado
+                <Calendar size={11} /> Scheduled
               </button>
             </div>
 
@@ -262,31 +262,31 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
                   {(['interval', 'cron'] as const).map(t => (
                     <button key={t} type="button" onClick={() => setScheduleType(t)}
                       className={`px-2.5 py-1 text-[10px] rounded border transition-colors ${scheduleType === t ? 'bg-navy-600 border-ai-teal text-ai-teal' : 'border-navy-500 text-navy-300 hover:text-white'}`}>
-                      {t === 'interval' ? 'Intervalo' : 'Hora específica'}
+                      {t === 'interval' ? 'Interval' : 'Specific time'}
                     </button>
                   ))}
                 </div>
 
                 {scheduleType === 'interval' ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-navy-300">A cada</span>
+                    <span className="text-[10px] text-navy-300">Every</span>
                     <select value={intervalMinutes} onChange={e => setIntervalMinutes(Number(e.target.value))}
                       className="bg-navy-800 border border-navy-500 focus:border-ai-teal rounded px-2 py-1 text-xs text-white outline-none">
-                      <option value={5}>5 minutos</option>
-                      <option value={15}>15 minutos</option>
-                      <option value={30}>30 minutos</option>
-                      <option value={60}>1 hora</option>
-                      <option value={120}>2 horas</option>
-                      <option value={360}>6 horas</option>
-                      <option value={720}>12 horas</option>
-                      <option value={1440}>24 horas</option>
+                      <option value={5}>5 minutes</option>
+                      <option value={15}>15 minutes</option>
+                      <option value={30}>30 minutes</option>
+                      <option value={60}>1 hour</option>
+                      <option value={120}>2 hours</option>
+                      <option value={360}>6 hours</option>
+                      <option value={720}>12 hours</option>
+                      <option value={1440}>24 hours</option>
                     </select>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {/* Time picker */}
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-navy-300 w-8">Hora</span>
+                      <span className="text-[10px] text-navy-300 w-8">Time</span>
                       <input
                         type="number" min="0" max="23" value={cronHour}
                         onChange={e => setCronHour(e.target.value.padStart(2, '0'))}
@@ -302,11 +302,11 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
 
                     {/* Day presets */}
                     <div className="flex items-center gap-1 flex-wrap">
-                      <span className="text-[10px] text-navy-300 w-8">Dias</span>
+                      <span className="text-[10px] text-navy-300 w-8">Days</span>
                       {(['daily', 'weekdays', 'weekends', 'custom'] as const).map(p => (
                         <button key={p} type="button" onClick={() => setCronPreset(p)}
                           className={`px-2 py-0.5 text-[10px] rounded border transition-colors ${cronPreset === p ? 'bg-navy-600 border-ai-teal text-ai-teal' : 'border-navy-500 text-navy-300 hover:text-white'}`}>
-                          {p === 'daily' ? 'Todos' : p === 'weekdays' ? 'Seg-Sex' : p === 'weekends' ? 'Sáb-Dom' : 'Personalizado'}
+                          {p === 'daily' ? 'All' : p === 'weekdays' ? 'Mon-Fri' : p === 'weekends' ? 'Sat-Sun' : 'Custom'}
                         </button>
                       ))}
                     </div>
@@ -324,7 +324,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
 
                     {/* Timezone */}
                     <div className="flex items-center gap-2 pl-8">
-                      <span className="text-[10px] text-navy-300 flex-shrink-0">Fuso</span>
+                      <span className="text-[10px] text-navy-300 flex-shrink-0">Zone</span>
                       <select value={timezone} onChange={e => setTimezone(e.target.value)}
                         className="flex-1 bg-navy-800 border border-navy-500 focus:border-ai-teal rounded px-2 py-1 text-xs text-white outline-none">
                         {TIMEZONES.map(tz => (
@@ -347,7 +347,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
                 )}
 
                 <p className="text-[9px] text-ai-teal/70">
-                  Executado pelo PiClaw — funciona mesmo com o browser fechado.
+                  Executed by PiClaw — runs even with the browser closed.
                 </p>
               </div>
             )}
@@ -356,22 +356,22 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
           {/* Params */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] uppercase tracking-wider text-navy-300">Parâmetros</span>
+              <span className="text-[10px] uppercase tracking-wider text-navy-300">Parameters</span>
               <button onClick={addParam} className="text-[10px] text-ai-teal hover:text-white flex items-center gap-1">
-                <Plus size={11} /> Adicionar
+                <Plus size={11} /> Add
               </button>
             </div>
             {params.length === 0 && (
-              <p className="text-[10px] text-navy-400 italic">Sem parâmetros — usa {'{{'}<span className="text-navy-300">variavel</span>{'}}'}  nas mensagens para criar um.</p>
+              <p className="text-[10px] text-navy-400 italic">No parameters — use {'{{'}<span className="text-navy-300">variable</span>{'}}'}  in messages to create one.</p>
             )}
             <div className="space-y-1.5">
               {params.map((param, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <input value={param.key} onChange={e => updateParam(i, { key: e.target.value.replace(/\W/g, '_') })}
-                    placeholder="chave"
+                    placeholder="key"
                     className="w-28 bg-navy-700 border border-navy-600 rounded px-2 py-1 text-xs font-mono text-ai-teal outline-none focus:border-ai-teal" />
                   <input value={param.label} onChange={e => updateParam(i, { label: e.target.value })}
-                    placeholder="Label para o utilizador"
+                    placeholder="User label"
                     className="flex-1 bg-navy-700 border border-navy-600 rounded px-2 py-1 text-xs text-gray-300 outline-none focus:border-ai-teal" />
                   <input value={param.default ?? ''} onChange={e => updateParam(i, { default: e.target.value })}
                     placeholder="default"
@@ -391,12 +391,12 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
                   <Zap size={11} /> Skill
                 </button>
                 <button onClick={() => addStep('message')} className="text-[10px] text-drupal-blue-light hover:text-white flex items-center gap-1">
-                  <MessageSquare size={11} /> Mensagem
+                  <MessageSquare size={11} /> Message
                 </button>
                 <button
                   onClick={() => addStep('mcp')}
                   disabled={installedMcps.length === 0}
-                  title={installedMcps.length === 0 ? 'Nenhum MCP instalado — configura na tab MCPs' : undefined}
+                  title={installedMcps.length === 0 ? 'No MCP installed — configure in the MCPs tab' : undefined}
                   className="text-[10px] text-violet-400 hover:text-white flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Puzzle size={11} /> MCP
@@ -419,7 +419,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
                         : <MessageSquare size={12} className="text-drupal-blue-light flex-shrink-0" />
                     }
                     <span className="text-[10px] uppercase tracking-wider text-navy-300">
-                      {idx + 1}. {step.type === 'skill' ? 'Skill' : step.type === 'mcp' ? 'MCP' : 'Mensagem'}
+                      {idx + 1}. {step.type === 'skill' ? 'Skill' : step.type === 'mcp' ? 'MCP' : 'Message'}
                     </span>
                     <div className="ml-auto flex items-center gap-1">
                       <button onClick={() => moveStep(step.id, -1)} disabled={idx === 0} className="text-navy-400 hover:text-white disabled:opacity-30"><ArrowUp size={12} /></button>
@@ -431,7 +431,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
                   {step.type === 'mcp' ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-[10px] text-navy-300 flex-shrink-0">Servidor</label>
+                        <label className="text-[10px] text-navy-300 flex-shrink-0">Server</label>
                         {installedMcps.length > 0 ? (
                           <select
                             value={step.mcpServer ?? ''}
@@ -441,13 +441,13 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
                             {installedMcps.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
                         ) : (
-                          <span className="text-[10px] text-accent-red">Nenhum MCP instalado</span>
+                          <span className="text-[10px] text-accent-red">No MCP installed</span>
                         )}
                       </div>
                       <textarea
                         value={step.content ?? ''}
                         onChange={e => updateStep(step.id, { content: e.target.value })}
-                        placeholder="Instrução para o agente usar este MCP... usa {{param}} para parâmetros"
+                        placeholder="Instruction for the agent to use this MCP... use {{param}} for parameters"
                         rows={3}
                         className="w-full bg-navy-800 border border-navy-600 focus:border-violet-400 rounded px-3 py-2 text-xs text-gray-300 outline-none resize-none placeholder:text-navy-500 font-mono leading-relaxed"
                       />
@@ -457,18 +457,18 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
                       {step.command ? (
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-mono text-ai-teal">{step.command}</span>
-                          <button onClick={() => setPickingForStep(step.id)} className="text-[10px] text-navy-300 hover:text-white">Mudar</button>
+                          <button onClick={() => setPickingForStep(step.id)} className="text-[10px] text-navy-300 hover:text-white">Change</button>
                         </div>
                       ) : (
                         <button onClick={() => setPickingForStep(step.id)}
                           className="w-full text-left text-xs text-navy-300 hover:text-ai-teal border border-dashed border-navy-500 rounded px-3 py-1.5">
-                          Seleccionar skill...
+                          Select skill...
                         </button>
                       )}
                       {pickingForStep === step.id && (
                         <div className="mt-2 bg-navy-800 border border-navy-500 rounded-lg overflow-hidden">
                           <input autoFocus value={skillSearch} onChange={e => setSkillSearch(e.target.value)}
-                            placeholder="Filtrar skills..."
+                            placeholder="Filter skills..."
                             className="w-full bg-transparent px-3 py-2 text-xs text-white outline-none border-b border-navy-600 placeholder:text-navy-500" />
                           <div className="max-h-40 overflow-y-auto">
                             {filteredSkills.map(cmd => (
@@ -485,7 +485,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
                     </div>
                   ) : (
                     <textarea value={step.content ?? ''} onChange={e => updateStep(step.id, { content: e.target.value })}
-                      placeholder="Mensagem para o agente... usa {{param}} para parâmetros"
+                      placeholder="Message for the agent... use {{param}} for parameters"
                       rows={3}
                       className="w-full bg-navy-800 border border-navy-600 focus:border-ai-teal rounded px-3 py-2 text-xs text-gray-300 outline-none resize-none placeholder:text-navy-500 font-mono leading-relaxed" />
                   )}
@@ -498,13 +498,13 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
         {/* Footer */}
         <div className="flex items-center justify-between px-5 py-3 border-t border-navy-500 flex-shrink-0">
           <p className="text-[10px] text-navy-400">
-            {steps.length === 0 ? 'Adiciona pelo menos um step' : `${steps.length} step${steps.length > 1 ? 's' : ''}`}
+            {steps.length === 0 ? 'Add at least one step' : `${steps.length} step${steps.length > 1 ? 's' : ''}`}
           </p>
           <div className="flex gap-2">
-            <button onClick={onClose} className="px-3 py-1.5 text-xs text-navy-300 hover:text-white">Cancelar</button>
+            <button onClick={onClose} className="px-3 py-1.5 text-xs text-navy-300 hover:text-white">Cancel</button>
             <button onClick={handleSave} disabled={!name.trim() || steps.length === 0 || saving}
               className="flex items-center gap-1.5 px-4 py-1.5 text-xs bg-drupal-blue hover:bg-drupal-blue-light disabled:opacity-40 text-white rounded-lg transition-colors">
-              {saving ? 'A guardar...' : <><Check size={12} /> Guardar</>}
+              {saving ? 'Saving...' : <><Check size={12} /> Save</>}
             </button>
           </div>
         </div>

@@ -35,7 +35,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   {
     id: 'github',
     name: 'GitHub',
-    description: 'Repositórios, pull requests, issues e workflows',
+    description: 'Repositories, pull requests, issues and workflows',
     category: 'dev',
     command: 'npx',
     args: ['-y', '@modelcontextprotocol/server-github'],
@@ -47,20 +47,20 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   {
     id: 'jira',
     name: 'Jira',
-    description: 'Gerir issues, projetos e sprints do Jira',
+    description: 'Manage Jira issues, projects and sprints',
     category: 'productivity',
     command: 'npx',
     args: ['-y', 'mcp-server-jira'],
     envKeys: [
-      { key: 'JIRA_URL', label: 'URL do Jira', hint: 'https://empresa.atlassian.net' },
-      { key: 'JIRA_EMAIL', label: 'Email', hint: 'utilizador@empresa.com' },
+      { key: 'JIRA_URL', label: 'Jira URL', hint: 'https://company.atlassian.net' },
+      { key: 'JIRA_EMAIL', label: 'Email', hint: 'user@company.com' },
       { key: 'JIRA_API_TOKEN', label: 'API Token', secret: true, hint: 'id.atlassian.com → Security → API tokens' },
     ],
   },
   {
     id: 'figma',
     name: 'Figma',
-    description: 'Ler e modificar ficheiros de design no Figma',
+    description: 'Read and modify design files in Figma',
     category: 'design',
     command: 'npx',
     args: ['-y', 'figma-mcp'],
@@ -72,7 +72,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   {
     id: 'linear',
     name: 'Linear',
-    description: 'Issues, projetos e cycles do Linear',
+    description: 'Linear issues, projects and cycles',
     category: 'productivity',
     command: 'npx',
     args: ['-y', '@linear/mcp-server-linear'],
@@ -83,20 +83,20 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   {
     id: 'slack',
     name: 'Slack',
-    description: 'Enviar e ler mensagens em canais do Slack',
+    description: 'Send and read messages in Slack channels',
     category: 'communication',
     command: 'npx',
     args: ['-y', '@modelcontextprotocol/server-slack'],
     envKeys: [
-      { key: 'SLACK_BOT_TOKEN', label: 'Bot Token', secret: true, hint: 'Começa com xoxb- (api.slack.com/apps)' },
-      { key: 'SLACK_TEAM_ID', label: 'Team ID', hint: 'Visível em api.slack.com/methods/auth.test' },
+      { key: 'SLACK_BOT_TOKEN', label: 'Bot Token', secret: true, hint: 'Starts with xoxb- (api.slack.com/apps)' },
+      { key: 'SLACK_TEAM_ID', label: 'Team ID', hint: 'Visible at api.slack.com/methods/auth.test' },
     ],
     docsUrl: 'https://github.com/modelcontextprotocol/servers/tree/main/src/slack',
   },
   {
     id: 'notion',
     name: 'Notion',
-    description: 'Ler e escrever páginas e bases de dados no Notion',
+    description: 'Read and write pages and databases in Notion',
     category: 'productivity',
     command: 'npx',
     args: ['-y', '@notionhq/notion-mcp-server'],
@@ -108,7 +108,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   {
     id: 'postgres',
     name: 'PostgreSQL',
-    description: 'Executar queries em bases de dados PostgreSQL',
+    description: 'Run queries against PostgreSQL databases',
     category: 'data',
     command: 'npx',
     args: ['-y', '@modelcontextprotocol/server-postgres', '{{POSTGRES_URL}}'],
@@ -119,19 +119,19 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   },
   {
     id: 'jira-cookie',
-    name: 'Jira (sessão corporativa)',
-    description: 'Integração Jira via cookie de sessão — para instâncias sem API token',
+    name: 'Jira (corporate session)',
+    description: 'Jira integration via session cookie — for instances without an API token',
     category: 'productivity',
     command: 'script',
     args: [],
     envKeys: [],
     scriptBased: true,
-    scriptNote: 'Esta integração usa cookies de sessão guardados em /workspace/.pi/jira.env.\n\nPara renovar o cookie:\n1. Abre o Jira no browser e faz login\n2. Abre DevTools → Application → Cookies\n3. Copia os valores de JSESSIONID, atlassian.xsrf.token, INGRESSCOOKIE\n4. Pede ao agente no chat: "actualiza o cookie Jira"\n\nOs cookies ficam apenas em .pi/jira.env (gitignored). Nunca passam pela UI.',
+    scriptNote: 'This integration uses session cookies stored in /workspace/.pi/jira.env.\n\nTo renew the cookie:\n1. Open Jira in the browser and log in\n2. Open DevTools → Application → Cookies\n3. Copy the values of JSESSIONID, atlassian.xsrf.token, INGRESSCOOKIE\n4. Ask the agent in chat: "update the Jira cookie"\n\nCookies are stored only in .pi/jira.env (gitignored). They never pass through the UI.',
   },
   {
     id: 'filesystem',
     name: 'Filesystem',
-    description: 'Acesso directo a ficheiros no workspace',
+    description: 'Direct access to files in the workspace',
     category: 'dev',
     command: 'npx',
     args: ['-y', '@modelcontextprotocol/server-filesystem', '/workspace'],
@@ -141,11 +141,11 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
 ]
 
 export const CATEGORY_LABELS: Record<McpCatalogEntry['category'], string> = {
-  productivity: 'Produtividade',
+  productivity: 'Productivity',
   design: 'Design',
-  dev: 'Desenvolvimento',
-  data: 'Dados',
-  communication: 'Comunicação',
+  dev: 'Development',
+  data: 'Data',
+  communication: 'Communication',
 }
 
 const MCP_PATH = '.pi/mcp.json'

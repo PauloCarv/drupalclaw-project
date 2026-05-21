@@ -39,7 +39,7 @@ function ScriptInfoModal({ entry, onAdd, onClose }: ScriptInfoModalProps) {
             <Terminal size={14} className="text-ai-teal" />
             <div>
               <h3 className="text-sm font-semibold text-white">{entry.name}</h3>
-              <p className="text-[11px] text-navy-400 mt-0.5">Integração por script</p>
+              <p className="text-[11px] text-navy-400 mt-0.5">Script-based integration</p>
             </div>
           </div>
           <button onClick={onClose} className="text-navy-400 hover:text-white"><X size={16} /></button>
@@ -54,13 +54,13 @@ function ScriptInfoModal({ entry, onAdd, onClose }: ScriptInfoModalProps) {
           </div>
         </div>
         <div className="flex gap-2 px-5 pb-4">
-          <button onClick={onClose} className="flex-1 py-1.5 text-xs text-navy-300 hover:text-white border border-navy-600 rounded-lg">Fechar</button>
+          <button onClick={onClose} className="flex-1 py-1.5 text-xs text-navy-300 hover:text-white border border-navy-600 rounded-lg">Close</button>
           <button
             onClick={handleAdd}
             disabled={adding}
             className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs bg-drupal-blue hover:bg-drupal-blue-light disabled:opacity-40 text-white rounded-lg"
           >
-            {adding ? 'A registar...' : <><Check size={12} /> Registar</>}
+            {adding ? 'Registering...' : <><Check size={12} /> Register</>}
           </button>
         </div>
       </div>
@@ -92,7 +92,7 @@ function ConfigForm({ entry, onSave, onClose }: ConfigFormProps) {
       <div className="bg-navy-800 border border-navy-500 rounded-xl w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-navy-500">
           <div>
-            <h3 className="text-sm font-semibold text-white">Configurar {entry.name}</h3>
+            <h3 className="text-sm font-semibold text-white">Configure {entry.name}</h3>
             <p className="text-[11px] text-navy-400 mt-0.5">{entry.description}</p>
           </div>
           <button onClick={onClose} className="text-navy-400 hover:text-white"><X size={16} /></button>
@@ -100,7 +100,7 @@ function ConfigForm({ entry, onSave, onClose }: ConfigFormProps) {
 
         <div className="p-5 space-y-3">
           {entry.envKeys.length === 0 ? (
-            <p className="text-xs text-navy-400">Este MCP não requer configuração.</p>
+            <p className="text-xs text-navy-400">This MCP requires no configuration.</p>
           ) : (
             entry.envKeys.map(envKey => (
               <div key={envKey.key}>
@@ -132,7 +132,7 @@ function ConfigForm({ entry, onSave, onClose }: ConfigFormProps) {
 
           {/* Command preview */}
           <div className="bg-navy-900 rounded-lg px-3 py-2 border border-navy-600">
-            <p className="text-[9px] text-navy-500 uppercase tracking-wider mb-1">Comando</p>
+            <p className="text-[9px] text-navy-500 uppercase tracking-wider mb-1">Command</p>
             <code className="text-[10px] text-navy-300 break-all">
               {entry.command} {entry.args.join(' ')}
             </code>
@@ -143,17 +143,17 @@ function ConfigForm({ entry, onSave, onClose }: ConfigFormProps) {
           {entry.docsUrl ? (
             <a href={entry.docsUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1 text-[10px] text-drupal-blue-light hover:text-ai-teal">
-              <ExternalLink size={10} /> Documentação
+              <ExternalLink size={10} /> Documentation
             </a>
           ) : <span />}
           <div className="flex gap-2">
-            <button onClick={onClose} className="px-3 py-1.5 text-xs text-navy-300 hover:text-white">Cancelar</button>
+            <button onClick={onClose} className="px-3 py-1.5 text-xs text-navy-300 hover:text-white">Cancel</button>
             <button
               onClick={handleSave}
               disabled={!canSave || saving}
               className="flex items-center gap-1.5 px-4 py-1.5 text-xs bg-drupal-blue hover:bg-drupal-blue-light disabled:opacity-40 text-white rounded-lg"
             >
-              {saving ? 'A guardar...' : <><Check size={12} /> Adicionar</>}
+              {saving ? 'Saving...' : <><Check size={12} /> Add</>}
             </button>
           </div>
         </div>
@@ -239,10 +239,10 @@ export function McpManager() {
         {/* Installed */}
         <div>
           <h3 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">
-            Instalados ({installedEntries.length})
+            Installed ({installedEntries.length})
           </h3>
           {installedEntries.length === 0 ? (
-            <p className="text-[11px] text-navy-500 italic">Nenhum MCP configurado ainda.</p>
+            <p className="text-[11px] text-navy-500 italic">No MCPs configured yet.</p>
           ) : (
             <div className="space-y-1.5">
               {installedEntries.map(entry => (
@@ -252,7 +252,7 @@ export function McpManager() {
                       <span className="text-xs font-medium text-white">{entry.name}</span>
                       {entry.scriptBased
                         ? <span className="ml-2 text-[9px] text-ai-teal bg-ai-teal/10 px-1.5 py-0.5 rounded flex items-center gap-0.5"><Terminal size={8} /> script</span>
-                        : <span className="ml-2 text-[9px] text-ai-teal bg-ai-teal/10 px-1.5 py-0.5 rounded">activo</span>
+                        : <span className="ml-2 text-[9px] text-ai-teal bg-ai-teal/10 px-1.5 py-0.5 rounded">active</span>
                       }
                       <p className="text-[10px] text-navy-400 mt-0.5">{entry.description}</p>
                     </div>
@@ -266,7 +266,7 @@ export function McpManager() {
                     </button>
                   </div>
                   {removingId === entry.id && (
-                    <p className="text-[10px] text-accent-red mt-1">Clica novamente para confirmar</p>
+                    <p className="text-[10px] text-accent-red mt-1">Click again to confirm</p>
                   )}
                 </div>
               ))}
@@ -276,7 +276,7 @@ export function McpManager() {
 
         {/* Catalog */}
         <div>
-          <h3 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Catálogo</h3>
+          <h3 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Catalogue</h3>
           <div className="space-y-2">
             {byCategory.map(({ cat, label, entries }) => (
               <div key={cat} className="border border-navy-600 rounded-lg overflow-hidden">
@@ -313,10 +313,10 @@ export function McpManager() {
                             }`}
                           >
                             {installed
-                              ? <><Check size={10} /> Activo</>
+                              ? <><Check size={10} /> Active</>
                               : entry.scriptBased
                                 ? <><Terminal size={10} /> Script</>
-                                : <><Plus size={10} /> Adicionar</>
+                                : <><Plus size={10} /> Add</>
                             }
                           </button>
                         </div>
@@ -330,7 +330,7 @@ export function McpManager() {
         </div>
 
         <p className="text-[9px] text-navy-600 italic">
-          Após adicionar um MCP, reinicia o agente com /restart para activá-lo.
+          After adding an MCP, restart the agent with /restart to activate it.
         </p>
       </div>
     </>

@@ -452,7 +452,7 @@ function TreeNode({ node, depth, isHidden = false, onRefresh, onSiblingDelete, o
         >
           <Trash2 size={10} className="text-accent-red flex-shrink-0" />
           <span className="text-[10px] text-accent-red flex-1 truncate">
-            {isDir ? `Apagar ${node.name}/ e conteúdo?` : `Apagar ${node.name}?`}
+            {isDir ? `Delete ${node.name}/ and contents?` : `Delete ${node.name}?`}
           </span>
           <button
             onClick={handleDeleteConfirm}
@@ -465,7 +465,7 @@ function TreeNode({ node, depth, isHidden = false, onRefresh, onSiblingDelete, o
             onClick={(e) => { e.stopPropagation(); setConfirmDelete(false) }}
             className="text-[9px] text-navy-400 hover:text-gray-300 px-1.5 py-0.5 rounded transition-colors"
           >
-            Não
+            No
           </button>
         </div>
       ) : (
@@ -518,7 +518,7 @@ function TreeNode({ node, depth, isHidden = false, onRefresh, onSiblingDelete, o
             {isProtected ? (
               <span
                 className="p-0.5 text-navy-500"
-                title="Protegido pelo sistema — não pode ser eliminado nem renomeado"
+                title="System protected — cannot be deleted or renamed"
               >
                 <Lock size={9} />
               </span>
@@ -534,7 +534,7 @@ function TreeNode({ node, depth, isHidden = false, onRefresh, onSiblingDelete, o
                 <button
                   onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
                   className="p-0.5 rounded text-gray-400 hover:text-accent-red transition-colors"
-                  title={`Apagar ${node.name}`}
+                  title={`Delete ${node.name}`}
                 >
                   <Trash2 size={9} />
                 </button>

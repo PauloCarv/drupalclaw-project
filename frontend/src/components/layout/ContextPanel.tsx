@@ -20,11 +20,11 @@ function fmtElapsed(s: number): string {
 
 function fmtRelative(ts: number, now: number): string {
   const diff = Math.floor((now - ts) / 1000)
-  if (diff < 10) return 'agora mesmo'
-  if (diff < 60) return `há ${diff}s`
-  if (diff < 3600) return `há ${Math.floor(diff / 60)}m`
-  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
-  return new Date(ts).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+  if (diff < 10) return 'just now'
+  if (diff < 60) return `${diff}s ago`
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
 function fmt(n: number) {
@@ -74,7 +74,7 @@ export function ContextPanel() {
       const content = await readFile(path)
       setFileContent(path, content)
     } catch {
-      setFileContent(path, '// Erro ao carregar AGENTS.md')
+      setFileContent(path, '// Error loading AGENTS.md')
     }
   }
 
@@ -112,7 +112,7 @@ export function ContextPanel() {
     ? timeline.filter((p) => Number(p.id ?? p.rowid ?? 0) < sessionBounds.start).length > 0
     : timeline.length >= TIMELINE_LIMIT
   const sessionStart = activeSession
-    ? new Date(activeSession.createdAt).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    ? new Date(activeSession.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     : '—'
   const sessionName = activeSession?.name ?? 'web:default'
 
@@ -123,7 +123,7 @@ export function ContextPanel() {
   const modelCtxWindow = currentModel?.contextWindow ?? null
 
   const ctxColor = percent > 100 ? 'text-accent-red' : percent > 90 ? 'text-accent-red' : percent > 70 ? 'text-yellow-400' : 'text-ai-teal'
-  const ctxLabel = percent > 100 ? 'Excedido' : percent > 90 ? 'Quase cheio' : percent > 70 ? 'Elevado' : tokens > 0 ? 'Normal' : '—'
+  const ctxLabel = percent > 100 ? 'Exceeded' : percent > 90 ? 'Almost full' : percent > 70 ? 'High' : tokens > 0 ? 'Normal' : '—'
   const showCompact = percent > 70
 
   const { isStreaming, isAgentRunning, streamingStartedAt } = useChatStore()
@@ -160,18 +160,18 @@ export function ContextPanel() {
   return (
     <aside className="w-52 flex-shrink-0 bg-navy-700 border-l border-navy-500 flex flex-col overflow-y-auto">
       <div className="px-3 pt-3 pb-2 border-b border-navy-500">
-        <span className="text-[11px] uppercase tracking-wider text-gray-300 font-semibold">Agente</span>
+        <span className="text-[11px] uppercase tracking-wider text-gray-300 font-semibold">Agent</span>
       </div>
 
       {/* Session */}
-      <Section icon={MessageSquare} title="Sessão">
+      <Section icon={MessageSquare} title="Session">
         <Row label="Chat" value={sessionName} />
-        <Row label="Mensagens" value={msgCount > 0 ? `${msgCount}${hasMore ? '+' : ''}` : '—'} />
-        <Row label="Início" value={sessionStart} />
+        <Row label="Messages" value={msgCount > 0 ? `${msgCount}${hasMore ? '+' : ''}` : '—'} />
+        <Row label="Start" value={sessionStart} />
         {tokens > 0 && (
           <div className="mt-1.5 pt-1.5 border-t border-navy-600">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-navy-400">Janela usada</span>
+              <span className="text-[10px] text-navy-400">Context used</span>
               <span className={`text-[11px] font-semibold ${ctxColor}`}>{percent.toFixed(0)}% — {ctxLabel}</span>
             </div>
             <div className="mt-1 h-1 bg-navy-600 rounded-full overflow-hidden">
@@ -180,7 +180,7 @@ export function ContextPanel() {
                 style={{ width: `${Math.min(percent, 100)}%`, backgroundColor: percent > 90 ? '#ef4444' : percent > 70 ? '#f59e0b' : '#2dd4bf' }}
               />
             </div>
-            <div className="mt-0.5 text-[9px] text-navy-500 italic">contexto global do agente</div>
+            <div className="mt-0.5 text-[9px] text-navy-500 italic">global agent context</div>
             <div className="flex justify-between mt-0.5">
               <span className="text-[9px] text-navy-400">{fmt(tokens)}</span>
               <span className="text-[9px] text-navy-400">{fmt(ctxWindow)}</span>
@@ -194,13 +194,13 @@ export function ContextPanel() {
                     ? 'bg-accent-red/20 text-accent-red hover:bg-accent-red/30 border border-accent-red/30'
                     : 'bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20 border border-yellow-400/20'
                 }`}
-                title="Envia /compact ao agente — resume o histórico e liberta espaço no contexto"
+                title="Sends /compact to the agent — summarises history and frees context space"
               >
                 {compacting
                   ? <Loader2 size={10} className="animate-spin" />
                   : <Minimize2 size={10} />
                 }
-                {compacting ? 'A compactar...' : 'Compactar contexto'}
+                {compacting ? 'Compacting...' : 'Compact context'}
               </button>
             )}
           </div>
@@ -210,56 +210,56 @@ export function ContextPanel() {
       {/* Model */}
       <Section icon={Cpu} title="Modelo">
         <Row label="Provider" value={providerName} />
-        <Row label="Modelo" value={modelName} accent />
-        {modelCtxWindow && <Row label="Contexto" value={fmtCtx(modelCtxWindow)} />}
+        <Row label="Model" value={modelName} accent />
+        {modelCtxWindow && <Row label="Context" value={fmtCtx(modelCtxWindow)} />}
         {currentModel?.reasoning && (
           <div className="mt-1">
             <span className="text-[9px] bg-drupal-blue/30 text-drupal-blue-light px-1.5 py-0.5 rounded">
-              reasoning ativo
+              reasoning active
             </span>
           </div>
         )}
       </Section>
 
       {/* System prompt */}
-      <Section icon={BookOpen} title="Instruções">
+      <Section icon={BookOpen} title="Instructions">
         <div className="text-[10px] text-navy-300 leading-relaxed">
-          Sistema: <span className="text-gray-300">AGENTS.md</span>
+          System: <span className="text-gray-300">AGENTS.md</span>
         </div>
         <button
           onClick={openAgentsMd}
           className="mt-1 flex items-center gap-1 text-[10px] text-drupal-blue-light hover:text-ai-teal transition-colors"
         >
           <ExternalLink size={9} />
-          <span>Ver instruções</span>
+          <span>View instructions</span>
         </button>
       </Section>
 
       {/* Activity */}
-      <Section icon={Activity} title="Atividade">
+      <Section icon={Activity} title="Activity">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-navy-400">Estado</span>
+          <span className="text-[10px] text-navy-400">Status</span>
           <div className="flex items-center gap-1.5">
             {isAgentRunning ? (
               <>
                 <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isStreaming ? 'bg-drupal-blue' : 'bg-ai-teal'}`} />
                 <span className="text-[11px] text-ai-teal font-medium">
-                  {isStreaming ? 'A gerar' : 'A processar'}
+                  {isStreaming ? 'Generating' : 'Processing'}
                 </span>
               </>
             ) : (
               <>
                 <span className="w-1.5 h-1.5 rounded-full bg-navy-400" />
-                <span className="text-[11px] text-gray-300">Inativo</span>
+                <span className="text-[11px] text-gray-300">Idle</span>
               </>
             )}
           </div>
         </div>
         {isAgentRunning && elapsed > 0 && (
-          <Row label="Em execução" value={fmtElapsed(elapsed)} />
+          <Row label="Running" value={fmtElapsed(elapsed)} />
         )}
         {lastAssistantTs && (
-          <Row label="Última resposta" value={fmtRelative(lastAssistantTs, now)} />
+          <Row label="Last response" value={fmtRelative(lastAssistantTs, now)} />
         )}
       </Section>
     </aside>
