@@ -31,9 +31,13 @@ docker/.env
 .claude/
 CLAUDE.md
 PLAN.md
+GITFLOW.md
 
 # Institutional website (managed separately)
 site/
+
+# GitHub Wiki (separate git repo)
+wiki/
 
 # OS
 .DS_Store
