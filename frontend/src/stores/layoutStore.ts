@@ -7,6 +7,7 @@ export type SidebarSection = 'explorer' | 'skills' | 'chats' | 'settings'
 interface LayoutState {
   sidebarOpen: boolean
   sidebarSection: SidebarSection
+  sidebarWidth: number
   contextPanelOpen: boolean
   activeMainTab: MainTab
   activeBottomTab: BottomTab
@@ -16,6 +17,7 @@ interface LayoutState {
 
   toggleSidebar: () => void
   setSidebarSection: (section: SidebarSection) => void
+  setSidebarWidth: (width: number) => void
   toggleContextPanel: () => void
   setMainTab: (tab: MainTab) => void
   setBottomTab: (tab: BottomTab) => void
@@ -27,6 +29,7 @@ interface LayoutState {
 export const useLayoutStore = create<LayoutState>((set) => ({
   sidebarOpen: true,
   sidebarSection: 'explorer',
+  sidebarWidth: 224,
   contextPanelOpen: true,
   activeMainTab: 'chat',
   activeBottomTab: 'terminal',
@@ -36,6 +39,7 @@ export const useLayoutStore = create<LayoutState>((set) => ({
 
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setSidebarSection: (section) => set({ sidebarSection: section, sidebarOpen: true }),
+  setSidebarWidth: (width) => set({ sidebarWidth: Math.max(160, Math.min(600, width)) }),
   toggleContextPanel: () => set((s) => ({ contextPanelOpen: !s.contextPanelOpen })),
   setMainTab: (tab) => set({ activeMainTab: tab }),
   setBottomTab: (tab) => set({ activeBottomTab: tab, bottomPanelOpen: true }),

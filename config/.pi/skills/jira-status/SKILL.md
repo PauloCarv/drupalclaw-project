@@ -1,36 +1,36 @@
 ---
 name: jira-status
-description: Transiciona o estado de um issue do Jira (ex: To Do → In Progress). Requer ISSUE_KEY e STATUS_NAME.
+description: Transitions a Jira issue status (e.g. To Do → In Progress). Requires ISSUE_KEY and STATUS_NAME.
 distribution: private
 ---
 
 # jira-status
 
-Muda o estado de um issue do Jira via transição.
+Changes a Jira issue status via transition.
 
-## Parâmetros (obrigatórios)
+## Parameters (required)
 
-- `ISSUE_KEY` — chave do issue (ex: CFENABL2-123)
-- `STATUS_NAME` — nome do estado destino (ex: "In Progress", "Done", "To Do")
+- `ISSUE_KEY` — issue key (e.g. CFENABL2-123)
+- `STATUS_NAME` — target status name (e.g. "In Progress", "Done", "To Do")
 
 ## Steps
 
-1. Carregar ambiente e validar sessão:
+1. Load environment and validate session:
    ```bash
    ENV_FILE="/workspace/.pi/jira.env"
-   [[ ! -f "$ENV_FILE" ]] && echo "❌ Ficheiro $ENV_FILE não encontrado." && exit 1
+   [[ ! -f "$ENV_FILE" ]] && echo "❌ File $ENV_FILE not found." && exit 1
    source "$ENV_FILE"
 
-   [[ -z "$ISSUE_KEY" ]] && echo "❌ Parâmetro ISSUE_KEY obrigatório." && exit 1
-   [[ -z "$STATUS_NAME" ]] && echo "❌ Parâmetro STATUS_NAME obrigatório." && exit 1
+   [[ -z "$ISSUE_KEY" ]] && echo "❌ Parameter ISSUE_KEY is required." && exit 1
+   [[ -z "$STATUS_NAME" ]] && echo "❌ Parameter STATUS_NAME is required." && exit 1
 
    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
      -H "Cookie: $JIRA_COOKIE" \
      "$JIRA_BASE_URL/rest/api/2/myself")
-   [[ "$HTTP_STATUS" != "200" ]] && echo "⚠️  Cookie expirado (HTTP $HTTP_STATUS). Usa jira-check para renovar." && exit 1
+   [[ "$HTTP_STATUS" != "200" ]] && echo "⚠️  Cookie expired (HTTP $HTTP_STATUS). Use jira-check to renew." && exit 1
    ```
 
-2. Obter transições disponíveis para o issue:
+2. Get available transitions for the issue:
    ```bash
    TRANSITIONS=$(curl -s \
      -H "Cookie: $JIRA_COOKIE" \
@@ -47,8 +47,8 @@ for t in d.get('transitions', []):
 " "$STATUS_NAME" 2>/dev/null)
 
    if [[ -z "$TRANSITION_ID" ]]; then
-     echo "❌ Estado '$STATUS_NAME' não encontrado para $ISSUE_KEY."
-     echo "Estados disponíveis:"
+     echo "❌ Status '$STATUS_NAME' not found for $ISSUE_KEY."
+     echo "Available statuses:"
      echo "$TRANSITIONS" | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
@@ -59,7 +59,7 @@ for t in d.get('transitions', []):
    fi
    ```
 
-3. Executar a transição:
+3. Execute the transition:
    ```bash
    PAYLOAD="{\"transition\":{\"id\":\"$TRANSITION_ID\"}}"
 
@@ -73,7 +73,7 @@ for t in d.get('transitions', []):
    if [[ "$HTTP_CODE" == "204" ]]; then
      echo "✅ $ISSUE_KEY → '$STATUS_NAME'"
    else
-     echo "❌ Erro na transição (HTTP $HTTP_CODE)"
+     echo "❌ Transition error (HTTP $HTTP_CODE)"
      exit 1
    fi
    ```

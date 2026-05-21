@@ -11,7 +11,7 @@ TEMPLATES_SRC="/home/agent/.pi/templates"
 # -- Sync Drupal skills to workspace --
 if [[ -d "$SKILLS_SRC" ]]; then
   mkdir -p "$WORKSPACE/.pi/skills"
-  for skill_dir in "$SKILLS_SRC"/drupal-*; do
+  for skill_dir in "$SKILLS_SRC"/*/; do
     if [[ -d "$skill_dir" ]]; then
       skill_name=$(basename "$skill_dir")
       if [[ ! -f "$WORKSPACE/.pi/skills/$skill_name/SKILL.md" ]] || \

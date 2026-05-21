@@ -349,7 +349,7 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
                   )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                  <button onClick={() => onEdit(flow)} className="p-1.5 text-navy-300 hover:text-white rounded transition-colors" title="Editar">
+                  <button onClick={() => onEdit(flow)} className="p-1.5 text-navy-300 hover:text-white rounded transition-colors" title="Edit">
                     <Pencil size={13} />
                   </button>
                   <button

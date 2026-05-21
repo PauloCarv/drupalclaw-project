@@ -1,16 +1,16 @@
 ---
 name: drupal-watchdog-cache
-description: Actualiza silenciosamente a cache JSON do painel Watchdog da UI. Responde apenas com uma linha de confirmação sem mostrar os logs completos.
+description: Silently updates the JSON cache for the UI Watchdog panel. Responds with a single confirmation line without printing the full logs.
 distribution: public
 ---
 
 # drupal-watchdog-cache
 
-Uso interno da UI do DrupalClaw. Escreve `/workspace/.piclaw/watchdog.json` com os últimos 60 registos do watchdog Drupal em formato JSON compacto. Não imprime os logs — responde apenas com o resultado da operação numa única linha curta.
+Internal UI skill for DrupalClaw. Writes `/workspace/.piclaw/watchdog.json` with the latest 60 Drupal watchdog entries in compact JSON format. Does not print the logs — responds only with the operation result in a single short line.
 
 ## Steps
 
-1. Detectar Drush e escrever cache JSON:
+1. Detect Drush and write JSON cache:
    ```bash
    PHP_CONTAINER=$(docker ps --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -E "drupal.*(php|fpm)" | head -1)
    if [[ -n "$PHP_CONTAINER" ]]; then
@@ -30,9 +30,9 @@ Uso interno da UI do DrupalClaw. Escreve `/workspace/.piclaw/watchdog.json` com 
      # Compact JSON (remove whitespace) to minimise file size
      COMPACT=$(echo "$WATCHDOG_JSON" | python3 -c "import sys,json; sys.stdout.write(json.dumps(json.loads(sys.stdin.read())))" 2>/dev/null || echo "$WATCHDOG_JSON")
      printf '%s' "$COMPACT" > "$CACHE_DIR/watchdog.json"
-     echo "Cache actualizada."
+     echo "Cache updated."
    else
      printf '{}' > "$CACHE_DIR/watchdog.json"
-     echo "Cache vazia (sem registos no watchdog)."
+     echo "Cache empty (no watchdog entries)."
    fi
    ```

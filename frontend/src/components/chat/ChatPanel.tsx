@@ -56,7 +56,10 @@ export function ChatPanel() {
 
   // Filter messages to the active session's boundaries.
   // Local optimistic messages (local-*) only show in the current (live) session.
-  const messages = activeSession
+  const isAuthMessage = (m: { role: string; content: string }) =>
+    m.role === 'user' && m.content.startsWith('/login')
+
+  const messages = (activeSession
     ? (() => {
         const { start, end } = getSessionBounds(activeSession)
         return allMessages.filter((m) => {
@@ -69,6 +72,7 @@ export function ChatPanel() {
         })
       })()
     : allMessages
+  ).filter(m => !isAuthMessage(m))
 
   const { data: allCommands = [] } = useQuery({
     queryKey: ['commands'],
@@ -483,7 +487,7 @@ function MessageBubble({
             <button
               onClick={onRetry}
               className="text-navy-400 hover:text-ai-teal transition-colors"
-              title="Tentar novamente"
+              title="Retry"
             >
               <RotateCw size={10} />
             </button>
@@ -492,7 +496,7 @@ function MessageBubble({
             <button
               onClick={onCancel}
               className="text-navy-400 hover:text-accent-red transition-colors"
-              title="Cancelar"
+              title="Cancel"
             >
               <X size={10} />
             </button>

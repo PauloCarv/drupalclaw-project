@@ -208,7 +208,7 @@ export function ContextPanel() {
       </Section>
 
       {/* Model */}
-      <Section icon={Cpu} title="Modelo">
+      <Section icon={Cpu} title="Model">
         <Row label="Provider" value={providerName} />
         <Row label="Model" value={modelName} accent />
         {modelCtxWindow && <Row label="Context" value={fmtCtx(modelCtxWindow)} />}

@@ -1,40 +1,40 @@
 ---
 name: jira-issues
-description: Lista issues do Jira com filtros (projecto, estado, assignee). Requer sessão activa (jira-check).
+description: Lists Jira issues with filters (project, status, assignee). Requires active session (jira-check).
 distribution: private
 ---
 
 # jira-issues
 
-Lista issues do Jira corporativo via REST API com cookie de sessão.
+Lists corporate Jira issues via REST API with session cookie.
 
-## Parâmetros (opcionais, extraídos do contexto ou perguntados)
+## Parameters (optional, extracted from context or asked)
 
-- `PROJECT` — chave do projecto (default: $JIRA_PROJECT_KEY do env)
-- `STATUS` — estado a filtrar: "In Progress", "To Do", "Done", etc. (default: todos em aberto)
-- `ASSIGNEE` — "currentUser()" para os meus, ou username específico (default: todos)
-- `MAX` — número máximo de resultados (default: 20)
+- `PROJECT` — project key (default: $JIRA_PROJECT_KEY from env)
+- `STATUS` — status to filter: "In Progress", "To Do", "Done", etc. (default: all open)
+- `ASSIGNEE` — "currentUser()" for mine, or specific username (default: all)
+- `MAX` — maximum number of results (default: 20)
 
 ## Steps
 
-1. Carregar ambiente e validar sessão:
+1. Load environment and validate session:
    ```bash
    ENV_FILE="/workspace/.pi/jira.env"
-   [[ ! -f "$ENV_FILE" ]] && echo "❌ Ficheiro $ENV_FILE não encontrado." && exit 1
+   [[ ! -f "$ENV_FILE" ]] && echo "❌ File $ENV_FILE not found." && exit 1
    source "$ENV_FILE"
 
    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
      -H "Cookie: $JIRA_COOKIE" \
      "$JIRA_BASE_URL/rest/api/2/myself")
-   [[ "$HTTP_STATUS" != "200" ]] && echo "⚠️  Cookie expirado (HTTP $HTTP_STATUS). Usa jira-check para renovar." && exit 1
+   [[ "$HTTP_STATUS" != "200" ]] && echo "⚠️  Cookie expired (HTTP $HTTP_STATUS). Use jira-check to renew." && exit 1
    ```
 
-2. Construir JQL e chamar a API:
+2. Build JQL and call the API:
    ```bash
    PROJECT="${PROJECT:-$JIRA_PROJECT_KEY}"
    MAX="${MAX:-20}"
 
-   # Construir JQL dinamicamente
+   # Build JQL dynamically
    JQL="project = $PROJECT"
    [[ -n "$STATUS" ]] && JQL="$JQL AND status = \"$STATUS\""
    [[ -n "$ASSIGNEE" ]] && JQL="$JQL AND assignee = $ASSIGNEE"
@@ -47,7 +47,7 @@ Lista issues do Jira corporativo via REST API com cookie de sessão.
      "$JIRA_BASE_URL/rest/api/2/search?jql=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$JQL")&maxResults=$MAX&fields=summary,status,assignee,priority,updated")
 
    TOTAL=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('total',0))")
-   echo "📋 Issues ($TOTAL total, a mostrar até $MAX):"
+   echo "📋 Issues ($TOTAL total, showing up to $MAX):"
    echo ""
    echo "$RESPONSE" | python3 -c "
 import sys, json
@@ -57,11 +57,11 @@ for issue in d.get('issues', []):
     summary = issue['fields']['summary']
     status = issue['fields']['status']['name']
     assignee = issue['fields'].get('assignee') or {}
-    assignee_name = assignee.get('displayName', 'Não atribuído')
+    assignee_name = assignee.get('displayName', 'Unassigned')
     priority = issue['fields'].get('priority') or {}
     priority_name = priority.get('name', '-')
     print(f'  [{key}] {summary}')
-    print(f'    Estado: {status} | Assignee: {assignee_name} | Prioridade: {priority_name}')
+    print(f'    Status: {status} | Assignee: {assignee_name} | Priority: {priority_name}')
     print()
 "
    ```

@@ -139,21 +139,21 @@ export function FileTree() {
           <button
             onClick={() => { setCreatingType('file'); setNewName('') }}
             className="text-gray-400 hover:text-white transition-colors"
-            title="Novo ficheiro"
+            title="New file"
           >
             <FilePlus size={11} />
           </button>
           <button
             onClick={() => { setCreatingType('folder'); setNewName('') }}
             className="text-gray-400 hover:text-white transition-colors"
-            title="Nova pasta"
+            title="New folder"
           >
             <FolderPlus size={11} />
           </button>
           <button
             onClick={() => setShowHidden(h => !h)}
             className={`transition-colors ${showHidden ? 'text-ai-teal' : 'text-gray-400 hover:text-white'}`}
-            title={showHidden ? 'Ocultar ficheiros hidden' : 'Mostrar ficheiros hidden'}
+            title={showHidden ? 'Hide hidden files' : 'Show hidden files'}
           >
             {showHidden ? <Eye size={11} /> : <EyeOff size={11} />}
           </button>
@@ -491,7 +491,7 @@ function TreeNode({ node, depth, isHidden = false, onRefresh, onSiblingDelete, o
             : <File size={13} className="text-navy-400 flex-shrink-0" />
           }
 
-          <span className={`text-xs truncate flex-1 ${isHidden ? 'text-navy-300 italic' : 'text-gray-300'}`}>
+          <span className={`text-xs whitespace-nowrap flex-1 ${isHidden ? 'text-navy-300 italic' : 'text-gray-300'}`}>
             {node.name}
           </span>
 

@@ -11,8 +11,8 @@ export interface Session {
 
 function formatSessionName(ts: number): string {
   const d = new Date(ts)
-  return d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) +
-    ' ' + d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) +
+    ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
 export function loadSessions(): Session[] {

@@ -22,48 +22,48 @@ interface DevPanelConfig {
 
 const FALLBACK_CONFIG: DevPanelConfig = {
   title: 'Drupal Dev Panel',
-  subtitle: 'Atalhos para desenvolvimento Drupal.',
+  subtitle: 'Shortcuts for Drupal development.',
   groups: [
     {
       label: 'Stack',
       buttons: [
-        { label: 'Start Stack', command: 'drupal-serve', hint: 'Inicia PHP + nginx + BD' },
-        { label: 'Stop', command: 'drupal-stack stop', hint: 'Para containers' },
-        { label: 'Restart', command: 'drupal-stack restart', hint: 'Reinicia containers' },
-        { label: 'Status', command: 'drupal-stack status', hint: 'Estado dos containers' },
+        { label: 'Start Stack', command: 'drupal-serve', hint: 'Start PHP + nginx + DB' },
+        { label: 'Stop', command: 'drupal-stack stop', hint: 'Stop containers' },
+        { label: 'Restart', command: 'drupal-stack restart', hint: 'Restart containers' },
+        { label: 'Status', command: 'drupal-stack status', hint: 'Container status' },
       ],
     },
     {
-      label: 'Projecto',
+      label: 'Project',
       buttons: [
-        { label: 'Init', command: 'drupal-init', hint: 'Cria projecto via Composer' },
-        { label: 'Cache Rebuild', command: 'drupal-cr', hint: 'Limpa caches' },
-        { label: 'Status', command: 'drupal-status', hint: 'Estado do projecto' },
+        { label: 'Init', command: 'drupal-init', hint: 'Create project via Composer' },
+        { label: 'Cache Rebuild', command: 'drupal-cr', hint: 'Clear caches' },
+        { label: 'Status', command: 'drupal-status', hint: 'Project status' },
       ],
     },
     {
-      label: 'Codigo',
+      label: 'Code',
       buttons: [
-        { label: 'New Module', command: 'drupal-module', hint: 'Scaffolda modulo custom' },
+        { label: 'New Module', command: 'drupal-module', hint: 'Scaffold custom module' },
         { label: 'Analyze', command: 'drupal-analyze', hint: 'PHPStan + PHPCS' },
-        { label: 'Fix', command: 'drupal-fix', hint: 'Corrige erros' },
-        { label: 'Install Module', command: 'drupal-install', hint: 'Instala modulo contrib' },
+        { label: 'Fix', command: 'drupal-fix', hint: 'Fix code errors' },
+        { label: 'Install Module', command: 'drupal-install', hint: 'Install contrib module' },
       ],
     },
     {
-      label: 'Base de Dados',
+      label: 'Database',
       buttons: [
-        { label: 'DB Export', command: 'drupal-db-export', hint: 'Exporta DB' },
-        { label: 'DB Import', command: 'drupal-db-import', hint: 'Importa DB' },
-        { label: 'DB Query', command: 'drupal-db-query', hint: 'Executa query SQL' },
+        { label: 'DB Export', command: 'drupal-db-export', hint: 'Export DB' },
+        { label: 'DB Import', command: 'drupal-db-import', hint: 'Import DB' },
+        { label: 'DB Query', command: 'drupal-db-query', hint: 'Run SQL query' },
       ],
     },
     {
-      label: 'Diagnostico',
+      label: 'Diagnostics',
       buttons: [
         { label: 'Logs', command: 'drupal-logs', hint: 'Watchdog logs' },
-        { label: 'Debug', command: 'drupal-debug', hint: 'Diagnostica erros' },
-        { label: 'Performance', command: 'drupal-perf', hint: 'Analisa performance' },
+        { label: 'Debug', command: 'drupal-debug', hint: 'Diagnose errors' },
+        { label: 'Performance', command: 'drupal-perf', hint: 'Analyse performance' },
       ],
     },
   ],

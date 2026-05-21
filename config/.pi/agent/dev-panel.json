@@ -1,47 +1,47 @@
 {
   "title": "Drupal Dev Panel",
-  "subtitle": "Atalhos para desenvolvimento Drupal. Clique para executar.",
+  "subtitle": "Shortcuts for Drupal development. Click to run.",
   "groups": [
     {
       "label": "Stack",
       "buttons": [
-        { "label": "🚀 Start Stack",   "command": "drupal-serve",          "hint": "Inicia PHP + nginx + BD (escolhe BD)" },
-        { "label": "⏹ Stop",           "command": "drupal-stack stop",     "hint": "Para containers (preserva dados)" },
-        { "label": "🔄 Restart",       "command": "drupal-stack restart",  "hint": "Reinicia containers" },
-        { "label": "📊 Status",        "command": "drupal-stack status",   "hint": "Estado dos containers" }
+        { "label": "🚀 Start Stack",   "command": "drupal-serve",          "hint": "Starts PHP + nginx + DB (choose DB)" },
+        { "label": "⏹ Stop",           "command": "drupal-stack stop",     "hint": "Stop containers (data preserved)" },
+        { "label": "🔄 Restart",       "command": "drupal-stack restart",  "hint": "Restart containers" },
+        { "label": "📊 Status",        "command": "drupal-stack status",   "hint": "Container status" }
       ]
     },
     {
-      "label": "Projecto",
+      "label": "Project",
       "buttons": [
-        { "label": "🚀 Init",          "command": "drupal-init",     "hint": "Cria projecto Drupal via Composer" },
-        { "label": "🔄 Cache Rebuild", "command": "drupal-cr",       "hint": "Limpa caches (drush cr)" },
-        { "label": "📋 Status",        "command": "drupal-status",   "hint": "Estado do projecto e módulos" }
+        { "label": "🚀 Init",          "command": "drupal-init",     "hint": "Create Drupal project via Composer" },
+        { "label": "🔄 Cache Rebuild", "command": "drupal-cr",       "hint": "Clear caches (drush cr)" },
+        { "label": "📋 Status",        "command": "drupal-status",   "hint": "Project and module status" }
       ]
     },
     {
-      "label": "Código",
+      "label": "Code",
       "buttons": [
-        { "label": "📦 New Module",    "command": "drupal-module",   "hint": "Scaffolda módulo custom" },
-        { "label": "🧪 Analyze",       "command": "drupal-analyze",  "hint": "PHPStan + PHPCS no código custom" },
-        { "label": "🔧 Fix",           "command": "drupal-fix",      "hint": "Corrige erros detectados" },
-        { "label": "🧩 Install Module","command": "drupal-install",  "hint": "Instala módulo contrib" }
+        { "label": "📦 New Module",    "command": "drupal-module",   "hint": "Scaffold custom module" },
+        { "label": "🧪 Analyze",       "command": "drupal-analyze",  "hint": "PHPStan + PHPCS on custom code" },
+        { "label": "🔧 Fix",           "command": "drupal-fix",      "hint": "Fix detected errors" },
+        { "label": "🧩 Install Module","command": "drupal-install",  "hint": "Install contrib module" }
       ]
     },
     {
-      "label": "Base de Dados",
+      "label": "Database",
       "buttons": [
-        { "label": "💾 DB Export",     "command": "drupal-db-export", "hint": "Exporta DB para ficheiro SQL" },
-        { "label": "📥 DB Import",     "command": "drupal-db-import", "hint": "Importa DB de ficheiro SQL" },
-        { "label": "🔍 DB Query",      "command": "drupal-db-query",  "hint": "Executa query SQL" }
+        { "label": "💾 DB Export",     "command": "drupal-db-export", "hint": "Export DB to SQL file" },
+        { "label": "📥 DB Import",     "command": "drupal-db-import", "hint": "Import DB from SQL file" },
+        { "label": "🔍 DB Query",      "command": "drupal-db-query",  "hint": "Run SQL query" }
       ]
     },
     {
-      "label": "Diagnóstico",
+      "label": "Diagnostics",
       "buttons": [
-        { "label": "📋 Logs",          "command": "drupal-logs",     "hint": "Mostra últimos logs do watchdog" },
-        { "label": "🐛 Debug",         "command": "drupal-debug",    "hint": "Analisa e diagnostica erros" },
-        { "label": "⚡ Performance",    "command": "drupal-perf",     "hint": "Analisa performance e bottlenecks" }
+        { "label": "📋 Logs",          "command": "drupal-logs",     "hint": "Show latest watchdog logs" },
+        { "label": "🐛 Debug",         "command": "drupal-debug",    "hint": "Analyse and diagnose errors" },
+        { "label": "⚡ Performance",    "command": "drupal-perf",     "hint": "Analyse performance and bottlenecks" }
       ]
     }
   ]

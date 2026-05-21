@@ -28,12 +28,12 @@ function normalizeSeverity(severity: string | number): SeverityGroup {
 }
 
 const SEVERITY_META: Record<SeverityGroup, { label: string; dot: string; badge: string }> = {
-  all:     { label: 'Todos',  dot: 'bg-navy-400',     badge: 'bg-navy-600 text-navy-300' },
-  error:   { label: 'Erro',   dot: 'bg-accent-red',   badge: 'bg-red-900/40 text-red-300' },
-  warning: { label: 'Aviso',  dot: 'bg-yellow-400',   badge: 'bg-yellow-900/40 text-yellow-300' },
-  notice:  { label: 'Nota',   dot: 'bg-blue-400',     badge: 'bg-blue-900/40 text-blue-300' },
-  info:    { label: 'Info',   dot: 'bg-accent-green', badge: 'bg-green-900/40 text-green-300' },
-  debug:   { label: 'Debug',  dot: 'bg-navy-400',     badge: 'bg-navy-700 text-navy-400' },
+  all:     { label: 'All',     dot: 'bg-navy-400',     badge: 'bg-navy-600 text-navy-300' },
+  error:   { label: 'Error',   dot: 'bg-accent-red',   badge: 'bg-red-900/40 text-red-300' },
+  warning: { label: 'Warning', dot: 'bg-yellow-400',   badge: 'bg-yellow-900/40 text-yellow-300' },
+  notice:  { label: 'Notice',  dot: 'bg-blue-400',     badge: 'bg-blue-900/40 text-blue-300' },
+  info:    { label: 'Info',    dot: 'bg-accent-green', badge: 'bg-green-900/40 text-green-300' },
+  debug:   { label: 'Debug',   dot: 'bg-navy-400',     badge: 'bg-navy-700 text-navy-400' },
 }
 
 const FILTER_ORDER: SeverityGroup[] = ['all', 'error', 'warning', 'notice', 'info', 'debug']
@@ -54,7 +54,7 @@ function formatDate(entry: WatchdogEntry): string {
   if (!entry.timestamp) return ''
   const n = typeof entry.timestamp === 'string' ? parseInt(entry.timestamp, 10) : entry.timestamp
   if (isNaN(n) || n <= 0) return String(entry.timestamp)
-  return new Date(n * 1000).toLocaleString('pt-PT', {
+  return new Date(n * 1000).toLocaleString('en-GB', {
     day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
   })
 }
@@ -203,7 +203,7 @@ export function WatchdogPanel() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Pesquisar..."
+            placeholder="Search..."
             className="bg-navy-700 text-xs text-gray-300 pl-6 pr-2 py-1 rounded border border-navy-500 focus:outline-none focus:border-drupal-blue w-40 placeholder:text-navy-400"
           />
         </div>
@@ -212,7 +212,7 @@ export function WatchdogPanel() {
           onClick={reload}
           disabled={loading || updating}
           className="text-navy-400 hover:text-gray-300 disabled:opacity-40 transition-colors"
-          title="Recarregar da cache"
+          title="Reload from cache"
         >
           <RotateCcw size={11} className={loading && !updating ? 'animate-spin' : ''} />
         </button>
@@ -221,7 +221,7 @@ export function WatchdogPanel() {
           onClick={handleRefresh}
           disabled={isAgentRunning || updating}
           className="flex items-center gap-1 text-[10px] bg-drupal-blue hover:bg-drupal-blue-light disabled:opacity-50 disabled:cursor-not-allowed text-white px-2 py-1 rounded transition-colors flex-shrink-0"
-          title="Executar drupal-watchdog-cache e recarregar"
+          title="Run drupal-watchdog-cache and reload"
         >
           <RefreshCw size={10} className={updating ? 'animate-spin' : ''} />
           Refresh
@@ -255,7 +255,7 @@ export function WatchdogPanel() {
         {loading && (
           <div className="flex items-center justify-center gap-2 py-16 text-navy-400">
             <Loader2 size={14} className="animate-spin" />
-            <span className="text-xs">A carregar...</span>
+            <span className="text-xs">Loading...</span>
           </div>
         )}
 
@@ -269,8 +269,8 @@ export function WatchdogPanel() {
               className="flex items-center gap-1.5 text-xs bg-drupal-blue hover:bg-drupal-blue-light disabled:opacity-50 text-white px-3 py-1.5 rounded transition-colors"
             >
               {updating
-                ? <><Loader2 size={11} className="animate-spin" /> A executar...</>
-                : <><RefreshCw size={11} /> Gerar watchdog</>
+                ? <><Loader2 size={11} className="animate-spin" /> Running...</>
+                : <><RefreshCw size={11} /> Generate watchdog</>
               }
             </button>
           </div>
@@ -279,8 +279,8 @@ export function WatchdogPanel() {
         {!loading && !error && entries !== null && visible.length === 0 && (
           <div className="text-xs text-navy-400 text-center py-16">
             {search || filter !== 'all'
-              ? 'Sem resultados para os filtros seleccionados'
-              : 'Sem registos no watchdog'}
+              ? 'No results for selected filters'
+              : 'No watchdog entries'}
           </div>
         )}
 
@@ -289,9 +289,9 @@ export function WatchdogPanel() {
             <thead className="sticky top-0 bg-navy-800 z-10">
               <tr className="text-navy-400 border-b border-navy-600">
                 <th className="text-left px-3 py-1.5 font-medium w-20">Sev.</th>
-                <th className="text-left px-3 py-1.5 font-medium w-28">Tipo</th>
-                <th className="text-left px-3 py-1.5 font-medium">Mensagem</th>
-                <th className="text-right px-3 py-1.5 font-medium w-28 whitespace-nowrap">Data/hora</th>
+                <th className="text-left px-3 py-1.5 font-medium w-28">Type</th>
+                <th className="text-left px-3 py-1.5 font-medium">Message</th>
+                <th className="text-right px-3 py-1.5 font-medium w-28 whitespace-nowrap">Date/Time</th>
               </tr>
             </thead>
             <tbody>

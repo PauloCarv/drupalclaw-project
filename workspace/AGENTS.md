@@ -19,25 +19,25 @@ If `docker info` succeeds → Docker is available. Full stop.
 If a previous message said Docker was unavailable, that information is STALE — verify again.
 The socket IS mounted: `-v /var/run/docker.sock:/var/run/docker.sock` is confirmed in docker-compose.yml.
 
-## Primeiro Uso — Onboarding
+## First Use — Onboarding
 
-Quando um utilizador abre o workspace pela primeira vez (sem projecto Drupal criado), guia-o nesta ordem:
+When a user opens the workspace for the first time (no Drupal project created yet), guide them in this order:
 
-1. **Iniciar a stack** — `drupal-serve` (ou `drupal-stack start`)
-   - Arranca os containers Docker: nginx + PHP-FPM + base de dados
-   - A stack pode e deve ser iniciada ANTES de existir um projecto Drupal
-   - Perguntar que BD quer: mariadb (recomendado) | postgres | sqlite
-2. **Criar o projecto Drupal** — `drupal-init`
-   - Cria o projecto via Composer dentro da stack já activa
-   - A base de dados já está pronta — não é necessário reconfigurá-la
-3. **Instalar o Drupal** — via browser no URL da stack, ou:
+1. **Start the stack** — `drupal-serve` (or `drupal-stack start`)
+   - Starts the Docker containers: nginx + PHP-FPM + database
+   - The stack can and should be started BEFORE a Drupal project exists
+   - Ask which DB they want: mariadb (recommended) | postgres | sqlite
+2. **Create the Drupal project** — `drupal-init`
+   - Creates the project via Composer inside the already-running stack
+   - The database is already ready — no need to reconfigure it
+3. **Install Drupal** — via browser at the stack URL, or:
    ```bash
    vendor/bin/drush site:install --db-url=mysql://drupal:drupal@db/drupal -y
    ```
 
-**Regra**: Se o utilizador pede `drupal-init` sem a stack activa, executa `drupal-serve` primeiro e só depois `drupal-init`. Nunca instalar Drupal sem a stack a correr (excepto SQLite sem containers).
+**Rule**: If the user requests `drupal-init` without an active stack, run `drupal-serve` first and only then `drupal-init`. Never install Drupal without the stack running (except SQLite without containers).
 
-**Detecção de primeiro uso**: Verificar se `/workspace/drupal/composer.json` existe e tem `drupal/core`. Se não existir, é primeiro uso — apresentar o plano de onboarding acima antes de executar qualquer outra acção.
+**First-use detection**: Check whether `/workspace/drupal/composer.json` exists and contains `drupal/core`. If not, it is first use — present the onboarding plan above before executing any other action.
 
 ## Core capabilities
 
@@ -69,23 +69,23 @@ The workspace uses sibling Docker containers for the development environment:
 
 ## Project commands
 
-| Comando | Descrição |
+| Command | Description |
 |---|---|
-| `drupal-serve` | Inicia stack Docker (PHP + nginx + BD) |
-| `drupal-stack [action]` | Gestão da stack: start/stop/status/restart/destroy |
-| `drupal-init` | Cria projecto Drupal via Composer |
+| `drupal-serve` | Start Docker stack (PHP + nginx + DB) |
+| `drupal-stack [action]` | Stack management: start/stop/status/restart/destroy |
+| `drupal-init` | Create Drupal project via Composer |
 | `drupal-cr` | Cache rebuild (drush cr) |
-| `drupal-status` | Estado do projecto, módulos, BD |
-| `drupal-module [name]` | Scaffolda módulo custom |
-| `drupal-analyze` | PHPStan + PHPCS no código custom |
+| `drupal-status` | Project status: modules, DB, config |
+| `drupal-module [name]` | Scaffold a custom module |
+| `drupal-analyze` | PHPStan + PHPCS on custom code |
 | `drupal-fix` | Auto-fix PHPCS/PHPCBF |
-| `drupal-install [module]` | Instala módulo contrib |
-| `drupal-db-export` | Exporta BD para SQL |
-| `drupal-db-import [file]` | Importa dump SQL |
-| `drupal-db-query [sql]` | Executa query SQL |
-| `drupal-logs` | Últimos logs do watchdog |
-| `drupal-debug` | Diagnóstico de erros |
-| `drupal-perf` | Análise de performance |
+| `drupal-install [module]` | Install a contrib module |
+| `drupal-db-export` | Export DB to SQL dump |
+| `drupal-db-import [file]` | Import SQL dump |
+| `drupal-db-query [sql]` | Run a SQL query |
+| `drupal-logs` | Latest watchdog logs |
+| `drupal-debug` | Error diagnostics |
+| `drupal-perf` | Performance analysis |
 
 ## Available tools
 
@@ -128,7 +128,7 @@ This is the canonical file that both the agent (pi-mcp-adapter) and the DrupalCl
 1. **Read before write** — always `cat /workspace/.pi/mcp.json` first to merge, never overwrite blindly
 2. **Create if missing** — `mkdir -p /workspace/.pi && echo '{"mcpServers":{}}' > /workspace/.pi/mcp.json` if it doesn't exist yet
 3. **Never use the global path** (`~/.pi/agent/mcp.json`) — the UI won't see it
-4. **After saving**, tell the user: "Guarda o ficheiro. Usa `/restart` no chat para activar o novo MCP."
+4. **After saving**, tell the user: "File saved. Use `/restart` in the chat to activate the new MCP."
 5. **Secrets in env** — write API keys/tokens into the `env` block, never in `args`
 
 ## Working style
