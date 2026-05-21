@@ -1,35 +1,35 @@
 ---
 name: drupal-db-export
-description: Exporta a base de dados Drupal para ficheiro SQL.
+description: Exports the Drupal database to a SQL file.
 distribution: public
 ---
 
 # drupal-db-export
 
-Exporta a BD Drupal para um dump SQL.
+Exports the Drupal DB to a SQL dump.
 
 ## Steps
 
-1. Resolver drush e exportar dump:
+1. Resolve drush and export dump:
    ```bash
    PHP_CONTAINER=$(docker ps --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -E "drupal.*(php|fpm)" | head -1)
    if [[ -n "$PHP_CONTAINER" ]]; then
-     echo "🐳 Stack activa: $PHP_CONTAINER"
+     echo "🐳 Active stack: $PHP_CONTAINER"
      DRUSH="docker exec -i -w /var/www/html $PHP_CONTAINER vendor/bin/drush"
    elif [[ -x "vendor/bin/drush" ]]; then
      DRUSH="vendor/bin/drush"
    else
-     echo "❌ Stack Docker não está activa e drush local não encontrado."
-     echo "   Para iniciar a stack: usa drupal-serve"
+     echo "❌ Docker stack not active and local drush not found."
+     echo "   To start the stack: use drupal-serve"
      exit 1
    fi
 
    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
    DUMP_FILE="/workspace/db-export-$TIMESTAMP.sql.gz"
 
-   echo "💾 A exportar base de dados..."
-   # sql:dump escreve para stdout; gzip localmente para evitar problemas de paths entre containers
+   echo "💾 Exporting database..."
+   # sql:dump writes to stdout; gzip locally to avoid path issues between containers
    $DRUSH sql:dump | gzip > "$DUMP_FILE"
-   echo "✅ Exportado para $DUMP_FILE"
+   echo "✅ Exported to $DUMP_FILE"
    ls -lh "$DUMP_FILE"
    ```

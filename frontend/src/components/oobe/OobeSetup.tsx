@@ -182,7 +182,7 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
       // Wait for any previous /login to finish, then send a neutral message
       // to clear any pending command state before __step1
       await new Promise(r => setTimeout(r, 800))
-      try { await providersApi.sendAgentMessage('ok') } catch { /* ignore */ }
+      try { await providersApi.sendAgentMessage('/login __clear') } catch { /* ignore */ }
       await new Promise(r => setTimeout(r, 300))
 
       const result = await sendStep1()

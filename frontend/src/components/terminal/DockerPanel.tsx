@@ -40,7 +40,7 @@ export function DockerPanel() {
               <tr className="text-[9px] text-navy-500 uppercase tracking-wider border-b border-navy-700">
                 <th className="text-left px-2 py-1 font-normal w-1/2">container</th>
                 <th className="text-left px-2 py-1 font-normal">status</th>
-                <th className="text-right px-2 py-1 font-normal">acções</th>
+                <th className="text-right px-2 py-1 font-normal">actions</th>
               </tr>
             </thead>
             <tbody>

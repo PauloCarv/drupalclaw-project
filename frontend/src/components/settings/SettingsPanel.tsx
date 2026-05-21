@@ -138,13 +138,13 @@ export function SettingsPanel() {
           <div className="flex items-center justify-between py-1">
             <div className="flex-1 min-w-0 pr-2">
               <span className="text-[11px] text-navy-300 block">Auto-compact</span>
-              <span className="text-[10px] text-navy-500 block leading-tight">Compacta automaticamente quando o contexto está quase cheio, antes de enviar</span>
+              <span className="text-[10px] text-navy-500 block leading-tight">Automatically compacts when context is nearly full, before sending</span>
             </div>
             <button
               onClick={handleAutoCompactToggle}
               disabled={autoCompact === null || togglingAutoCompact}
               className="flex-shrink-0"
-              title={autoCompact ? 'Desactivar auto-compact' : 'Activar auto-compact'}
+              title={autoCompact ? 'Disable auto-compact' : 'Enable auto-compact'}
             >
               {togglingAutoCompact || autoCompact === null ? (
                 <Loader2 size={12} className="animate-spin text-navy-400" />

@@ -56,7 +56,10 @@ export function ChatPanel() {
 
   // Filter messages to the active session's boundaries.
   // Local optimistic messages (local-*) only show in the current (live) session.
-  const messages = activeSession
+  const isAuthMessage = (m: { role: string; content: string }) =>
+    m.role === 'user' && m.content.startsWith('/login')
+
+  const messages = (activeSession
     ? (() => {
         const { start, end } = getSessionBounds(activeSession)
         return allMessages.filter((m) => {
@@ -69,6 +72,7 @@ export function ChatPanel() {
         })
       })()
     : allMessages
+  ).filter(m => !isAuthMessage(m))
 
   const { data: allCommands = [] } = useQuery({
     queryKey: ['commands'],
@@ -256,7 +260,7 @@ export function ChatPanel() {
         <div className="flex items-center gap-2 px-3 py-1.5 border-b border-navy-500 flex-shrink-0">
           <span className="text-[10px] text-navy-400 truncate flex-1">{activeSession.name}</span>
           {!isCurrentSession && (
-            <span className="text-[10px] text-navy-400">histórico</span>
+            <span className="text-[10px] text-navy-400">history</span>
           )}
         </div>
       )}
@@ -266,15 +270,15 @@ export function ChatPanel() {
           <Loader2 size={11} className="animate-spin flex-shrink-0" />
           <span>
             {streamingContent
-              ? 'A receber resposta...'
+              ? 'Receiving response...'
               : isStreaming
-                ? 'A processar...'
-                : 'A continuar a processar...'}
+                ? 'Processing...'
+                : 'Continuing to process...'}
           </span>
           {(isStreaming || isAgentRunning) && (
-            <button onClick={cancelStreaming} className="ml-auto text-navy-300 hover:text-accent-red transition-colors flex items-center gap-1" title="Aborta a resposta e quaisquer comandos em execução">
+            <button onClick={cancelStreaming} className="ml-auto text-navy-300 hover:text-accent-red transition-colors flex items-center gap-1" title="Abort the response and any running commands">
               <Square size={10} />
-              <span>Parar</span>
+              <span>Stop</span>
             </button>
           )}
         </div>
@@ -322,7 +326,7 @@ export function ChatPanel() {
                   <span className="w-1.5 h-1.5 rounded-full bg-ai-teal animate-bounce" style={{ animationDelay: '150ms' }} />
                   <span className="w-1.5 h-1.5 rounded-full bg-ai-teal animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
-                <span className="text-xs text-navy-300">A pensar...</span>
+                <span className="text-xs text-navy-300">Thinking...</span>
               </div>
             </div>
           </div>
@@ -346,7 +350,7 @@ export function ChatPanel() {
               </button>
             ))}
             <div className="px-3 py-1 border-t border-navy-600 flex gap-3 text-[9px] text-navy-400">
-              <span>↑↓ navegar</span><span>Tab seleccionar</span><span>Esc fechar</span>
+              <span>↑↓ navigate</span><span>Tab select</span><span>Esc close</span>
             </div>
           </div>
         )}
@@ -374,7 +378,7 @@ export function ChatPanel() {
             disabled={isStreaming || isAgentRunning}
             onClick={() => fileInputRef.current?.click()}
             className="text-navy-300 hover:text-ai-teal p-0.5 flex-shrink-0 transition-colors"
-            title="Anexar ficheiro"
+            title="Attach file"
           >
             <Paperclip size={14} />
           </button>
@@ -384,7 +388,7 @@ export function ChatPanel() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={(isStreaming || isAgentRunning) ? 'A aguardar resposta...' : 'Pergunta ou / para comandos... (Shift+Enter para nova linha)'}
+            placeholder={(isStreaming || isAgentRunning) ? 'Waiting for response...' : 'Ask anything or / for commands... (Shift+Enter for new line)'}
             className="flex-1 bg-transparent text-sm text-gray-200 placeholder:text-navy-400 outline-none resize-none leading-relaxed"
             style={{ minHeight: '22px', maxHeight: '160px' }}
             rows={1}
@@ -392,7 +396,7 @@ export function ChatPanel() {
           />
 
           {(isStreaming || isAgentRunning) ? (
-            <button type="button" onClick={cancelStreaming} className="text-accent-red hover:text-red-400 flex-shrink-0" title="Parar agente e processos em execução">
+            <button type="button" onClick={cancelStreaming} className="text-accent-red hover:text-red-400 flex-shrink-0" title="Stop agent and running processes">
               <Square size={16} />
             </button>
           ) : (
@@ -406,7 +410,7 @@ export function ChatPanel() {
           )}
         </div>
         <p className="mt-1 text-[9px] text-navy-400 pl-1">
-          Enter para enviar · Shift+Enter para nova linha · arrasta ficheiros para anexar
+          Enter to send · Shift+Enter for new line · drag files to attach
         </p>
       </form>
     </div>
@@ -483,7 +487,7 @@ function MessageBubble({
             <button
               onClick={onRetry}
               className="text-navy-400 hover:text-ai-teal transition-colors"
-              title="Tentar novamente"
+              title="Retry"
             >
               <RotateCw size={10} />
             </button>
@@ -492,7 +496,7 @@ function MessageBubble({
             <button
               onClick={onCancel}
               className="text-navy-400 hover:text-accent-red transition-colors"
-              title="Cancelar"
+              title="Cancel"
             >
               <X size={10} />
             </button>

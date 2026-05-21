@@ -1,51 +1,51 @@
 ---
 name: drupal-install
-description: Instala um módulo contrib via Composer e activa com Drush.
+description: Installs a contrib module via Composer and enables it with Drush.
 distribution: public
 ---
 
 # drupal-install
 
-Instala módulo contrib Drupal.
+Installs a Drupal contrib module.
 
 ## Steps
 
-1. O utilizador deve fornecer o nome do módulo (ex: `drupal-install admin_toolbar`).
+1. The user must provide the module name (e.g. `drupal-install admin_toolbar`).
 
-2. Resolver e instalar via Composer:
+2. Resolve and install via Composer:
    ```bash
    MODULE="${1:-}"
    if [[ -z "$MODULE" ]]; then
-     echo "❌ Indica o nome do módulo. Ex: drupal-install admin_toolbar"
+     echo "❌ Provide the module name. Ex: drupal-install admin_toolbar"
      exit 1
    fi
 
    PHP_CONTAINER=$(docker ps --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -E "drupal.*(php|fpm)" | head -1)
    if [[ -n "$PHP_CONTAINER" ]]; then
-     echo "🐳 Stack activa: $PHP_CONTAINER"
+     echo "🐳 Active stack: $PHP_CONTAINER"
      DRUSH="docker exec -i -w /var/www/html $PHP_CONTAINER vendor/bin/drush"
      COMPOSER_CMD="docker exec -i -w /var/www/html $PHP_CONTAINER composer"
    elif [[ -x "vendor/bin/drush" ]]; then
      DRUSH="vendor/bin/drush"
      COMPOSER_CMD="composer"
    else
-     echo "❌ Stack Docker não está activa e drush local não encontrado."
-     echo "   Para iniciar a stack: usa drupal-serve"
+     echo "❌ Docker stack not active and local drush not found."
+     echo "   To start the stack: use drupal-serve"
      exit 1
    fi
 
-   echo "📦 A instalar drupal/$MODULE..."
+   echo "📦 Installing drupal/$MODULE..."
    $COMPOSER_CMD require "drupal/$MODULE" --no-interaction
    ```
 
-3. Activar com Drush:
+3. Enable with Drush:
    ```bash
    if [[ -n "$DRUSH" ]]; then
-     echo "🔌 A activar $MODULE..."
+     echo "🔌 Enabling $MODULE..."
      $DRUSH en "$MODULE" -y
      $DRUSH cache:rebuild
-     echo "✅ Módulo $MODULE instalado e activo."
+     echo "✅ Module $MODULE installed and enabled."
    else
-     echo "⚠ Módulo baixado mas não activado (drush não disponível)."
+     echo "⚠ Module downloaded but not enabled (drush not available)."
    fi
    ```

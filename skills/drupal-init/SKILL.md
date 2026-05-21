@@ -1,130 +1,130 @@
 ---
 name: drupal-init
-description: Inicializa um projecto Drupal em /workspace/drupal — novo via Composer ou existente via Git.
+description: Initialises a Drupal project in /workspace/drupal — new via Composer or existing via Git.
 distribution: public
 ---
 
 # drupal-init
 
-Inicializa o projecto Drupal em `/workspace/drupal`. Suporta três cenários:
-- Projecto novo via Composer (drupal/recommended-project)
-- Repositório Git existente (clone de URL)
-- Pasta já existente (avisa e pergunta antes de sobrescrever)
+Initialises the Drupal project in `/workspace/drupal`. Supports three scenarios:
+- New project via Composer (drupal/recommended-project)
+- Existing Git repository (clone from URL)
+- Existing folder (warns and asks before overwriting)
 
 ---
 
-## Step 1 — Verificar se já existe projecto
+## Step 1 — Check if project already exists
 
 ```bash
 DRUPAL_DIR="/workspace/drupal"
 
 if [[ -f "${DRUPAL_DIR}/composer.json" ]] && grep -q "drupal/core" "${DRUPAL_DIR}/composer.json"; then
-  PROJECT_NAME=$(jq -r '.name // "sem nome"' "${DRUPAL_DIR}/composer.json" 2>/dev/null || echo "desconhecido")
-  echo "⚠️  Já existe um projecto Drupal em $DRUPAL_DIR"
-  echo "   Nome: $PROJECT_NAME"
+  PROJECT_NAME=$(jq -r '.name // "unnamed"' "${DRUPAL_DIR}/composer.json" 2>/dev/null || echo "unknown")
+  echo "⚠️  A Drupal project already exists at $DRUPAL_DIR"
+  echo "   Name: $PROJECT_NAME"
   echo ""
-  echo "❌ ATENÇÃO: Continuar vai APAGAR todos os ficheiros e a base de dados!"
+  echo "❌ WARNING: Continuing will DELETE all files and the database!"
   echo "PROJECT_EXISTS=true"
   echo "PROJECT_NAME=$PROJECT_NAME"
 elif [[ -d "${DRUPAL_DIR}" ]] && [[ "$(ls -A ${DRUPAL_DIR} 2>/dev/null | grep -v '^\.gitkeep$')" != "" ]]; then
-  echo "⚠️  A pasta $DRUPAL_DIR existe mas não parece um projecto Drupal válido."
+  echo "⚠️  The folder $DRUPAL_DIR exists but does not appear to be a valid Drupal project."
   echo "PROJECT_EXISTS=partial"
 else
   echo "PROJECT_EXISTS=false"
 fi
 ```
 
-**Se PROJECT_EXISTS=true ou partial**, perguntar ao utilizador antes de continuar:
+**If PROJECT_EXISTS=true or partial**, ask the user before continuing:
 
-> Já existe conteúdo em `/workspace/drupal` (`$PROJECT_NAME`).
-> Queres **apagar tudo e começar do zero**?
-> - `sim` — apaga o directório e continua
-> - `não` — cancela (padrão)
+> Content already exists in `/workspace/drupal` (`$PROJECT_NAME`).
+> Do you want to **delete everything and start fresh**?
+> - `yes` — deletes the directory and continues
+> - `no` — cancels (default)
 
-Se o utilizador responder `sim`:
+If the user answers `yes`:
 ```bash
-# Parar stack se estiver a correr
+# Stop stack if running
 if [[ -f "/workspace/docker-compose.drupal.yml" ]]; then
   docker compose -f /workspace/docker-compose.drupal.yml -p drupal-dev down -v 2>/dev/null || true
-  echo "⏹️  Stack parada e volumes removidos."
+  echo "⏹️  Stack stopped and volumes removed."
 fi
 rm -rf "$DRUPAL_DIR"
 mkdir -p "$DRUPAL_DIR"
-echo "🗑️  Directório $DRUPAL_DIR limpo."
+echo "🗑️  Directory $DRUPAL_DIR cleared."
 ```
 
-Se o utilizador responder `não` (padrão):
+If the user answers `no` (default):
 ```bash
-echo "ℹ️  Operação cancelada. Projecto existente preservado."
-echo "   Usa 'drupal-serve' para iniciar a stack se ainda não estiver a correr."
+echo "ℹ️  Operation cancelled. Existing project preserved."
+echo "   Use 'drupal-serve' to start the stack if it is not already running."
 exit 0
 ```
 
-**Se PROJECT_EXISTS=false**, continuar directamente para o Step 2 sem perguntar.
+**If PROJECT_EXISTS=false**, proceed directly to Step 2 without asking.
 
 ---
 
-## Step 2 — Tipo de projecto
+## Step 2 — Project type
 
-Perguntar ao utilizador:
+Ask the user:
 
-> Como queres inicializar o projecto Drupal?
+> How do you want to initialise the Drupal project?
 >
-> 1. **Novo projecto** — instalar Drupal de raiz via Composer
-> 2. **Repositório Git existente** — clonar de URL (GitHub, GitLab, Bitbucket, etc.)
+> 1. **New project** — install Drupal from scratch via Composer
+> 2. **Existing Git repository** — clone from URL (GitHub, GitLab, Bitbucket, etc.)
 
-Guardar a escolha como `INIT_TYPE=new` ou `INIT_TYPE=git`.
+Save the choice as `INIT_TYPE=new` or `INIT_TYPE=git`.
 
 ---
 
-## Step 3a — Se INIT_TYPE=git: clonar repositório
+## Step 3a — If INIT_TYPE=git: clone repository
 
-Perguntar ao utilizador:
+Ask the user:
 
-> Qual é o URL do repositório Git?
-> (ex: `https://github.com/utilizador/meu-drupal.git` ou `git@github.com:utilizador/meu-drupal.git`)
+> What is the Git repository URL?
+> (e.g. `https://github.com/user/my-drupal.git` or `git@github.com:user/my-drupal.git`)
 
 ```bash
-# GIT_URL vem da resposta do utilizador
-GIT_URL="<URL fornecido>"
+# GIT_URL comes from the user's answer
+GIT_URL="<provided URL>"
 
-echo "🔄 A clonar repositório..."
+echo "🔄 Cloning repository..."
 git clone "$GIT_URL" /workspace/drupal
 cd /workspace/drupal
 
-# Instalar dependências se composer.json existir
+# Install dependencies if composer.json exists
 if [[ -f "composer.json" ]]; then
-  echo "📦 A instalar dependências Composer..."
+  echo "📦 Installing Composer dependencies..."
   composer install --no-interaction
 fi
 
-echo "✅ Repositório clonado com sucesso."
+echo "✅ Repository cloned successfully."
 echo "INIT_DONE=true"
 echo "NEEDS_COMPOSER=false"
 ```
 
-Após clone, avançar para o **Step 4** (importação de dados).
+After cloning, proceed to **Step 4** (data import).
 
 ---
 
-## Step 3b — Se INIT_TYPE=new: criar projecto via Composer
+## Step 3b — If INIT_TYPE=new: create project via Composer
 
 ```bash
 mkdir -p /workspace/drupal
 cd /workspace/drupal
-echo "📦 A criar projecto Drupal via Composer (pode demorar alguns minutos)..."
+echo "📦 Creating Drupal project via Composer (may take a few minutes)..."
 composer create-project drupal/recommended-project . --no-interaction
 ```
 
 ```bash
 cd /workspace/drupal
-echo "🔧 A instalar Drush..."
+echo "🔧 Installing Drush..."
 composer require drush/drush --no-interaction
 ```
 
 ```bash
 cd /workspace/drupal
-echo "📦 A instalar módulos contrib essenciais..."
+echo "📦 Installing essential contrib modules..."
 composer require drupal/admin_toolbar drupal/pathauto drupal/token drupal/metatag --no-interaction
 ```
 
@@ -133,7 +133,7 @@ cd /workspace/drupal
 if [[ -f web/sites/default/default.settings.php ]]; then
   cp web/sites/default/default.settings.php web/sites/default/settings.php
   chmod 666 web/sites/default/settings.php
-  echo "✅ settings.php criado."
+  echo "✅ settings.php created."
 fi
 echo "INIT_DONE=true"
 echo "NEEDS_COMPOSER=false"
@@ -141,80 +141,80 @@ echo "NEEDS_COMPOSER=false"
 
 ---
 
-## Step 4 — Importação de base de dados (opcional)
+## Step 4 — Database import (optional)
 
-Perguntar ao utilizador:
+Ask the user:
 
-> Tens um dump SQL para importar?
-> - `sim` — indica o caminho do ficheiro (ex: `/workspace/backup.sql` ou `/workspace/backup.sql.gz`)
-> - `não` — continuar sem importar
+> Do you have a SQL dump to import?
+> - `yes` — provide the file path (e.g. `/workspace/backup.sql` or `/workspace/backup.sql.gz`)
+> - `no` — continue without importing
 
-**Se sim**, perguntar o caminho e executar:
+**If yes**, ask for the path and run:
 
 ```bash
-# SQL_FILE vem da resposta do utilizador
-SQL_FILE="<caminho fornecido>"
+# SQL_FILE comes from the user's answer
+SQL_FILE="<provided path>"
 
-# Verificar se stack está a correr para importar via container
+# Check if stack is running to import via container
 STACK_RUNNING=false
 if docker compose -f "/workspace/docker-compose.drupal.yml" -p drupal-dev ps --status running 2>/dev/null | grep -q "db"; then
   STACK_RUNNING=true
 fi
 
 if [[ "$STACK_RUNNING" == "true" ]]; then
-  echo "📥 A importar dump SQL via stack Docker..."
+  echo "📥 Importing SQL dump via Docker stack..."
   if [[ "$SQL_FILE" == *.gz ]]; then
     gunzip -c "$SQL_FILE" | docker compose -f /workspace/docker-compose.drupal.yml -p drupal-dev exec -T db mysql -udrupal -pdrupal drupal
   else
     docker compose -f /workspace/docker-compose.drupal.yml -p drupal-dev exec -T db mysql -udrupal -pdrupal drupal < "$SQL_FILE"
   fi
-  echo "✅ Base de dados importada."
+  echo "✅ Database imported."
 else
-  echo "⚠️  Stack não está a correr — a importação SQL não pode ser feita agora."
-  echo "   Inicia a stack com 'drupal-serve' e depois importa com 'drupal-db-import $SQL_FILE'."
+  echo "⚠️  Stack not running — SQL import cannot be done now."
+  echo "   Start the stack with 'drupal-serve' then import with 'drupal-db-import $SQL_FILE'."
 fi
 ```
 
-**Se não**, continuar.
+**If no**, continue.
 
 ---
 
-## Step 5 — Importação de ficheiros sites/default/files (opcional)
+## Step 5 — File import for sites/default/files (optional)
 
-Perguntar ao utilizador:
+Ask the user:
 
-> Tens ficheiros de media/uploads para importar? (zip ou tar.gz de `sites/default/files`)
-> - `sim` — indica o caminho do arquivo
-> - `não` — continuar
+> Do you have media/upload files to import? (zip or tar.gz of `sites/default/files`)
+> - `yes` — provide the archive path
+> - `no` — continue
 
-**Se sim**, perguntar o caminho e executar:
+**If yes**, ask for the path and run:
 
 ```bash
-# ARCHIVE_FILE vem da resposta do utilizador
-ARCHIVE_FILE="<caminho fornecido>"
+# ARCHIVE_FILE comes from the user's answer
+ARCHIVE_FILE="<provided path>"
 FILES_DIR="/workspace/drupal/web/sites/default/files"
 
 mkdir -p "$FILES_DIR"
 
-echo "📂 A extrair ficheiros para $FILES_DIR..."
+echo "📂 Extracting files to $FILES_DIR..."
 if [[ "$ARCHIVE_FILE" == *.tar.gz ]] || [[ "$ARCHIVE_FILE" == *.tgz ]]; then
   tar -xzf "$ARCHIVE_FILE" -C "$FILES_DIR" --strip-components=1 2>/dev/null || tar -xzf "$ARCHIVE_FILE" -C "$FILES_DIR"
 elif [[ "$ARCHIVE_FILE" == *.zip ]]; then
   unzip -o "$ARCHIVE_FILE" -d "$FILES_DIR"
 else
-  echo "⚠️  Formato não reconhecido. Suportados: .zip, .tar.gz, .tgz"
+  echo "⚠️  Unrecognised format. Supported: .zip, .tar.gz, .tgz"
 fi
 
-# Corrigir permissões
+# Fix permissions
 chmod -R 755 "$FILES_DIR"
-echo "✅ Ficheiros extraídos para $FILES_DIR"
+echo "✅ Files extracted to $FILES_DIR"
 ```
 
-**Se não**, continuar.
+**If no**, continue.
 
 ---
 
-## Step 6 — Preparar estrutura Docker
+## Step 6 — Prepare Docker structure
 
 ```bash
 mkdir -p /workspace/.piclaw/stack
@@ -222,19 +222,19 @@ if [[ -d /home/agent/.pi/templates ]]; then
   cp /home/agent/.pi/templates/Dockerfile.php /workspace/.piclaw/stack/ 2>/dev/null || true
   cp /home/agent/.pi/templates/nginx.conf /workspace/.piclaw/stack/ 2>/dev/null || true
 fi
-echo "📦 Estrutura stack Docker preparada em .piclaw/stack/"
+echo "📦 Docker stack structure prepared in .piclaw/stack/"
 ```
 
 ---
 
-## Step 7 — Verificar stack e reportar resultado
+## Step 7 — Check stack and report result
 
 ```bash
 echo ""
-echo "✅ Projecto Drupal inicializado em /workspace/drupal"
+echo "✅ Drupal project initialised in /workspace/drupal"
 echo ""
 
-# Verificar se stack está a correr
+# Check if stack is running
 STACK_RUNNING=false
 STATE_FILE="/workspace/.piclaw/stack/state.json"
 if [[ -f "$STATE_FILE" ]] && docker compose -f "/workspace/docker-compose.drupal.yml" -p drupal-dev ps --status running 2>/dev/null | grep -q "php"; then
@@ -244,21 +244,21 @@ fi
 
 if [[ "$STACK_RUNNING" == "true" ]]; then
   echo "═══════════════════════════════════════════════"
-  echo "✅ Stack já está a correr!"
-  echo "   Completa a instalação Drupal via browser:"
+  echo "✅ Stack is already running!"
+  echo "   Complete the Drupal installation via browser:"
   echo "   🌐 $STACK_URL"
   echo ""
-  echo "   Ou instala via drush (se não importaste BD):"
+  echo "   Or install via drush (if you did not import a DB):"
   echo "   vendor/bin/drush site:install --db-url=mysql://drupal:drupal@db/drupal -y"
   echo "═══════════════════════════════════════════════"
 else
   echo "═══════════════════════════════════════════════"
-  echo "👉 Próximo passo: inicia a stack Docker"
-  echo "   Usa 'drupal-serve' para iniciar os containers (PHP + nginx + BD)."
-  echo "   Opções de BD: mariadb (recomendado) | postgres | sqlite"
+  echo "👉 Next step: start the Docker stack"
+  echo "   Use 'drupal-serve' to start the containers (PHP + nginx + DB)."
+  echo "   DB options: mariadb (recommended) | postgres | sqlite"
   echo ""
-  echo "   Após a stack iniciar, completa a instalação via browser"
-  echo "   ou com: vendor/bin/drush site:install -y"
+  echo "   Once the stack is running, complete the installation via browser"
+  echo "   or with: vendor/bin/drush site:install -y"
   echo "═══════════════════════════════════════════════"
 fi
 ```

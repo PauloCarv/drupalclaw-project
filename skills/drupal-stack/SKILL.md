@@ -1,61 +1,61 @@
 ---
 name: drupal-stack
-description: Gere a stack Docker para Drupal (PHP-FPM + nginx + BD). Permite escolher BD, valida portas, e faz start/stop.
+description: Manages the Docker stack for Drupal (PHP-FPM + nginx + DB). Supports DB selection, port validation, and start/stop.
 distribution: public
 ---
 
 # drupal-stack
 
-Gere a stack de containers Docker para desenvolvimento Drupal.
+Manages the Docker container stack for Drupal development.
 
-## Parâmetros
+## Parameters
 
 - `action` — start | stop | status | restart | destroy (default: start)
 - `db` — mariadb | postgres | sqlite (default: mariadb)
-- `php_port` — porta para nginx/PHP (default: auto-detect)
-- `db_port` — porta para BD (default: auto-detect)
+- `php_port` — port for nginx/PHP (default: auto-detect)
+- `db_port` — port for DB (default: auto-detect)
 
 ## Steps
 
-### 1. Verificar Docker socket
+### 1. Check Docker socket
 
 ```bash
 if ! docker info >/dev/null 2>&1; then
-  echo "❌ Docker socket não disponível."
-  echo "Certifica-te que o container PiClaw foi iniciado com:"
+  echo "❌ Docker socket not available."
+  echo "Make sure the PiClaw container was started with:"
   echo "  -v /var/run/docker.sock:/var/run/docker.sock"
   exit 1
 fi
-echo "✅ Docker disponível: $(docker --version)"
+echo "✅ Docker available: $(docker --version)"
 ```
 
-### 2. Definir variáveis e detectar path do host
+### 2. Set variables and detect host path
 
 ```bash
 WORKSPACE_DIR="/workspace"
 PROJECT_NAME="drupal-dev"
 DB_TYPE="${DB_TYPE:-mariadb}"
 
-# O docker compose fala com o daemon do HOST — os paths de volume têm de ser
-# paths do host, não do container. Detectamos via docker inspect neste container.
+# docker compose talks to the HOST daemon — volume paths must be
+# host paths, not container paths. Detected via docker inspect on this container.
 SELF_ID=$(cat /etc/hostname 2>/dev/null || hostname)
 HOST_WORKSPACE=$(docker inspect "$SELF_ID" --format '{{range .Mounts}}{{if eq .Destination "/workspace"}}{{.Source}}{{end}}{{end}}' 2>/dev/null)
 
 if [[ -z "$HOST_WORKSPACE" ]]; then
-  # Fallback: tentar pelo nome do container
+  # Fallback: try by container name
   SELF_NAME=$(docker ps --filter "id=$SELF_ID" --format '{{.Names}}' 2>/dev/null | head -1)
   [[ -n "$SELF_NAME" ]] && HOST_WORKSPACE=$(docker inspect "$SELF_NAME" --format '{{range .Mounts}}{{if eq .Destination "/workspace"}}{{.Source}}{{end}}{{end}}' 2>/dev/null)
 fi
 
 if [[ -z "$HOST_WORKSPACE" ]]; then
-  echo "❌ Não consigo determinar o path host de /workspace."
-  echo "   Verifica que o container tem o volume /workspace montado."
+  echo "❌ Cannot determine the host path for /workspace."
+  echo "   Check that the container has the /workspace volume mounted."
   exit 1
 fi
 echo "🗂️  Host workspace: $HOST_WORKSPACE"
 
 STACK_DIR="${WORKSPACE_DIR}/.piclaw/stack"
-# COMPOSE_FILE usa path do HOST para que docker compose o encontre
+# COMPOSE_FILE uses HOST path so docker compose can find it
 COMPOSE_FILE="${HOST_WORKSPACE}/docker-compose.drupal.yml"
 
 DRUPAL_DIR="${HOST_WORKSPACE}/drupal"
@@ -64,7 +64,7 @@ if [[ ! -d "${WORKSPACE_DIR}/drupal" ]]; then
 fi
 ```
 
-### 3. Detectar portas disponíveis
+### 3. Detect available ports
 
 ```bash
 find_free_port() {
@@ -86,7 +86,7 @@ find_free_port() {
 if [[ -z "${PHP_PORT:-}" ]]; then
   PHP_PORT=$(find_free_port 8085)
   if [[ -z "$PHP_PORT" ]]; then
-    echo "❌ Não encontrei porta livre para PHP (tentei 8085-8184)"
+    echo "❌ No free port found for PHP (tried 8085-8184)"
     exit 1
   fi
 fi
@@ -98,33 +98,33 @@ if [[ "$DB_TYPE" != "sqlite" ]]; then
   if [[ -z "${DB_PORT:-}" ]]; then
     DB_PORT=$(find_free_port $DEFAULT_DB_PORT)
     if [[ -z "$DB_PORT" ]]; then
-      echo "❌ Não encontrei porta livre para BD"
+      echo "❌ No free port found for DB"
       exit 1
     fi
   fi
   echo "🗄️  DB port: $DB_PORT ($DB_TYPE)"
 else
   DB_PORT=""
-  echo "🗄️  BD: SQLite (sem container de BD)"
+  echo "🗄️  DB: SQLite (no DB container)"
 fi
 ```
 
-### 4. Criar directório stack
+### 4. Create stack directory
 
 ```bash
 mkdir -p "$STACK_DIR"
 ```
 
-### 5. Copiar templates
+### 5. Copy templates
 
 ```bash
 cp /home/agent/.pi/templates/Dockerfile.php "$STACK_DIR/Dockerfile.php"
 cp /home/agent/.pi/templates/nginx.conf "$STACK_DIR/nginx.conf"
 ```
 
-### 6. Gerar docker-compose.drupal.yml
+### 6. Generate docker-compose.drupal.yml
 
-Todos os paths de volume usam `$HOST_WORKSPACE` (path do host) para que o daemon Docker os resolva correctamente.
+All volume paths use `$HOST_WORKSPACE` (host path) so the Docker daemon resolves them correctly.
 
 ```bash
 cat > "${WORKSPACE_DIR}/docker-compose.drupal.yml" << 'COMPOSE_HEADER'
@@ -288,10 +288,10 @@ networks:
 EOF
 fi
 
-echo "✅ docker-compose.drupal.yml gerado"
+echo "✅ docker-compose.drupal.yml generated"
 ```
 
-### 7. Acção: start
+### 7. Action: start
 
 ```bash
 if [[ "${ACTION:-start}" == "start" ]]; then
@@ -299,22 +299,22 @@ if [[ "${ACTION:-start}" == "start" ]]; then
   REBUILD_FLAG="--build"
   if docker image inspect "$PHP_IMAGE" >/dev/null 2>&1; then
     IMAGE_AGE=$(docker image inspect "$PHP_IMAGE" --format '{{.Created}}' 2>/dev/null | cut -c1-10)
-    echo "ℹ️  Imagem $PHP_IMAGE já existe (criada: $IMAGE_AGE)."
+    echo "ℹ️  Image $PHP_IMAGE already exists (built: $IMAGE_AGE)."
   fi
 fi
 ```
 
-Se a imagem já existir, perguntar ao utilizador:
+If the image already exists, ask the user:
 
-> A imagem `drupal-claw-php` já foi compilada anteriormente.
-> Queres fazer **nova build** ou usar a imagem existente?
-> - `nova build` — reconstrói a imagem (mais lento, usa alterações ao Dockerfile)
-> - `usar existente` — inicia directamente com a imagem actual (mais rápido)
+> The `drupal-claw-php` image was previously built.
+> Do you want to do a **new build** or use the existing image?
+> - `new build` — rebuilds the image (slower, picks up Dockerfile changes)
+> - `use existing` — starts directly with the current image (faster)
 
 ```bash
 if [[ "${ACTION:-start}" == "start" ]]; then
-  # REBUILD_FLAG: "nova build" → --build | "usar existente" → ""
-  # Se imagem não existia → --build sem perguntar
+  # REBUILD_FLAG: "new build" → --build | "use existing" → ""
+  # If image did not exist → --build without asking
 
   docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d $REBUILD_FLAG
 
@@ -333,30 +333,30 @@ if [[ "${ACTION:-start}" == "start" ]]; then
 
   echo ""
   echo "═══════════════════════════════════════════════"
-  echo "✅ Stack Drupal iniciada!"
+  echo "✅ Drupal stack started!"
   echo "  🌐 Drupal (browser): http://localhost:${PHP_PORT}"
-  echo "  🔗 Drupal (interno): ${INTERNAL_URL}"
-  [[ -n "$DB_PORT" ]] && echo "  🗄️  BD ($DB_TYPE): localhost:${DB_PORT}"
-  echo "  📁 Ficheiros: ${DRUPAL_DIR}"
+  echo "  🔗 Drupal (internal): ${INTERNAL_URL}"
+  [[ -n "$DB_PORT" ]] && echo "  🗄️  DB ($DB_TYPE): localhost:${DB_PORT}"
+  echo "  📁 Files: ${DRUPAL_DIR}"
   if [[ "$HTTP_CODE" =~ ^[23] ]]; then
     echo "  ✅ Health check OK (HTTP $HTTP_CODE)"
   else
-    echo "  ⚠️  Health check: HTTP $HTTP_CODE — pode ainda estar a iniciar"
+    echo "  ⚠️  Health check: HTTP $HTTP_CODE — may still be starting"
   fi
   echo "═══════════════════════════════════════════════"
 fi
 ```
 
-### 8. Acção: stop
+### 8. Action: stop
 
 ```bash
 if [[ "${ACTION:-}" == "stop" ]]; then
   docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" stop
-  echo "⏹ Stack parada. Dados preservados."
+  echo "⏹ Stack stopped. Data preserved."
 fi
 ```
 
-### 9. Acção: status
+### 9. Action: status
 
 ```bash
 if [[ "${ACTION:-}" == "status" ]]; then
@@ -364,25 +364,25 @@ if [[ "${ACTION:-}" == "status" ]]; then
 fi
 ```
 
-### 10. Acção: restart
+### 10. Action: restart
 
 ```bash
 if [[ "${ACTION:-}" == "restart" ]]; then
   docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" restart
-  echo "🔄 Stack reiniciada."
+  echo "🔄 Stack restarted."
 fi
 ```
 
-### 11. Acção: destroy
+### 11. Action: destroy
 
 ```bash
 if [[ "${ACTION:-}" == "destroy" ]]; then
   docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" down -v
-  echo "🗑️ Stack destruída (volumes removidos)."
+  echo "🗑️ Stack destroyed (volumes removed)."
 fi
 ```
 
-### 12. Guardar estado
+### 12. Save state
 
 ```bash
 cat > "${WORKSPACE_DIR}/.piclaw/stack/state.json" << EOF
@@ -396,5 +396,5 @@ cat > "${WORKSPACE_DIR}/.piclaw/stack/state.json" << EOF
   "started_at": "$(date -Iseconds)"
 }
 EOF
-echo "💾 Estado guardado em .piclaw/stack/state.json"
+echo "💾 State saved to .piclaw/stack/state.json"
 ```

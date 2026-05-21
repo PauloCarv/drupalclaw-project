@@ -17,14 +17,39 @@ const sections: { id: SidebarSection; icon: typeof FolderTree; label: string }[]
 ]
 
 export function Sidebar() {
-  const { sidebarSection, setSidebarSection } = useLayoutStore()
+  const { sidebarSection, setSidebarSection, sidebarWidth, setSidebarWidth } = useLayoutStore()
+  const dragging = useRef(false)
+  const startX = useRef(0)
+  const startWidth = useRef(0)
+
+  const onDragStart = useCallback((e: React.MouseEvent) => {
+    dragging.current = true
+    startX.current = e.clientX
+    startWidth.current = sidebarWidth
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragging.current) return
+      setSidebarWidth(startWidth.current + ev.clientX - startX.current)
+    }
+    const onUp = () => {
+      dragging.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [sidebarWidth, setSidebarWidth])
 
   const renderContent = () => {
     switch (sidebarSection) {
       case 'explorer':
         return (
           <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto overflow-x-auto">
               <FileTree />
             </div>
             <div className="border-t border-navy-500 flex-shrink-0">
@@ -44,7 +69,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-56 flex-shrink-0 bg-navy-700 border-r border-navy-500 flex flex-col">
+    <aside className="flex-shrink-0 bg-navy-700 flex flex-col relative" style={{ width: sidebarWidth }}>
       {/* Section tabs */}
       <div className="flex border-b border-navy-500">
         {sections.map((s) => (
@@ -65,6 +90,12 @@ export function Sidebar() {
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {renderContent()}
       </div>
+
+      {/* Drag handle */}
+      <div
+        onMouseDown={onDragStart}
+        className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-ai-teal/40 transition-colors z-10"
+      />
     </aside>
   )
 }
@@ -145,13 +176,13 @@ function ContextStats() {
             {tokens > 0 ? (
               <>
                 <div className="text-[11px] font-semibold text-gray-200">{fmt(tokens)}</div>
-                <div className="text-[10px] text-navy-300">de {fmt(ctxWindow)} tokens</div>
+                <div className="text-[10px] text-navy-300">of {fmt(ctxWindow)} tokens</div>
                 <div className={`mt-1 text-[10px] font-medium ${percent > 90 ? 'text-accent-red' : percent > 70 ? 'text-yellow-400' : 'text-ai-teal'}`}>
-                  {percent > 90 ? 'Contexto quase cheio' : percent > 70 ? 'Contexto elevado' : 'Contexto OK'}
+                  {percent > 90 ? 'Almost full' : percent > 70 ? 'High usage' : 'OK'}
                 </div>
               </>
             ) : (
-              <div className="text-[10px] text-navy-400">Sem dados</div>
+              <div className="text-[10px] text-navy-400">No data</div>
             )}
           </div>
         </div>
@@ -159,7 +190,7 @@ function ContextStats() {
 
       {/* System metrics */}
       <div>
-        <span className="text-[10px] uppercase tracking-wider text-navy-400">Sistema</span>
+        <span className="text-[10px] uppercase tracking-wider text-navy-400">System</span>
         <div className="mt-1.5 space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-navy-300 w-6">CPU</span>
@@ -275,13 +306,13 @@ function ChatsList() {
       >
         <span className="flex-1 min-w-0 truncate">{session.name}</span>
         {isCurrent && !session.archived && (
-          <span className="w-1.5 h-1.5 rounded-full bg-ai-teal flex-shrink-0" title="Novas mensagens aqui" />
+          <span className="w-1.5 h-1.5 rounded-full bg-ai-teal flex-shrink-0" title="New messages here" />
         )}
         <div className="flex-shrink-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={(e) => handleRenameStart(session, e)}
             className="text-gray-400 hover:text-white p-0.5"
-            title="Renomear"
+            title="Rename"
           >
             <Pencil size={11} />
           </button>
@@ -289,7 +320,7 @@ function ChatsList() {
             <button
               onClick={(e) => { e.stopPropagation(); unarchiveSession(session.id) }}
               className="text-gray-400 hover:text-ai-teal p-0.5"
-              title="Restaurar"
+              title="Restore"
             >
               <ArchiveRestore size={11} />
             </button>
@@ -297,7 +328,7 @@ function ChatsList() {
             <button
               onClick={(e) => { e.stopPropagation(); archiveSession(session.id) }}
               className="text-gray-400 hover:text-yellow-400 p-0.5"
-              title="Arquivar"
+              title="Archive"
             >
               <Archive size={11} />
             </button>
@@ -306,7 +337,7 @@ function ChatsList() {
             <button
               onClick={(e) => handleDelete(session.id, e)}
               className={`p-0.5 ${isDeleting ? 'text-accent-red' : 'text-gray-400 hover:text-accent-red'}`}
-              title={isDeleting ? 'Clica de novo para confirmar' : 'Eliminar'}
+              title={isDeleting ? 'Click again to confirm' : 'Delete'}
             >
               <Trash2 size={11} />
             </button>
@@ -319,12 +350,12 @@ function ChatsList() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-2 border-b border-navy-500">
-        <h3 className="text-[10px] uppercase tracking-wider text-navy-400">Conversas</h3>
+        <h3 className="text-[10px] uppercase tracking-wider text-navy-400">Chats</h3>
         <button
           onClick={handleNew}
           disabled={creating}
           className="text-gray-400 hover:text-white disabled:opacity-40"
-          title="Nova conversa"
+          title="New chat"
         >
           <Plus size={14} />
         </button>
@@ -340,7 +371,7 @@ function ChatsList() {
               className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[10px] text-navy-400 hover:text-navy-300 transition-colors"
             >
               <Archive size={10} />
-              <span>Arquivadas ({archived.length})</span>
+              <span>Archived ({archived.length})</span>
             </button>
             {showArchived && archived.map(renderSession)}
           </>

@@ -170,9 +170,9 @@ export async function triggerManualRun(flow: Flow, params: Record<string, string
   const steps = flow.steps.map((s, i) => {
     if (s.type === 'skill') return `${i + 1}. Skill: ${s.command}`
     if (s.type === 'mcp') return `${i + 1}. MCP ${s.mcpServer ?? ''}: ${interpolateParams(s.content ?? '', params)}`
-    return `${i + 1}. Instrução: ${interpolateParams(s.content ?? '', params)}`
+    return `${i + 1}. Instruction: ${interpolateParams(s.content ?? '', params)}`
   }).join('\n')
-  const prompt = `${flowMarker(flow.id)}\nExecuta o flow "${flow.name}" sequencialmente:\n\n${steps}\n\nExecuta cada item por ordem. Reporta o resultado de cada step.`
+  const prompt = `${flowMarker(flow.id)}\nRun the flow "${flow.name}" sequentially:\n\n${steps}\n\nExecute each item in order. Report the result of each step.`
   // Schedule 5 seconds from now so PiClaw picks it up immediately
   const scheduleValue = new Date(Date.now() + 5000).toISOString()
   await writeIpcFile({

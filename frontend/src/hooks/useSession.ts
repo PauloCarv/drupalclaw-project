@@ -12,7 +12,7 @@ export function useSession() {
     let sessions = sessionsApi.loadSessions()
 
     if (sessions.length === 0) {
-      const initial = sessionsApi.createSession(0, 'Conversa inicial')
+      const initial = sessionsApi.createSession(0, 'Initial chat')
       sessions = [initial]
     }
 

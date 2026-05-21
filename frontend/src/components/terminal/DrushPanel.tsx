@@ -14,8 +14,8 @@ const DRUSH_CMDS = [
   { label: 'uli',    title: 'One-time Login URL',   cmd: `${DRUSH} uli` },
   { label: 'ws',     title: 'Watchdog Show (50)',   cmd: `${DRUSH} ws --count=50` },
   { label: 'status', title: 'Drupal Status',        cmd: `${DRUSH} status` },
-  { label: 'pmu',    title: 'Uninstall módulo…',    cmd: `${DRUSH} pmu ` },
-  { label: 'en',     title: 'Enable módulo…',       cmd: `${DRUSH} en ` },
+  { label: 'pmu',    title: 'Uninstall module…',    cmd: `${DRUSH} pmu ` },
+  { label: 'en',     title: 'Enable module…',       cmd: `${DRUSH} en ` },
 ]
 
 export function DrushPanel() {
@@ -45,7 +45,7 @@ export function DrushPanel() {
       <div className="flex items-center gap-1 px-2 py-1 bg-navy-800 border-b border-navy-600 flex-shrink-0 flex-wrap">
         {/* PHP context toggle */}
         <button
-          title="Entrar/sair do container PHP (contexto necessário para Drush)"
+          title="Enter/exit PHP container (required context for Drush)"
           onClick={handlePhp}
           className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded border transition-colors ${
             inPhp

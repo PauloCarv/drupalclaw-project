@@ -50,7 +50,7 @@ export function useFlows() {
       await flowsApi.markFlowRun(flow.id)
       setFlows(prev => prev.map(f => f.id === flow.id ? { ...f, lastRunAt: Date.now() } : f))
     } catch (err) {
-      setRunError(err instanceof Error ? err.message : 'Erro ao iniciar flow')
+      setRunError(err instanceof Error ? err.message : 'Failed to start flow')
     } finally {
       setRunningFlowId(null)
     }

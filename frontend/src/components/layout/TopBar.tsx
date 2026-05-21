@@ -133,7 +133,7 @@ export function TopBar() {
         </button>
 
         {/* Context panel toggle */}
-        <button onClick={toggleContextPanel} className="btn-ghost p-1.5" title="Painel de contexto">
+        <button onClick={toggleContextPanel} className="btn-ghost p-1.5" title="Context panel">
           <PanelRight size={16} />
         </button>
       </div>

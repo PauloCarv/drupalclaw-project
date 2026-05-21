@@ -1,33 +1,33 @@
 ---
 name: drupal-module
-description: Scaffolda um novo módulo custom Drupal com estrutura base.
+description: Scaffolds a new custom Drupal module with base structure.
 distribution: public
 ---
 
 # drupal-module
 
-Cria um novo módulo custom com ficheiros base.
+Creates a new custom module with base files.
 
 ## Steps
 
-1. Pedir nome do módulo (se não fornecido):
-   - Se o utilizador incluiu um nome na mensagem, usa esse.
-   - Caso contrário, sugere um nome e pergunta.
+1. Ask for module name (if not provided):
+   - If the user included a name in the message, use it.
+   - Otherwise, suggest a name and ask.
 
-2. Validar nome:
+2. Validate name:
    ```bash
    MODULE_NAME="${1:-my_module}"
    MODULE_NAME=$(echo "$MODULE_NAME" | tr '-' '_' | tr '[:upper:]' '[:lower:]')
    MODULE_DIR="web/modules/custom/$MODULE_NAME"
 
    if [[ -d "$MODULE_DIR" ]]; then
-     echo "⚠ Módulo $MODULE_NAME já existe em $MODULE_DIR"
+     echo "⚠ Module $MODULE_NAME already exists at $MODULE_DIR"
      ls -la "$MODULE_DIR"
      exit 0
    fi
    ```
 
-3. Criar estrutura:
+3. Create structure:
    ```bash
    mkdir -p "$MODULE_DIR/src/Controller"
    mkdir -p "$MODULE_DIR/src/Form"
@@ -36,7 +36,7 @@ Cria um novo módulo custom com ficheiros base.
    mkdir -p "$MODULE_DIR/config/install"
    ```
 
-4. Criar .info.yml:
+4. Create .info.yml:
    ```bash
    cat > "$MODULE_DIR/$MODULE_NAME.info.yml" << EOF
    name: '$MODULE_NAME'
@@ -47,7 +47,7 @@ Cria um novo módulo custom com ficheiros base.
    EOF
    ```
 
-5. Criar .module:
+5. Create .module:
    ```bash
    cat > "$MODULE_DIR/$MODULE_NAME.module" << 'EOF'
    <?php
@@ -59,16 +59,16 @@ Cria um novo módulo custom com ficheiros base.
    EOF
    ```
 
-6. Criar .routing.yml vazio:
+6. Create empty .routing.yml:
    ```bash
    touch "$MODULE_DIR/$MODULE_NAME.routing.yml"
    ```
 
-7. Reportar:
+7. Report:
    ```bash
-   echo "✅ Módulo criado em $MODULE_DIR"
-   echo "Ficheiros:"
+   echo "✅ Module created at $MODULE_DIR"
+   echo "Files:"
    find "$MODULE_DIR" -type f
    echo ""
-   echo "Para activar: vendor/bin/drush en $MODULE_NAME"
+   echo "To enable: vendor/bin/drush en $MODULE_NAME"
    ```

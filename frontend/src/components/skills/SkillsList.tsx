@@ -5,21 +5,21 @@ import { useChat } from '@/hooks/useChat'
 import { useLayoutStore } from '@/stores/layoutStore'
 
 const DRUPAL_FALLBACK: Skill[] = [
-  { name: 'drupal-serve', description: 'Inicia stack Docker', command: '/skill:drupal-serve' },
-  { name: 'drupal-init', description: 'Cria projecto Drupal', command: '/skill:drupal-init' },
+  { name: 'drupal-serve', description: 'Start Docker stack', command: '/skill:drupal-serve' },
+  { name: 'drupal-init', description: 'Create Drupal project', command: '/skill:drupal-init' },
   { name: 'drupal-cr', description: 'Cache rebuild', command: '/skill:drupal-cr' },
-  { name: 'drupal-module', description: 'Scaffolda módulo', command: '/skill:drupal-module' },
+  { name: 'drupal-module', description: 'Scaffold module', command: '/skill:drupal-module' },
   { name: 'drupal-analyze', description: 'PHPStan + PHPCS', command: '/skill:drupal-analyze' },
-  { name: 'drupal-fix', description: 'Auto-fix código', command: '/skill:drupal-fix' },
-  { name: 'drupal-install', description: 'Instala módulo', command: '/skill:drupal-install' },
-  { name: 'drupal-status', description: 'Estado do projecto', command: '/skill:drupal-status' },
-  { name: 'drupal-debug', description: 'Diagnostica erros', command: '/skill:drupal-debug' },
+  { name: 'drupal-fix', description: 'Auto-fix code', command: '/skill:drupal-fix' },
+  { name: 'drupal-install', description: 'Install module', command: '/skill:drupal-install' },
+  { name: 'drupal-status', description: 'Project status', command: '/skill:drupal-status' },
+  { name: 'drupal-debug', description: 'Diagnose errors', command: '/skill:drupal-debug' },
   { name: 'drupal-logs', description: 'Watchdog logs', command: '/skill:drupal-logs' },
   { name: 'drupal-perf', description: 'Performance', command: '/skill:drupal-perf' },
-  { name: 'drupal-db-export', description: 'Exporta BD', command: '/skill:drupal-db-export' },
-  { name: 'drupal-db-import', description: 'Importa BD', command: '/skill:drupal-db-import' },
-  { name: 'drupal-db-query', description: 'Query SQL', command: '/skill:drupal-db-query' },
-  { name: 'drupal-stack', description: 'Gestão stack Docker', command: '/skill:drupal-stack' },
+  { name: 'drupal-db-export', description: 'Export DB', command: '/skill:drupal-db-export' },
+  { name: 'drupal-db-import', description: 'Import DB', command: '/skill:drupal-db-import' },
+  { name: 'drupal-db-query', description: 'SQL query', command: '/skill:drupal-db-query' },
+  { name: 'drupal-stack', description: 'Docker stack mgmt', command: '/skill:drupal-stack' },
 ]
 
 function SkillButton({ skill, onRun }: { skill: Skill; onRun: (cmd: string) => void }) {
