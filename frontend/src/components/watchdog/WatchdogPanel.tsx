@@ -137,7 +137,7 @@ export function WatchdogPanel() {
               setError(null)
             }
           } catch {
-            setError('Erro ao processar JSON do watchdog.')
+            setError('Failed to parse watchdog JSON.')
           }
           setUpdating(false)
           return
