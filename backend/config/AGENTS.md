@@ -131,6 +131,77 @@ This is the canonical file that both the agent (pi-mcp-adapter) and the DrupalCl
 4. **After saving**, tell the user: "File saved. Use `/restart` in the chat to activate the new MCP."
 5. **Secrets in env** — write API keys/tokens into the `env` block, never in `args`
 
+## Creating Custom Drupal Skills
+
+When the user asks you to create a new Drupal skill (a `SKILL.md` file), you MUST follow the workspace isolation pattern. Each workspace has a unique Docker Compose project name — never use `docker ps | grep drupal` or hardcode `drupal-dev`.
+
+### Mandatory boilerplate for any skill that interacts with Docker containers
+
+Every skill that needs to run commands inside the PHP or DB container MUST start with this block:
+
+```bash
+STACK_STATE="/workspace/.piclaw/stack/state.json"
+if [[ ! -f "$STACK_STATE" ]]; then
+  echo "❌ No Drupal stack configured for this workspace."
+  echo "   Run 'drupal-serve' to initialize the stack."
+  exit 1
+fi
+
+PROJECT_NAME=$(jq -r '.project_name // empty' "$STACK_STATE")
+if [[ -z "$PROJECT_NAME" ]]; then
+  echo "❌ Stack state is missing project_name. Run 'drupal-stack start' to reinitialise."
+  exit 1
+fi
+
+PHP_CONTAINER=$(docker ps \
+  --filter "status=running" \
+  --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
+  --format '{{.Names}}' 2>/dev/null | grep -iE "php|fpm" | head -1)
+
+if [[ -n "$PHP_CONTAINER" ]]; then
+  echo "🐳 Stack: ${PROJECT_NAME} (${PHP_CONTAINER})"
+  DRUSH="docker exec -i -w /var/www/html $PHP_CONTAINER vendor/bin/drush"
+  COMPOSER_CMD="docker exec -i -w /var/www/html $PHP_CONTAINER composer"
+elif [[ -x "/workspace/drupal/vendor/bin/drush" ]]; then
+  DRUSH="/workspace/drupal/vendor/bin/drush"
+  COMPOSER_CMD="composer"
+else
+  echo "❌ Stack '${PROJECT_NAME}' is not running."
+  echo "   Run 'drupal-serve' to start it."
+  exit 1
+fi
+```
+
+### Rules for skill creation
+
+1. **Never hardcode a project name** (`drupal-dev`, `drupal-workspace`, etc.) — always read from `state.json`.
+2. **Never use name-based container grep** (`docker ps | grep php`, `docker ps | grep drupal`) — always use `--filter "label=com.docker.compose.project=${PROJECT_NAME}"`.
+3. **Always check state.json exists** before trying to read it — if missing, instruct user to run `drupal-serve`.
+4. **Drush must use full path inside container** — `vendor/bin/drush` not `drush`.
+5. **Save the skill to both locations**:
+   - `/workspace/.pi/skills/<name>/SKILL.md` (active, loaded immediately)
+   - Write a note that the user should also save to `skills/<name>/SKILL.md` in the repo so it persists after rebuild.
+6. **Output signals**: use `✅` for success, `⚠️` for warnings, `❌` for errors, `🐳` for Docker-routed operations.
+
+### Example: DB container pattern
+
+For skills that need to connect to the database container directly:
+
+```bash
+DB_CONTAINER=$(docker ps \
+  --filter "status=running" \
+  --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
+  --format '{{.Names}}' 2>/dev/null | grep -iE "db|mysql|mariadb|postgres" | head -1)
+
+DB_TYPE=$(jq -r '.db_type // "mariadb"' "$STACK_STATE")
+
+if [[ "$DB_TYPE" == "postgres" ]]; then
+  DB_CMD="docker exec -i $DB_CONTAINER psql -U drupal -d drupal"
+else
+  DB_CMD="docker exec -i $DB_CONTAINER mariadb -udrupal -pdrupal drupal"
+fi
+```
+
 ## Working style
 
 - Read relevant files before editing
