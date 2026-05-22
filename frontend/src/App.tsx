@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { OobeSetup } from '@/components/oobe/OobeSetup'
 import * as providersApi from '@/api/providers'
+import { getTimeline, postMessage } from '@/api/chat'
 
 export default function App() {
   const [oobeComplete, setOobeComplete] = useState<boolean | null>(null) // null = checking
@@ -13,6 +14,23 @@ export default function App() {
   const checkOobe = async () => {
     const ready = await providersApi.isProviderReady()
     setOobeComplete(ready)
+  }
+
+  const handleOobeComplete = async () => {
+    // On fresh install (empty timeline), trigger agent onboarding automatically
+    try {
+      const posts = await getTimeline(10)
+      const hasRealMessages = posts.some(p =>
+        p.data?.type === 'user_message' &&
+        !String(p.data?.content ?? '').startsWith('/login')
+      )
+      if (!hasRealMessages) {
+        await postMessage('Hello! I just set up DrupalClaw.')
+      }
+    } catch {
+      // Non-critical — proceed to main app regardless
+    }
+    setOobeComplete(true)
   }
 
   // Still checking
@@ -28,7 +46,7 @@ export default function App() {
 
   // OOBE not done — show setup
   if (!oobeComplete) {
-    return <OobeSetup onComplete={() => setOobeComplete(true)} />
+    return <OobeSetup onComplete={handleOobeComplete} />
   }
 
   // Ready — show main app
