@@ -87,6 +87,23 @@ export function FileTree() {
     setRefreshing(false)
   }
 
+  // Auto-refresh when a skill writes /workspace/.piclaw/signals/tree-refresh
+  const handleRefreshRef = useRef(handleRefresh)
+  useEffect(() => { handleRefreshRef.current = handleRefresh })
+  useEffect(() => {
+    let lastMtime: string | null = null
+    const id = setInterval(async () => {
+      try {
+        const data = await fetch('/workspace/tree?path=.piclaw/signals/tree-refresh').then(r => r.ok ? r.json() : null)
+        const mtime: string | undefined = data?.root?.mtime
+        if (!mtime) return
+        if (lastMtime !== null && mtime !== lastMtime) handleRefreshRef.current()
+        lastMtime = mtime
+      } catch { /* signal file doesn't exist yet */ }
+    }, 5000)
+    return () => clearInterval(id)
+  }, [])
+
   const cancelCreate = () => { setCreatingType(null); setNewName('') }
 
   const handleCreateSubmit = async () => {

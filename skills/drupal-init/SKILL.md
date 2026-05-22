@@ -264,4 +264,8 @@ else
   echo "   or with: vendor/bin/drush site:install -y"
   echo "═══════════════════════════════════════════════"
 fi
+
+# Signal the UI file tree to auto-refresh
+mkdir -p /workspace/.piclaw/signals
+touch /workspace/.piclaw/signals/tree-refresh
 ```

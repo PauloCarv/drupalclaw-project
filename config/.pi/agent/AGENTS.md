@@ -206,7 +206,14 @@ After editing: tell the user the Dev Panel will reflect the change immediately (
 2. **Never use name-based container grep** (`docker ps | grep php`, `docker ps | grep drupal`) — always use `--filter "label=com.docker.compose.project=${PROJECT_NAME}"`.
 3. **Always check state.json exists** before trying to read it — if missing, instruct user to run `drupal-serve`.
 4. **Drush must use full path inside container** — `vendor/bin/drush` not `drush`.
-5. **Save the skill to both locations**:
+5. **Trigger file tree refresh when the skill creates files**: if the skill creates or deletes a significant number of files (e.g. a new module scaffold, a Composer install, a `drupal-init`), add this at the very end so the UI file tree auto-refreshes:
+   ```bash
+   mkdir -p /workspace/.piclaw/signals
+   touch /workspace/.piclaw/signals/tree-refresh
+   ```
+   The frontend polls this file's mtime every 5 seconds and calls a full tree refresh when it changes. No restart or manual action required from the user.
+
+6. **Save the skill to both locations**:
    - `/workspace/.pi/skills/<name>/SKILL.md` (active, loaded immediately)
    - Write a note that the user should also save to `skills/<name>/SKILL.md` in the repo so it persists after rebuild.
 6. **Output signals**: use `✅` for success, `⚠️` for warnings, `❌` for errors, `🐳` for Docker-routed operations.
