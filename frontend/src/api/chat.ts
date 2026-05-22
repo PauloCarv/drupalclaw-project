@@ -141,14 +141,35 @@ export async function uploadMedia(file: File): Promise<MediaUpload> {
 
 /**
  * Connect to PiClaw SSE stream for live updates.
- * PiClaw dispatches this at GET /sse/stream.
+ * PiClaw sends all events as named SSE events (event: <type>\ndata: {...}\n\n).
+ * onmessage only fires for generic 'message' events which PiClaw never emits,
+ * so we use addEventListener for each named event type we care about.
  */
 export function connectSSE(
-  onMessage: (event: MessageEvent) => void,
+  onEvent: (eventType: string, data: unknown) => void,
   onError?: (error: Event) => void,
+  chatJid = 'web:default',
 ): EventSource {
-  const es = new EventSource('/sse/stream')
-  es.onmessage = onMessage
+  const es = new EventSource(`/sse/stream?chat_jid=${encodeURIComponent(chatJid)}`)
+
+  const NAMED_EVENTS = [
+    'agent_status', 'agent_thought', 'agent_draft', 'agent_thought_delta', 'agent_draft_delta',
+    'new_post', 'agent_response', 'heartbeat', 'connected',
+  ]
+  for (const eventType of NAMED_EVENTS) {
+    es.addEventListener(eventType, (e: MessageEvent) => {
+      try {
+        onEvent(eventType, JSON.parse(e.data))
+      } catch {
+        onEvent(eventType, null)
+      }
+    })
+  }
+
+  // Fallback for any default (unnamed) message events
+  es.onmessage = (e) => {
+    try { onEvent('message', JSON.parse(e.data)) } catch { /* ignore */ }
+  }
   es.onerror = (e) => { onError?.(e) }
   return es
 }

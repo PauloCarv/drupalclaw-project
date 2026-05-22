@@ -4,11 +4,14 @@ import { useChatStore } from '@/stores/chatStore'
 import * as chatApi from '@/api/chat'
 import type { TimelinePost } from '@/api/chat'
 
-// How long with no SSE activity before the timeline-based auto-clear is allowed.
-// Must be long enough to survive bash commands running between LLM steps (Composer
-// installs can take minutes with no SSE). 30s covers most normal operations;
-// the 10-min watchdog is the final safety net for truly stuck states.
-const SSE_QUIET_THRESHOLD_MS = 30_000
+// After streaming completes (done event received), wait this long before clearing.
+// Short because the response is already in the timeline — just need a buffer for
+// PiClaw to flush any final timeline writes.
+const SSE_QUIET_AFTER_STREAM_MS = 4_000
+
+// When agent is running but no streaming ever started (background tool-use, bash
+// commands mid-conversation), use a longer threshold to survive Composer installs etc.
+const SSE_QUIET_BACKGROUND_MS = 30_000
 
 // Watchdog: if streaming is true for this long with zero SSE activity, force-clear.
 const STREAMING_WATCHDOG_MS = 10 * 60 * 1000 // 10 minutes
@@ -18,6 +21,7 @@ export function useChat() {
   const queryClient = useQueryClient()
   const sseRef = useRef<EventSource | null>(null)
   const lastSseActivityAt = useRef<number>(0)
+  const streamingCompletedAt = useRef<number>(0)
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearWatchdog = useCallback(() => {
@@ -32,7 +36,7 @@ export function useChat() {
         store.setStreaming(false)
         store.setAgentRunning(false)
         store.setStreamingStartedAt(null)
-        store.clearStreamContent()
+        store.clearActivity()
         queryClient.invalidateQueries({ queryKey: ['timeline'] })
       }
     }, STREAMING_WATCHDOG_MS)
@@ -49,29 +53,65 @@ export function useChat() {
   // Connect SSE for live updates
   useEffect(() => {
     const es = chatApi.connectSSE(
-      (event) => {
-        try {
-          const data = JSON.parse(event.data)
-          lastSseActivityAt.current = Date.now()
-          queryClient.invalidateQueries({ queryKey: ['timeline'] })
+      (eventType, data) => {
+        const d = (data ?? {}) as Record<string, unknown>
 
-          if (data.type === 'chunk' || data.type === 'delta') {
-            if (useChatStore.getState().isStreaming) {
-              store.appendStreamContent(data.content || data.text || '')
-            }
+        // Only agent processing events count toward the SSE quiet timer.
+        // new_post, agent_response, heartbeat etc. are informational — if they
+        // reset the timer, the quiet check never passes after 'done' fires.
+        const isAgentProcessing = eventType === 'agent_thought' || eventType === 'agent_draft' ||
+          eventType === 'agent_status'
+        if (isAgentProcessing) lastSseActivityAt.current = Date.now()
+
+        if (eventType === 'new_post' || eventType === 'agent_response') {
+          queryClient.invalidateQueries({ queryKey: ['timeline'] })
+          return
+        }
+
+        if (eventType === 'agent_thought') {
+          store.setThought(String(d.text ?? ''))
+          return
+        }
+
+        if (eventType === 'agent_draft') {
+          const text = String(d.text ?? '')
+          store.setDraft(text)
+          if (text && useChatStore.getState().isStreaming) {
+            store.setStreamContent(text)
           }
-          if (data.type === 'done' || data.type === 'complete') {
-            // Only clear streaming; keep isAgentRunning=true until the timeline
-            // auto-clear confirms the operation is fully done (handles multi-step agents
-            // that emit done between sequential tool call groups).
+          return
+        }
+
+        if (eventType === 'agent_status') {
+          const type = String(d.type ?? '')
+          const title = String(d.title ?? '')
+          const toolName = d.tool_name ? String(d.tool_name) : undefined
+
+          if (type === 'done') {
+            streamingCompletedAt.current = Date.now()
             store.setStreaming(false)
-            store.clearStreamContent()
+            store.setStreamContent('')
             queryClient.invalidateQueries({ queryKey: ['timeline'] })
+          } else if (type === 'tool_call') {
+            store.pushActivityItem({
+              id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              type: 'tool', title, toolName, status: 'working', ts: Date.now(),
+            })
+          } else if (type === 'tool_status') {
+            const s = String(d.status ?? '')
+            if (s === 'Done') store.updateLastToolStatus(toolName ?? '', 'done', title)
+            else if (s === 'Failed') store.updateLastToolStatus(toolName ?? '', 'failed', title)
+          } else if (type === 'intent') {
+            store.pushActivityItem({
+              id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              type: 'intent', title, status: 'info', ts: Date.now(),
+            })
+          } else if (type === 'error') {
+            store.pushActivityItem({
+              id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              type: 'error', title, status: 'failed', ts: Date.now(),
+            })
           }
-        } catch (e) {
-          // Non-JSON SSE event (keepalive) — still counts as activity
-          if (event.data) console.warn('[SSE] unexpected non-JSON event:', event.data)
-          lastSseActivityAt.current = Date.now()
         }
       },
       () => { /* SSE error — auto-reconnects */ },
@@ -89,14 +129,19 @@ export function useChat() {
   // Guards:
   // 1. Only run while agent is considered active (streaming or background running)
   // 2. Only consider data fetched AFTER agent started (avoids stale cache from other tabs)
-  // 3. Only clear if SSE has been quiet for >8s — prevents clearing mid tool-call
-  //    when PiClaw posts intermediate agent_response entries between bash commands
+  // 3. Only clear if SSE has been quiet long enough:
+  //    - 4s after streaming completes (done event) — fast path for normal chat
+  //    - 30s otherwise — covers background tool-use and Composer installs
   useEffect(() => {
     const { isStreaming, isAgentRunning, streamingStartedAt } = useChatStore.getState()
     if ((!isStreaming && !isAgentRunning) || !streamingStartedAt) return
     if (dataUpdatedAt < streamingStartedAt) return
 
-    const sseQuiet = Date.now() - lastSseActivityAt.current > SSE_QUIET_THRESHOLD_MS
+    const now = Date.now()
+    const threshold = streamingCompletedAt.current > streamingStartedAt
+      ? SSE_QUIET_AFTER_STREAM_MS
+      : SSE_QUIET_BACKGROUND_MS
+    const sseQuiet = now - lastSseActivityAt.current > threshold
     if (!sseQuiet) return
 
     const hasNewAgentMsg = messages.some(
@@ -107,7 +152,7 @@ export function useChat() {
       store.setStreaming(false)
       store.setAgentRunning(false)
       store.setStreamingStartedAt(null)
-      store.clearStreamContent()
+      store.clearActivity()
     }
   }, [messages, dataUpdatedAt, store])
 
@@ -118,6 +163,7 @@ export function useChat() {
     const now = Date.now()
     const localId = `local-${now}`
     lastSseActivityAt.current = now
+    streamingCompletedAt.current = 0
     const userMsg: chatApi.ChatMessage = {
       id: localId,
       role: 'user',
@@ -135,7 +181,7 @@ export function useChat() {
     }
     store.setStreaming(true)
     store.setAgentRunning(true)
-    store.clearStreamContent()
+    store.clearActivity()
     scheduleWatchdog()
 
     try {
@@ -169,7 +215,7 @@ export function useChat() {
     store.setStreaming(false)
     store.setAgentRunning(false)
     store.setStreamingStartedAt(null)
-    store.clearStreamContent()
+    store.clearActivity()
     chatApi.abortAgent()
     queryClient.invalidateQueries({ queryKey: ['timeline'] })
   }, [clearWatchdog, store, queryClient])
@@ -179,6 +225,7 @@ export function useChat() {
     isStreaming: store.isStreaming,
     isAgentRunning: store.isAgentRunning,
     streamingContent: store.streamingContent,
+    streamingStartedAt: store.streamingStartedAt,
     sendMessage,
     cancelStreaming,
   }

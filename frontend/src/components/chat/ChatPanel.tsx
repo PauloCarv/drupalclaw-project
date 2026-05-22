@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import {
   Send, Square, X, Loader2, Paperclip, FileText, ImageIcon,
   Check, AlertCircle, RotateCw,
@@ -9,6 +9,7 @@ import { useChat } from '@/hooks/useChat'
 import { useSession } from '@/hooks/useSession'
 import { OobeSetup } from '@/components/oobe/OobeSetup'
 import { MarkdownContent } from './MarkdownContent'
+import { LiveActivity } from './LiveActivity'
 import { getAllCommands, type Skill } from '@/api/skills'
 import { uploadMedia, type MediaUpload } from '@/api/chat'
 
@@ -51,7 +52,7 @@ export function ChatPanel() {
   const prevAssistantCountRef = useRef(0)
   const programmaticScrollRef = useRef(false)
 
-  const { messages: allMessages, isStreaming, isAgentRunning, streamingContent, sendMessage, cancelStreaming } = useChat()
+  const { messages: allMessages, isStreaming, isAgentRunning, streamingContent, streamingStartedAt, sendMessage, cancelStreaming } = useChat()
   const { activeSession, currentSession, isCurrentSession, getSessionBounds, switchSession } = useSession()
 
   // Filter messages to the active session's boundaries.
@@ -305,39 +306,33 @@ export function ChatPanel() {
           </div>
         )}
 
-        {messages.map((msg) => {
-          const status = getMsgStatus(msg.id, msg.role)
-          return (
-            <MessageBubble
-              key={msg.id}
-              role={msg.role}
-              content={msg.content}
-              timestamp={msg.timestamp}
-              status={status}
-              onCancel={status === 'processing' ? cancelStreaming : undefined}
-              onRetry={status !== 'processing' ? () => handleRetry(msg.id, msg.content) : undefined}
-            />
-          )
-        })}
+        {(() => {
+          // LiveActivity shows below the triggering user message only while there's
+          // no assistant response yet. Derive this from messages — no extra state.
+          const hasResponseAfterStart = streamingStartedAt != null &&
+            messages.some(m => m.role === 'assistant' && m.timestamp >= streamingStartedAt)
+          const showActivity = !hasResponseAfterStart
+
+          return messages.map((msg) => {
+            const status = getMsgStatus(msg.id, msg.role)
+            return (
+              <Fragment key={msg.id}>
+                <MessageBubble
+                  role={msg.role}
+                  content={msg.content}
+                  timestamp={msg.timestamp}
+                  status={status}
+                  onCancel={status === 'processing' ? cancelStreaming : undefined}
+                  onRetry={status !== 'processing' ? () => handleRetry(msg.id, msg.content) : undefined}
+                />
+                {showActivity && msg.id === lastUserMsgId && <LiveActivity />}
+              </Fragment>
+            )
+          })
+        })()}
 
         {isStreaming && streamingContent && (
           <MessageBubble role="assistant" content={streamingContent} streaming />
-        )}
-
-        {isStreaming && !streamingContent && (
-          <div className="flex gap-2 items-start">
-            <img src={drupalclawIcon} alt="DrupalClaw" className="w-7 h-7 rounded-full object-contain flex-shrink-0 mt-0.5" />
-            <div className="bg-navy-700 border border-navy-500 rounded-lg px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-ai-teal animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-ai-teal animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-ai-teal animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-                <span className="text-xs text-navy-300">Thinking...</span>
-              </div>
-            </div>
-          </div>
         )}
 
         <div ref={messagesEndRef} />

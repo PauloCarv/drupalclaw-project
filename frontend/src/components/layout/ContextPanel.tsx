@@ -126,7 +126,7 @@ export function ContextPanel() {
   const ctxLabel = percent > 100 ? 'Exceeded' : percent > 90 ? 'Almost full' : percent > 70 ? 'High' : tokens > 0 ? 'Normal' : '—'
   const showCompact = percent > 70
 
-  const { isStreaming, isAgentRunning, streamingStartedAt } = useChatStore()
+  const { isStreaming, isAgentRunning, streamingStartedAt, agentActivity } = useChatStore()
 
   // Tick every 1s while agent is running, 30s when idle — drives elapsed + relative time
   const [now, setNow] = useState(Date.now())
@@ -258,6 +258,18 @@ export function ContextPanel() {
         {isAgentRunning && elapsed > 0 && (
           <Row label="Running" value={fmtElapsed(elapsed)} />
         )}
+        {isAgentRunning && (() => {
+          const working = [...agentActivity.items].reverse().find(i => i.status === 'working')
+          return working ? (
+            <div className="mt-1 text-[10px] text-navy-300 truncate" title={working.title}>
+              {working.title}
+            </div>
+          ) : agentActivity.thought ? (
+            <div className="mt-1 text-[10px] text-navy-400 italic truncate" title={agentActivity.thought}>
+              {agentActivity.thought}
+            </div>
+          ) : null
+        })()}
         {lastAssistantTs && (
           <Row label="Last response" value={fmtRelative(lastAssistantTs, now)} />
         )}

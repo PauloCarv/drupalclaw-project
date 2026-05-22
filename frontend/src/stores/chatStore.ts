@@ -1,6 +1,24 @@
 import { create } from 'zustand'
 import type { ChatMessage, ChatSession } from '@/api/chat'
 
+export interface ActivityItem {
+  id: string
+  type: 'tool' | 'intent' | 'error'
+  title: string
+  toolName?: string
+  status: 'working' | 'done' | 'failed' | 'info'
+  ts: number
+}
+
+interface AgentActivity {
+  thought: string
+  draft: string
+  items: ActivityItem[]
+}
+
+const EMPTY_ACTIVITY: AgentActivity = { thought: '', draft: '', items: [] }
+const MAX_ITEMS = 6
+
 interface ChatState {
   sessions: ChatSession[]
   activeSessionId: string | null
@@ -9,6 +27,7 @@ interface ChatState {
   isAgentRunning: boolean
   streamingContent: string
   streamingStartedAt: number | null
+  agentActivity: AgentActivity
 
   setSessions: (sessions: ChatSession[]) => void
   setActiveSession: (id: string | null) => void
@@ -18,7 +37,14 @@ interface ChatState {
   setAgentRunning: (running: boolean) => void
   setStreamingStartedAt: (ts: number | null) => void
   appendStreamContent: (chunk: string) => void
+  setStreamContent: (content: string) => void
   clearStreamContent: () => void
+
+  setThought: (text: string) => void
+  setDraft: (text: string) => void
+  pushActivityItem: (item: ActivityItem) => void
+  updateLastToolStatus: (toolName: string, status: 'done' | 'failed', title: string) => void
+  clearActivity: () => void
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -29,6 +55,7 @@ export const useChatStore = create<ChatState>((set) => ({
   isAgentRunning: false,
   streamingContent: '',
   streamingStartedAt: null,
+  agentActivity: EMPTY_ACTIVITY,
 
   setSessions: (sessions) => set({ sessions }),
   setActiveSession: (id) => set({ activeSessionId: id }),
@@ -38,5 +65,39 @@ export const useChatStore = create<ChatState>((set) => ({
   setAgentRunning: (isAgentRunning) => set({ isAgentRunning }),
   setStreamingStartedAt: (streamingStartedAt) => set({ streamingStartedAt }),
   appendStreamContent: (chunk) => set((state) => ({ streamingContent: state.streamingContent + chunk })),
+  setStreamContent: (streamingContent) => set({ streamingContent }),
   clearStreamContent: () => set({ streamingContent: '' }),
+
+  setThought: (thought) => set((s) => ({ agentActivity: { ...s.agentActivity, thought } })),
+  setDraft: (draft) => set((s) => ({ agentActivity: { ...s.agentActivity, draft } })),
+
+  pushActivityItem: (item) => set((s) => ({
+    agentActivity: {
+      ...s.agentActivity,
+      items: [...s.agentActivity.items, item].slice(-MAX_ITEMS),
+    },
+  })),
+
+  updateLastToolStatus: (toolName, status, title) => set((s) => {
+    const items = [...s.agentActivity.items]
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (items[i].toolName === toolName && items[i].status === 'working') {
+        items[i] = { ...items[i], status, title }
+        return { agentActivity: { ...s.agentActivity, items } }
+      }
+    }
+    // No match — add a terminal item
+    const fallback: ActivityItem = { id: `${Date.now()}`, type: 'tool', title, toolName, status, ts: Date.now() }
+    return {
+      agentActivity: {
+        ...s.agentActivity,
+        items: [...items, fallback].slice(-MAX_ITEMS),
+      },
+    }
+  }),
+
+  clearActivity: () => set({
+    agentActivity: EMPTY_ACTIVITY,
+    streamingContent: '',
+  }),
 }))
