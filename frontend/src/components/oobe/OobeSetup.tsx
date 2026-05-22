@@ -4,6 +4,7 @@ import {
   Github, Key, Cloud, Server, Cpu, ChevronRight, Copy,
 } from 'lucide-react'
 import * as providersApi from '@/api/providers'
+import drupalclawIcon from '@/assets/icon.png'
 
 /**
  * OOBE Setup — PiClaw Adaptive Card login via direct commands.
@@ -456,9 +457,11 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
       <div className={embedded ? 'w-full' : 'max-w-lg w-full mx-4'}>
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className={`${embedded ? 'w-12 h-12 text-lg' : 'w-16 h-16 text-2xl'} rounded-2xl bg-drupal-blue flex items-center justify-center font-bold text-white mx-auto mb-4 shadow-lg shadow-drupal-blue/20`}>
-            DC
-          </div>
+          <img
+            src={drupalclawIcon}
+            alt="DrupalClaw"
+            className={`${embedded ? 'w-12 h-12' : 'w-16 h-16'} rounded-2xl object-contain mx-auto mb-4 shadow-lg shadow-drupal-blue/20`}
+          />
           <h1 className={`${embedded ? 'text-lg' : 'text-xl'} font-semibold text-white`}>
             {embedded ? 'Provider Setup' : 'DrupalClaw Setup'}
           </h1>
