@@ -22,7 +22,7 @@ function stripAnsi(s: string): string {
     .replace(/\r/g, '')
 }
 
-export function useDockerStats(refreshMs = 8000) {
+export function useDockerStats(projectName?: string, refreshMs = 8000) {
   const [containers, setContainers] = useState<ContainerInfo[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -32,10 +32,11 @@ export function useDockerStats(refreshMs = 8000) {
   const linesRef = useRef<string[]>([])
 
   const poll = useCallback(() => {
+    const filter = projectName ? `--filter "label=com.docker.compose.project=${projectName}"` : ''
     sendRef.current?.(
-      `echo '${START}'; docker ps -a --format '{{.Names}}|{{.State}}|{{.Status}}' 2>&1; echo '${END}'\r`
+      `echo '${START}'; docker ps -a ${filter} --format '{{.Names}}|{{.State}}|{{.Status}}' 2>&1; echo '${END}'\r`
     )
-  }, [])
+  }, [projectName])
 
   useEffect(() => {
     let mounted = true

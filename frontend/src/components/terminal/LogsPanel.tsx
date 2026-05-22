@@ -1,15 +1,23 @@
 import { useRef, useState } from 'react'
 import { useTerminal } from '@/hooks/useTerminal'
+import { useStackState } from '@/hooks/useStackState'
 
-const CONTAINERS = [
-  { id: 'php',   name: 'drupal-dev-php-1',    label: 'PHP',   color: 'text-accent-green',      activeClass: 'border-accent-green bg-accent-green/10' },
-  { id: 'nginx', name: 'drupal-dev-nginx-1',  label: 'nginx', color: 'text-yellow-400',         activeClass: 'border-yellow-400 bg-yellow-400/10' },
-  { id: 'db',    name: 'drupal-dev-db-1',     label: 'DB',    color: 'text-drupal-blue-light',  activeClass: 'border-drupal-blue-light bg-drupal-blue/10' },
-  { id: 'dc',    name: 'docker-drupalclaw-1', label: 'DC',    color: 'text-navy-300',            activeClass: 'border-navy-300 bg-navy-500/20' },
-]
+const DC_CONTAINER = { id: 'dc', label: 'DC', color: 'text-navy-300', activeClass: 'border-navy-300 bg-navy-500/20' }
+
+function buildContainers(projectName: string | undefined) {
+  const p = projectName ?? 'drupal-dev'
+  return [
+    { id: 'php',   name: `${p}-php-1`,   label: 'PHP',   color: 'text-accent-green',     activeClass: 'border-accent-green bg-accent-green/10' },
+    { id: 'nginx', name: `${p}-nginx-1`, label: 'nginx', color: 'text-yellow-400',        activeClass: 'border-yellow-400 bg-yellow-400/10' },
+    { id: 'db',    name: `${p}-db-1`,    label: 'DB',    color: 'text-drupal-blue-light', activeClass: 'border-drupal-blue-light bg-drupal-blue/10' },
+    { ...DC_CONTAINER, name: 'docker-drupalclaw-1' },
+  ]
+}
 
 export function LogsPanel() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const stack = useStackState()
+  const CONTAINERS = buildContainers(stack?.project_name)
   // Separate PTY session — independent from the Terminal/Drush shared session
   const { sendCommand, sendRaw } = useTerminal(containerRef, { storageKey: 'piclaw_logs_client' })
 

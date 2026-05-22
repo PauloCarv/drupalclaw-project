@@ -1,4 +1,5 @@
 import { useDockerStats } from '@/hooks/useDockerStats'
+import { useStackState } from '@/hooks/useStackState'
 import { RefreshCw } from 'lucide-react'
 
 function StateIndicator({ state }: { state: string }) {
@@ -12,7 +13,8 @@ function StateIndicator({ state }: { state: string }) {
 }
 
 export function DockerPanel() {
-  const { containers, loading, restart, stop, start, refresh } = useDockerStats()
+  const stack = useStackState()
+  const { containers, loading, restart, stop, start, refresh } = useDockerStats(stack?.project_name ?? undefined)
 
   return (
     <div className="h-full w-full flex flex-col bg-[#0A1525] overflow-hidden">

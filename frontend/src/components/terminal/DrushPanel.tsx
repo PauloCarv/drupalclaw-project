@@ -1,8 +1,14 @@
 import { useRef } from 'react'
 import { useTerminal } from '@/hooks/useTerminal'
 import { useLayoutStore } from '@/stores/layoutStore'
+import { useStackState } from '@/hooks/useStackState'
 
-const PHP_CMD = "PHP_CONTAINER=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'drupal.*(php|fpm)' | head -1) && docker exec -it -w /var/www/html \"$PHP_CONTAINER\" bash"
+function buildPhpCmd(projectName: string | undefined): string {
+  if (projectName) {
+    return `PHP_CONTAINER=$(docker ps --filter "label=com.docker.compose.project=${projectName}" --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -iE 'php|fpm' | head -1) && docker exec -it -w /var/www/html "$PHP_CONTAINER" bash`
+  }
+  return `PHP_CONTAINER=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'drupal.*(php|fpm)' | head -1) && docker exec -it -w /var/www/html "$PHP_CONTAINER" bash`
+}
 
 const DRUSH = 'vendor/bin/drush'
 
@@ -22,6 +28,8 @@ export function DrushPanel() {
   const containerRef = useRef<HTMLDivElement>(null)
   const { sendCommand } = useTerminal(containerRef)
   const { terminalCtxId, setTerminalCtxId } = useLayoutStore()
+  const stack = useStackState()
+  const PHP_CMD = buildPhpCmd(stack?.project_name)
 
   const inPhp = terminalCtxId === 'drupal-php'
 
