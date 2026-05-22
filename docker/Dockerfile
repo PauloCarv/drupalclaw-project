@@ -15,8 +15,9 @@ RUN npm run build
 # -----------------------------------------------------------------------------
 # Stage 2: Final runtime image — based on working PiClaw
 # -----------------------------------------------------------------------------
-FROM ghcr.io/rcarmo/piclaw:latest@sha256:7e87c0157f8be71b885f41be275d906be9225f6b65874571e6a19ccef90eb7f8
+FROM ghcr.io/rcarmo/piclaw:latest
 
+# Detect where piclaw is installed (path varies by platform/version)
 ARG PICLAW_DIR=/usr/local/lib/bun/install/global/node_modules/piclaw
 
 # -- Install PHP 8.3 + Drupal dev stack + Docker CLI --
