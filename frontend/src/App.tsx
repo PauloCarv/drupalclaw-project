@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { OobeSetup } from '@/components/oobe/OobeSetup'
 import * as providersApi from '@/api/providers'
-import { getTimeline, postMessage } from '@/api/chat'
+import { getTimeline } from '@/api/chat'
 
 export default function App() {
   const [oobeComplete, setOobeComplete] = useState<boolean | null>(null) // null = checking
@@ -16,24 +16,22 @@ export default function App() {
     setOobeComplete(ready)
   }
 
-  const handleOobeComplete = () => {
-    // Render MainLayout immediately so SSE connects before we send the welcome message
-    setOobeComplete(true)
-    // Delay welcome message so SSE is connected and the thinking indicator shows
-    setTimeout(async () => {
-      try {
-        const posts = await getTimeline(10)
-        const hasRealMessages = posts.some(p =>
-          p.data?.type === 'user_message' &&
-          !String(p.data?.content ?? '').startsWith('/login')
-        )
-        if (!hasRealMessages) {
-          await postMessage('Hello! I just set up DrupalClaw.')
-        }
-      } catch {
-        // Non-critical
+  const handleOobeComplete = async () => {
+    // Check for fresh install before rendering MainLayout (timeline still accessible)
+    try {
+      const posts = await getTimeline(10)
+      const hasRealMessages = posts.some(p =>
+        p.data?.type === 'user_message' &&
+        !String(p.data?.content ?? '').startsWith('/login')
+      )
+      if (!hasRealMessages) {
+        // Signal ChatPanel to send the welcome via useChat.sendMessage (shows thinking indicator)
+        sessionStorage.setItem('dc_send_welcome', '1')
       }
-    }, 2000)
+    } catch {
+      // Non-critical
+    }
+    setOobeComplete(true)
   }
 
   // Still checking

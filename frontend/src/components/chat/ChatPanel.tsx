@@ -85,6 +85,14 @@ export function ChatPanel() {
     ? allCommands.filter((c) => c.name.toLowerCase().includes(input.toLowerCase())).slice(0, 8)
     : []
 
+  useEffect(() => {
+    if (sessionStorage.getItem('dc_send_welcome') !== '1') return
+    sessionStorage.removeItem('dc_send_welcome')
+    // Send via useChat.sendMessage so isAgentRunning is set and thinking indicator shows
+    const timer = setTimeout(() => { sendMessage('Hello! I just set up DrupalClaw.') }, 800)
+    return () => clearTimeout(timer)
+  }, [sendMessage])
+
   useEffect(() => { setSuggestionIndex(0) }, [input])
 
   useEffect(() => {
