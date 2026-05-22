@@ -11,7 +11,7 @@ const _cache: Record<string, FlowRun[]> = {}
 let _expandedId: string | null = null
 const _triggerSince: Record<string, number> = {}
 const _consecutiveFails: Record<string, number> = {}
-const POLL_TIMEOUT_MS = 5 * 60 * 1000
+const POLL_TIMEOUT_MS = 10 * 60 * 1000
 const MAX_CONSECUTIVE_FAILS = 5
 
 function fmtRelative(ts: number): string {
@@ -232,7 +232,7 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
           setPollTick(t => t + 1)
         }
       }
-    }, 6000)
+    }, 10000)
     return () => clearTimeout(timer)
   }, [runsCache, setRunsCache, pollTick])
 

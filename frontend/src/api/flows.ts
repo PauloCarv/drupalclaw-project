@@ -1,6 +1,8 @@
 import { apiGet } from './client'
 import { runWorkspaceCommand } from './bash'
 
+const RUNS_CLIENT_KEY   = 'piclaw_flows_runs_client'
+const STATUS_CLIENT_KEY = 'piclaw_flows_status_client'
 const RESULT_CLIENT_KEY = 'piclaw_fs_result_client'
 
 export interface FlowStep {
@@ -157,7 +159,9 @@ export async function isFlowRunning(flowId: string): Promise<boolean> {
   await runWorkspaceCommand(
     `mkdir -p ${TMP_DIR} && sqlite3 -json "${DB_PATH}" ` +
     `"SELECT id FROM scheduled_tasks WHERE prompt LIKE '%${marker}%' AND status='running' LIMIT 1" ` +
-    `> /workspace/${tmpPath} 2>/dev/null || echo '[]' > /workspace/${tmpPath}; chmod 644 /workspace/${tmpPath} 2>/dev/null`
+    `> /workspace/${tmpPath} 2>/dev/null || echo '[]' > /workspace/${tmpPath}; chmod 644 /workspace/${tmpPath} 2>/dev/null`,
+    15000,
+    STATUS_CLIENT_KEY,
   )
   try {
     const envelope = await apiGet<{ text: string }>(`/workspace/file?path=${encodeURIComponent(tmpPath)}`)
@@ -196,7 +200,9 @@ export async function getFlowRuns(flowId: string): Promise<FlowRun[]> {
     `trl.error, trl.result, st.schedule_type as scheduleType ` +
     `FROM task_run_logs trl JOIN scheduled_tasks st ON trl.task_id = st.id ` +
     `WHERE st.prompt LIKE '%${marker}%' ORDER BY trl.run_at DESC LIMIT 5" ` +
-    `> /workspace/${tmpPath} 2>/dev/null || echo '[]' > /workspace/${tmpPath}; chmod 644 /workspace/${tmpPath} 2>/dev/null`
+    `> /workspace/${tmpPath} 2>/dev/null || echo '[]' > /workspace/${tmpPath}; chmod 644 /workspace/${tmpPath} 2>/dev/null`,
+    20000,
+    RUNS_CLIENT_KEY,
   )
   try {
     const envelope = await apiGet<{ text: string }>(`/workspace/file?path=${encodeURIComponent(tmpPath)}`)
