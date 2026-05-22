@@ -148,13 +148,19 @@ export function WatchdogPanel() {
   }, [sendMessage, isAgentRunning, updating, stopPolling])
 
   const handleRowClick = useCallback((entry: WatchdogEntry) => {
+    const lang = navigator.language?.split('-')[0] ?? 'en'
+    const header = lang === 'pt' ? 'Analisa este registo do watchdog Drupal:'
+                 : lang === 'es' ? 'Analiza este registro del watchdog de Drupal:'
+                 : lang === 'fr' ? 'Analyse cette entrée watchdog Drupal :'
+                 : lang === 'de' ? 'Analysiere diesen Drupal-Watchdog-Eintrag:'
+                 : 'Analyze this Drupal watchdog entry:'
     const msg = [
-      'Analisa este registo do watchdog Drupal:',
+      header,
       '',
-      `Tipo: ${entry.type}`,
-      `Severidade: ${String(entry.severity)}`,
-      `Mensagem: ${stripHtml(String(entry.message))}`,
-      `Data: ${formatDate(entry)}`,
+      `Type: ${entry.type}`,
+      `Severity: ${String(entry.severity)}`,
+      `Message: ${stripHtml(String(entry.message))}`,
+      `Date: ${formatDate(entry)}`,
       entry.hostname ? `Host: ${entry.hostname}` : '',
       entry.location ? `URL: ${entry.location}` : '',
     ].filter(Boolean).join('\n')
