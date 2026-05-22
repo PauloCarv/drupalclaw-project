@@ -15,7 +15,7 @@ RUN npm run build
 # -----------------------------------------------------------------------------
 # Stage 2: Final runtime image — based on working PiClaw
 # -----------------------------------------------------------------------------
-FROM ghcr.io/rcarmo/piclaw:latest
+FROM ghcr.io/rcarmo/piclaw:latest@sha256:7e87c0157f8be71b885f41be275d906be9225f6b65874571e6a19ccef90eb7f8
 
 ARG PICLAW_DIR=/usr/local/lib/bun/install/global/node_modules/piclaw
 
@@ -55,7 +55,7 @@ WORKDIR ${PICLAW_DIR}
 COPY --from=frontend-build /app/dist/ ${PICLAW_DIR}/runtime/web/static/drupalclaw/
 
 # -- Replace PiClaw index.html with redirect to DrupalClaw UI --
-RUN echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/static/drupalclaw/index.html"></head><body></body></html>' \
+RUN echo '<!DOCTYPE html><html><head><script>window.location.replace("/static/drupalclaw/index.html")</script></head><body></body></html>' \
     > ${PICLAW_DIR}/runtime/web/static/index.html
 
 # -- Copy Drupal skills --
