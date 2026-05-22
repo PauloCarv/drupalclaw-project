@@ -61,5 +61,12 @@ fi
 # -- Fix Docker socket permissions (lost on Docker Desktop restart) --
 chmod 666 /var/run/docker.sock 2>/dev/null || true
 
+# -- Ensure DrupalClaw redirect is in place (overrides any stale PiClaw index.html) --
+PICLAW_STATIC="/usr/local/lib/bun/install/global/node_modules/piclaw/runtime/web/static"
+if [[ -d "$PICLAW_STATIC" ]]; then
+  echo '<!DOCTYPE html><html><head><script>window.location.replace("/static/drupalclaw/index.html")</script></head><body></body></html>' \
+    > "$PICLAW_STATIC/index.html"
+fi
+
 # -- Hand off to original PiClaw entrypoint --
 exec /entrypoint-piclaw.sh "$@"
