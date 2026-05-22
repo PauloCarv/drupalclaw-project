@@ -164,10 +164,16 @@ export function useChat() {
     const localId = `local-${now}`
     lastSseActivityAt.current = now
     streamingCompletedAt.current = 0
+    // Build the same content string that PiClaw will store (with attachment block)
+    // so the deduplication check (t.content === m.content) works correctly.
+    let localContent = content
+    if (media.length > 0) {
+      localContent += '\n\nAttachments:\n' + media.map(m => `- attachment:${m.id} (${m.filename})`).join('\n')
+    }
     const userMsg: chatApi.ChatMessage = {
       id: localId,
       role: 'user',
-      content,
+      content: localContent,
       timestamp: now,
     }
     store.addMessage(userMsg)
