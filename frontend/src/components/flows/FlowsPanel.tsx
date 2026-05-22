@@ -54,7 +54,7 @@ export function FlowsPanel() {
       {/* Error banner */}
       {runError && (
         <div className="px-4 py-2 bg-accent-red/10 border-b border-accent-red/20 text-xs text-accent-red flex-shrink-0">
-          Erro ao executar flow: {runError}
+          Failed to trigger flow: {runError}
         </div>
       )}
 

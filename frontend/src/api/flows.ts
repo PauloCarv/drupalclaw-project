@@ -70,8 +70,12 @@ async function readFlowsFile(): Promise<Flow[]> {
 async function writeFlowsFile(flows: Flow[]): Promise<void> {
   const content = JSON.stringify(flows)
   const b64 = btoa(unescape(encodeURIComponent(content)))
+  // Fresh key per call — avoids inheriting stale PTY state from previous (possibly timed-out) sessions
+  const key = `piclaw_flows_write_${Date.now().toString(36)}`
   await runWorkspaceCommand(
-    `mkdir -p /workspace/.piclaw && printf '%s' '${b64}' | base64 -d > /workspace/.piclaw/flows.json`
+    `mkdir -p /workspace/.piclaw && printf '%s' '${b64}' | base64 -d > /workspace/.piclaw/flows.json`,
+    20000,
+    key,
   )
 }
 
@@ -79,8 +83,11 @@ async function writeIpcFile(data: object, prefix: string): Promise<void> {
   const filename = `${prefix}_${Date.now()}.json`
   const content = JSON.stringify(data)
   const b64 = btoa(unescape(encodeURIComponent(content)))
+  const key = `piclaw_ipc_write_${Date.now().toString(36)}`
   await runWorkspaceCommand(
-    `mkdir -p ${IPC_TASKS_DIR} && printf '%s' '${b64}' | base64 -d > ${IPC_TASKS_DIR}/${filename}`
+    `mkdir -p ${IPC_TASKS_DIR} && printf '%s' '${b64}' | base64 -d > ${IPC_TASKS_DIR}/${filename}`,
+    20000,
+    key,
   )
 }
 
