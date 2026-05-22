@@ -12,15 +12,25 @@ Runs cache rebuild via Drush.
 
 1. Resolve drush (container vs local):
    ```bash
-   PHP_CONTAINER=$(docker ps --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -E "drupal.*(php|fpm)" | head -1)
+   STACK_STATE="/workspace/.piclaw/stack/state.json"
+   if [[ ! -f "$STACK_STATE" ]]; then
+     echo "❌ No Drupal stack configured for this workspace."
+     echo "   Run 'drupal-serve' to initialize the stack."
+     exit 1
+   fi
+   PROJECT_NAME=$(jq -r '.project_name // empty' "$STACK_STATE")
+   PHP_CONTAINER=$(docker ps \
+     --filter "status=running" \
+     --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
+     --format '{{.Names}}' 2>/dev/null | grep -iE "php|fpm" | head -1)
    if [[ -n "$PHP_CONTAINER" ]]; then
-     echo "🐳 Active stack: $PHP_CONTAINER"
+     echo "🐳 Stack: ${PROJECT_NAME} ($PHP_CONTAINER)"
      DRUSH="docker exec -i -w /var/www/html $PHP_CONTAINER vendor/bin/drush"
    elif [[ -x "vendor/bin/drush" ]]; then
      DRUSH="vendor/bin/drush"
    else
-     echo "❌ Docker stack not active and local drush not found."
-     echo "   To start the stack: use drupal-serve"
+     echo "❌ Stack '${PROJECT_NAME}' is not running."
+     echo "   Run 'drupal-serve' to start it."
      exit 1
    fi
    ```

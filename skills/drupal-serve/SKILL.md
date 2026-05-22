@@ -56,7 +56,8 @@ fi
 STATE_FILE="${WORKSPACE_DIR}/.piclaw/stack/state.json"
 if [[ -f "$STATE_FILE" ]]; then
   EXISTING_URL=$(jq -r '.drupal_url // empty' "$STATE_FILE" 2>/dev/null)
-  if [[ -n "$EXISTING_URL" ]] && docker compose -f "${WORKSPACE_DIR}/docker-compose.drupal.yml" -p drupal-dev ps --status running 2>/dev/null | grep -q "php"; then
+  EXISTING_PROJECT=$(jq -r '.project_name // empty' "$STATE_FILE" 2>/dev/null)
+  if [[ -n "$EXISTING_URL" && -n "$EXISTING_PROJECT" ]] && docker ps --filter "status=running" --filter "label=com.docker.compose.project=${EXISTING_PROJECT}" --format '{{.Names}}' 2>/dev/null | grep -qiE "php|fpm"; then
     echo "✅ Stack is already running!"
     echo "  🌐 $EXISTING_URL"
     echo ""

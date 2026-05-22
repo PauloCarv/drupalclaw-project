@@ -17,9 +17,20 @@ Shows the full Drupal project status.
      exit 1
    fi
 
-   PHP_CONTAINER=$(docker ps --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -E "drupal.*(php|fpm)" | head -1)
+   STACK_STATE="/workspace/.piclaw/stack/state.json"
+   PROJECT_NAME=""
+   if [[ -f "$STACK_STATE" ]]; then
+     PROJECT_NAME=$(jq -r '.project_name // empty' "$STACK_STATE")
+   fi
+   PHP_CONTAINER=""
+   if [[ -n "$PROJECT_NAME" ]]; then
+     PHP_CONTAINER=$(docker ps \
+       --filter "status=running" \
+       --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
+       --format '{{.Names}}' 2>/dev/null | grep -iE "php|fpm" | head -1)
+   fi
    if [[ -n "$PHP_CONTAINER" ]]; then
-     echo "🐳 Active stack: $PHP_CONTAINER"
+     echo "🐳 Stack: ${PROJECT_NAME} ($PHP_CONTAINER)"
      DRUSH="docker exec -i -w /var/www/html $PHP_CONTAINER vendor/bin/drush"
      PHP_CMD="docker exec -w /var/www/html $PHP_CONTAINER php"
      COMPOSER_CMD="docker exec -w /var/www/html $PHP_CONTAINER composer"
@@ -28,7 +39,7 @@ Shows the full Drupal project status.
      PHP_CMD="php"
      COMPOSER_CMD="composer"
    else
-     echo "⚠ Docker stack not active — partial information."
+     echo "⚠ Stack not active — partial information. Run 'drupal-serve' to start it."
      DRUSH=""
      PHP_CMD="php"
      COMPOSER_CMD="composer"

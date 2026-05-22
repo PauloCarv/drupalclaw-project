@@ -45,7 +45,8 @@ If the user answers `yes`:
 ```bash
 # Stop stack if running
 if [[ -f "/workspace/docker-compose.drupal.yml" ]]; then
-  docker compose -f /workspace/docker-compose.drupal.yml -p drupal-dev down -v 2>/dev/null || true
+  STACK_PROJECT=$(jq -r '.project_name // "drupal-dev"' /workspace/.piclaw/stack/state.json 2>/dev/null || echo "drupal-dev")
+  docker compose -f /workspace/docker-compose.drupal.yml -p "$STACK_PROJECT" down -v 2>/dev/null || true
   echo "⏹️  Stack stopped and volumes removed."
 fi
 rm -rf "$DRUPAL_DIR"
@@ -157,16 +158,17 @@ SQL_FILE="<provided path>"
 
 # Check if stack is running to import via container
 STACK_RUNNING=false
-if docker compose -f "/workspace/docker-compose.drupal.yml" -p drupal-dev ps --status running 2>/dev/null | grep -q "db"; then
+STACK_PROJECT=$(jq -r '.project_name // "drupal-dev"' /workspace/.piclaw/stack/state.json 2>/dev/null || echo "drupal-dev")
+if docker compose -f "/workspace/docker-compose.drupal.yml" -p "$STACK_PROJECT" ps --status running 2>/dev/null | grep -q "db"; then
   STACK_RUNNING=true
 fi
 
 if [[ "$STACK_RUNNING" == "true" ]]; then
   echo "📥 Importing SQL dump via Docker stack..."
   if [[ "$SQL_FILE" == *.gz ]]; then
-    gunzip -c "$SQL_FILE" | docker compose -f /workspace/docker-compose.drupal.yml -p drupal-dev exec -T db mysql -udrupal -pdrupal drupal
+    gunzip -c "$SQL_FILE" | docker compose -f /workspace/docker-compose.drupal.yml -p "$STACK_PROJECT" exec -T db mysql -udrupal -pdrupal drupal
   else
-    docker compose -f /workspace/docker-compose.drupal.yml -p drupal-dev exec -T db mysql -udrupal -pdrupal drupal < "$SQL_FILE"
+    docker compose -f /workspace/docker-compose.drupal.yml -p "$STACK_PROJECT" exec -T db mysql -udrupal -pdrupal drupal < "$SQL_FILE"
   fi
   echo "✅ Database imported."
 else
@@ -237,7 +239,8 @@ echo ""
 # Check if stack is running
 STACK_RUNNING=false
 STATE_FILE="/workspace/.piclaw/stack/state.json"
-if [[ -f "$STATE_FILE" ]] && docker compose -f "/workspace/docker-compose.drupal.yml" -p drupal-dev ps --status running 2>/dev/null | grep -q "php"; then
+STACK_PROJECT=$(jq -r '.project_name // "drupal-dev"' "$STATE_FILE" 2>/dev/null || echo "drupal-dev")
+if [[ -f "$STATE_FILE" ]] && docker compose -f "/workspace/docker-compose.drupal.yml" -p "$STACK_PROJECT" ps --status running 2>/dev/null | grep -q "php"; then
   STACK_RUNNING=true
   STACK_URL=$(jq -r '.drupal_url // ""' "$STATE_FILE" 2>/dev/null)
 fi
