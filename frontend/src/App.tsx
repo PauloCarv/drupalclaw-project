@@ -16,21 +16,24 @@ export default function App() {
     setOobeComplete(ready)
   }
 
-  const handleOobeComplete = async () => {
-    // On fresh install (empty timeline), trigger agent onboarding automatically
-    try {
-      const posts = await getTimeline(10)
-      const hasRealMessages = posts.some(p =>
-        p.data?.type === 'user_message' &&
-        !String(p.data?.content ?? '').startsWith('/login')
-      )
-      if (!hasRealMessages) {
-        await postMessage('Hello! I just set up DrupalClaw.')
-      }
-    } catch {
-      // Non-critical — proceed to main app regardless
-    }
+  const handleOobeComplete = () => {
+    // Render MainLayout immediately so SSE connects before we send the welcome message
     setOobeComplete(true)
+    // Delay welcome message so SSE is connected and the thinking indicator shows
+    setTimeout(async () => {
+      try {
+        const posts = await getTimeline(10)
+        const hasRealMessages = posts.some(p =>
+          p.data?.type === 'user_message' &&
+          !String(p.data?.content ?? '').startsWith('/login')
+        )
+        if (!hasRealMessages) {
+          await postMessage('Hello! I just set up DrupalClaw.')
+        }
+      } catch {
+        // Non-critical
+      }
+    }, 2000)
   }
 
   // Still checking

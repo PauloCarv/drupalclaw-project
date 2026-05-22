@@ -47,12 +47,18 @@ export interface TimelinePost {
   }
 }
 
+const OOBE_USER_RE = /^\/login/
+const OOBE_AGENT_RE = /provider authentication|oauth login for|oauth for .* didn't complete|select a model/i
+
 export function normalizeTimelinePost(post: TimelinePost): ChatMessage | null {
   const postData = post.data ?? {}
   const type = postData.type ?? ''
   const isUser = type === 'user_message' || post.role === 'user' || post.author === 'user'
   const content = postData.content ?? postData.text ?? post.content ?? post.text ?? post.body ?? ''
   if (!content) return null
+  // Hide OOBE authentication flow messages — they're internal scaffolding, not conversation
+  if (isUser && OOBE_USER_RE.test(content)) return null
+  if (!isUser && OOBE_AGENT_RE.test(content)) return null
   return {
     id: String(post.id ?? post.rowid ?? Math.random()),
     role: isUser ? 'user' : 'assistant',
