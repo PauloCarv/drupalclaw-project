@@ -5,8 +5,10 @@ import * as chatApi from '@/api/chat'
 import type { TimelinePost } from '@/api/chat'
 
 // How long with no SSE activity before the timeline-based auto-clear is allowed.
-// Prevents clearing during gaps between tool calls in long multi-step operations.
-const SSE_QUIET_THRESHOLD_MS = 8000
+// Must be long enough to survive bash commands running between LLM steps (Composer
+// installs can take minutes with no SSE). 30s covers most normal operations;
+// the 10-min watchdog is the final safety net for truly stuck states.
+const SSE_QUIET_THRESHOLD_MS = 30_000
 
 // Watchdog: if streaming is true for this long with zero SSE activity, force-clear.
 const STREAMING_WATCHDOG_MS = 10 * 60 * 1000 // 10 minutes
@@ -25,7 +27,8 @@ export function useChat() {
   const scheduleWatchdog = useCallback(() => {
     clearWatchdog()
     watchdogRef.current = setTimeout(() => {
-      if (useChatStore.getState().isStreaming) {
+      const s = useChatStore.getState()
+      if (s.isStreaming || s.isAgentRunning) {
         store.setStreaming(false)
         store.setAgentRunning(false)
         store.setStreamingStartedAt(null)
