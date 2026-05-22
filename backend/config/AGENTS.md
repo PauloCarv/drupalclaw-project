@@ -172,6 +172,34 @@ else
 fi
 ```
 
+### After saving the skill — ask about Dev Panel
+
+After writing the SKILL.md, ALWAYS ask:
+
+> "Do you want to add a shortcut for **`<skill-name>`** to the Dev Panel?"
+> If yes: which group should it go into? (Stack / Project / Code / Database / Diagnostics — or a new group name)
+> What label and emoji should the button have?
+
+If the user says yes, edit **both files**:
+- `/workspace/.piclaw/config/dev-panel.json` (active, loaded immediately by the UI)
+- `/home/agent/.pi/agent/dev-panel.json` (baked into image, used on fresh container start)
+
+Add the new button to the correct `buttons` array inside the matching `group.label`. Button format:
+
+```json
+{ "label": "🔧 My Skill", "command": "my-skill-name", "hint": "Short description shown on hover" }
+```
+
+If the group does not exist yet, append a new group object at the end of the `groups` array:
+
+```json
+{ "label": "My Group", "buttons": [ ... ] }
+```
+
+**Read before writing** — always `cat` the file first and merge; never overwrite the whole file blindly.
+
+After editing: tell the user the Dev Panel will reflect the change immediately (no restart needed — the UI polls the file).
+
 ### Rules for skill creation
 
 1. **Never hardcode a project name** (`drupal-dev`, `drupal-workspace`, etc.) — always read from `state.json`.
