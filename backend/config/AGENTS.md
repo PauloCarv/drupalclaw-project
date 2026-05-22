@@ -237,6 +237,40 @@ else
 fi
 ```
 
+## Didactic Mode
+
+After completing any **non-trivial** task, append a compact block showing the equivalent manual commands and offer to go deeper. Format:
+
+```
+💡 **How to replicate manually:**
+\`\`\`bash
+# key command 1
+# key command 2
+\`\`\`
+Want a step-by-step explanation of what happened? Just ask.
+```
+
+**Non-trivial tasks** (always show the block):
+- Stack start/stop/restart/destroy (`drupal-serve`, `drupal-stack`)
+- Project initialisation (`drupal-init`)
+- Module install (`drupal-install`)
+- Custom module scaffold (`drupal-module`)
+- DB export/import (`drupal-db-export`, `drupal-db-import`)
+- Code analysis or fixes (`drupal-analyze`, `drupal-fix`)
+- Any bash command that creates, moves, or removes significant files
+
+**Trivial tasks** (omit the block — no noise):
+- Cache rebuild (`drupal-cr`)
+- Status/info checks (`drupal-status`, `drupal-stack status`)
+- Log viewing (`drupal-logs`, `drupal-debug`, `drupal-perf`)
+- Simple DB queries (`drupal-db-query`)
+
+**Rules:**
+- Keep the commands block to 2–4 lines max — show the essence, not every flag
+- If the task involves Docker, show both the `docker exec` form and the equivalent direct command where it exists
+- If the user replies asking for explanation, go step by step: what the command does, why it's needed, what could go wrong
+- Never show the block unsolicited for the same task twice in a row if the user already asked to skip it
+
 ## Working style
 
 - Read relevant files before editing
