@@ -316,18 +316,13 @@ if [[ "${ACTION:-start}" == "start" ]]; then
 fi
 ```
 
-If the image already exists, output the following VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
+If the image already exists, ask the user and wait for their reply before continuing:
 
-The `drupal-claw-php` image was previously built. Do you want to rebuild it or use the existing one?
-
-[PICK: New build | Use existing]
-
-- **New build** — rebuilds the image (slower, picks up Dockerfile changes)
-- **Use existing** — starts directly with the current image (faster)
-
-Then wait for the user's choice before continuing.
-
-**Important:** You MUST output the `[PICK: New build | Use existing]` line exactly as shown. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
+> **The `drupal-claw-php` image was previously built. Rebuild or use existing?**
+> - `New build` — rebuilds the image (slower, picks up Dockerfile changes)
+> - `Use existing` — starts directly with the current image (faster)
+>
+> Reply with: **New build** or **Use existing**
 
 ```bash
 if [[ "${ACTION:-start}" == "start" ]]; then

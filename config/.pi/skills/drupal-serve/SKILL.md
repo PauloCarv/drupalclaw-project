@@ -70,19 +70,15 @@ fi
 
 ### 4. Ask user for DB type (if not specified)
 
-If the `db` parameter was not provided, output the following message VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
+If the `db` parameter was not provided, ask the user which database to use and wait for their reply before continuing. Format your question exactly like this:
 
 Which database do you want to use?
-
-[PICK: MariaDB | PostgreSQL | SQLite]
 
 - **MariaDB** — recommended, MySQL-compatible
 - **PostgreSQL** — native Drupal support
 - **SQLite** — no extra container, local file
 
-Then wait for the user to click a button or type their choice before continuing.
-
-**Important:** You MUST output the `[PICK: MariaDB | PostgreSQL | SQLite]` line exactly as shown above. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
+Reply with the name of your choice.
 
 ### 5. Start stack via drupal-stack
 

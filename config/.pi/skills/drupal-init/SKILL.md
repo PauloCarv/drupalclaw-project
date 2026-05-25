@@ -34,18 +34,13 @@ else
 fi
 ```
 
-**If PROJECT_EXISTS=true or partial**, output the following VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
+**If PROJECT_EXISTS=true or partial**, ask the user and wait for their reply before continuing:
 
-Content already exists in `/workspace/drupal` (`$PROJECT_NAME`). Do you want to delete everything and start fresh?
-
-[PICK: Yes, delete everything | No, cancel]
-
-- **Yes, delete everything** — deletes the directory and continues
-- **No, cancel** — cancels, preserves existing project
-
-Then wait for the user's choice before continuing.
-
-**Important:** You MUST output the `[PICK: Yes, delete everything | No, cancel]` line exactly as shown. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
+> **Content already exists in `/workspace/drupal` (`$PROJECT_NAME`). Delete everything and start fresh?**
+> - `Yes` — deletes the directory and continues
+> - `No` — cancels, preserves existing project
+>
+> Reply with: **Yes** or **No**
 
 If the user answers `yes`:
 ```bash
@@ -73,18 +68,13 @@ exit 0
 
 ## Step 2 — Project type
 
-Output the following VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
+Ask the user and wait for their reply before continuing:
 
-How do you want to initialise the Drupal project?
-
-[PICK: New project | Existing Git repository]
-
-- **New project** — install Drupal from scratch via Composer
-- **Existing Git repository** — clone from URL (GitHub, GitLab, Bitbucket, etc.)
-
-Then wait for the user's choice before continuing.
-
-**Important:** You MUST output the `[PICK: New project | Existing Git repository]` line exactly as shown. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
+> **How do you want to initialise the Drupal project?**
+> - `New project` — install Drupal from scratch via Composer
+> - `Existing Git repository` — clone from URL (GitHub, GitLab, Bitbucket, etc.)
+>
+> Reply with: **New project** or **Existing Git repository**
 
 Save the choice as `INIT_TYPE=new` or `INIT_TYPE=git`.
 
@@ -116,7 +106,7 @@ echo "INIT_DONE=true"
 echo "NEEDS_COMPOSER=false"
 ```
 
-After cloning, proceed to **Step 4** (data import).
+After cloning, proceed to **Step 3c** (settings setup).
 
 ---
 
@@ -143,28 +133,184 @@ composer require drupal/admin_toolbar drupal/pathauto drupal/token drupal/metata
 
 ```bash
 cd /workspace/drupal
-if [[ -f web/sites/default/default.settings.php ]]; then
-  cp web/sites/default/default.settings.php web/sites/default/settings.php
-  chmod 666 web/sites/default/settings.php
-  echo "✅ settings.php created."
-fi
 echo "INIT_DONE=true"
 echo "NEEDS_COMPOSER=false"
+```
+
+After creating the project, proceed to **Step 3c** (settings setup).
+
+---
+
+## Step 3c — Configure settings.local.php
+
+This step runs after both 3a and 3b. Sets up the correct local settings pattern: `settings.local.php` for environment-specific config (gitignored), with `settings.php` including it.
+
+```bash
+DRUPAL_DIR="/workspace/drupal"
+
+# Detect Drupal web root (web/ docroot/ or flat)
+if [[ -d "${DRUPAL_DIR}/web/sites/default" ]]; then
+  SITES_DIR="${DRUPAL_DIR}/web/sites/default"
+  WEB_ROOT="${DRUPAL_DIR}/web"
+elif [[ -d "${DRUPAL_DIR}/docroot/sites/default" ]]; then
+  SITES_DIR="${DRUPAL_DIR}/docroot/sites/default"
+  WEB_ROOT="${DRUPAL_DIR}/docroot"
+elif [[ -d "${DRUPAL_DIR}/sites/default" ]]; then
+  SITES_DIR="${DRUPAL_DIR}/sites/default"
+  WEB_ROOT="${DRUPAL_DIR}"
+else
+  echo "⚠️  Could not detect Drupal web root — skipping settings setup."
+  exit 0
+fi
+
+echo "📁 Web root: $WEB_ROOT"
+echo "📁 Sites dir: $SITES_DIR"
+
+# Ensure settings.php exists (copy from default if missing)
+if [[ ! -f "${SITES_DIR}/settings.php" ]]; then
+  if [[ -f "${SITES_DIR}/default.settings.php" ]]; then
+    cp "${SITES_DIR}/default.settings.php" "${SITES_DIR}/settings.php"
+    echo "✅ settings.php created from default."
+  else
+    echo "⚠️  No default.settings.php found — cannot create settings.php."
+    exit 0
+  fi
+fi
+chmod 666 "${SITES_DIR}/settings.php"
+
+# Activate settings.local.php include in settings.php
+# (Drupal ships it commented out with #)
+if grep -q "settings.local.php" "${SITES_DIR}/settings.php"; then
+  # Uncomment the block if it's commented out
+  python3 -c "
+import re, sys
+content = open('${SITES_DIR}/settings.php').read()
+# Uncomment the settings.local.php include block
+content = re.sub(r'# (if \(file_exists[^\n]*settings\.local\.php[^\n]*\))', r'\1', content)
+content = re.sub(r'#   (include [^\n]*settings\.local\.php[^\n]*)', r'  \1', content)
+content = re.sub(r'# (\})', r'\1', content)
+open('${SITES_DIR}/settings.php', 'w').write(content)
+print('done')
+" 2>/dev/null && echo "✅ settings.local.php include activated in settings.php." || \
+  echo "ℹ️  Could not auto-uncomment — check settings.php manually."
+else
+  # Append include at the end
+  printf '\nif (file_exists($app_root . '"'"'/'"'"' . $site_path . '"'"'/settings.local.php'"'"')) {\n  include $app_root . '"'"'/'"'"' . $site_path . '"'"'/settings.local.php'"'"';\n}\n' >> "${SITES_DIR}/settings.php"
+  echo "✅ settings.local.php include added to settings.php."
+fi
+```
+
+```bash
+DRUPAL_DIR="/workspace/drupal"
+STATE_FILE="/workspace/.piclaw/stack/state.json"
+
+# Detect web root again
+if [[ -d "${DRUPAL_DIR}/web/sites/default" ]]; then
+  SITES_DIR="${DRUPAL_DIR}/web/sites/default"
+elif [[ -d "${DRUPAL_DIR}/docroot/sites/default" ]]; then
+  SITES_DIR="${DRUPAL_DIR}/docroot/sites/default"
+else
+  SITES_DIR="${DRUPAL_DIR}/sites/default"
+fi
+
+# Skip if settings.local.php already exists with DB config
+if [[ -f "${SITES_DIR}/settings.local.php" ]] && grep -q "databases\[" "${SITES_DIR}/settings.local.php" 2>/dev/null; then
+  echo "ℹ️  settings.local.php already has DB config — skipping."
+else
+  # Read DB type from stack state
+  DB_DRIVER="mysql"
+  DB_HOST="db"
+  DB_PORT="3306"
+  DB_NAME="drupal"
+  DB_USER="drupal"
+  DB_PASS="drupal"
+
+  if [[ -f "$STATE_FILE" ]]; then
+    STACK_DB=$(jq -r '.db_type // "mariadb"' "$STATE_FILE" 2>/dev/null || echo "mariadb")
+    case "$STACK_DB" in
+      postgres) DB_DRIVER="pgsql"; DB_PORT="5432" ;;
+      sqlite)   DB_DRIVER="sqlite" ;;
+      *)        DB_DRIVER="mysql"; DB_PORT="3306" ;;
+    esac
+  fi
+
+  if [[ "$DB_DRIVER" == "sqlite" ]]; then
+    cat > "${SITES_DIR}/settings.local.php" << 'LOCALEOF'
+<?php
+
+$databases['default']['default'] = [
+  'driver' => 'sqlite',
+  'database' => '../sites/default/files/.sqlite',
+  'prefix' => '',
+  'namespace' => 'Drupal\\sqlite\\Driver\\Database\\sqlite',
+  'autoload' => 'core/modules/sqlite/src/Driver/Database/sqlite/',
+];
+LOCALEOF
+  else
+    cat > "${SITES_DIR}/settings.local.php" << LOCALEOF
+<?php
+
+\$databases['default']['default'] = [
+  'driver' => '${DB_DRIVER}',
+  'database' => '${DB_NAME}',
+  'username' => '${DB_USER}',
+  'password' => '${DB_PASS}',
+  'host' => '${DB_HOST}',
+  'port' => '${DB_PORT}',
+  'prefix' => '',
+  'namespace' => 'Drupal\\\\${DB_DRIVER}\\\\Driver\\\\Database\\\\${DB_DRIVER}',
+  'autoload' => 'core/modules/${DB_DRIVER}/src/Driver/Database/${DB_DRIVER}/',
+];
+LOCALEOF
+  fi
+
+  # Append local dev overrides
+  cat >> "${SITES_DIR}/settings.local.php" << 'LOCALEOF'
+
+// Local development settings — not safe for production.
+$settings['skip_permissions_hardening'] = TRUE;
+$settings['rebuild_access'] = TRUE;
+$config['system.performance']['cache']['page']['use_internal'] = FALSE;
+$config['system.performance']['css']['preprocess'] = FALSE;
+$config['system.performance']['js']['preprocess'] = FALSE;
+LOCALEOF
+
+  chmod 644 "${SITES_DIR}/settings.local.php"
+  echo "✅ settings.local.php created with ${DB_DRIVER} config (host: ${DB_HOST}:${DB_PORT})."
+fi
+```
+
+```bash
+DRUPAL_DIR="/workspace/drupal"
+
+# Add settings.local.php to .gitignore
+GITIGNORE="${DRUPAL_DIR}/.gitignore"
+ENTRY="sites/default/settings.local.php"
+
+if [[ -f "$GITIGNORE" ]]; then
+  if ! grep -q "$ENTRY" "$GITIGNORE"; then
+    echo "" >> "$GITIGNORE"
+    echo "# Local settings — not committed" >> "$GITIGNORE"
+    echo "$ENTRY" >> "$GITIGNORE"
+    echo "✅ settings.local.php added to .gitignore"
+  else
+    echo "ℹ️  settings.local.php already in .gitignore"
+  fi
+else
+  printf "# Local settings — not committed\n%s\n" "$ENTRY" > "$GITIGNORE"
+  echo "✅ .gitignore created with settings.local.php entry"
+fi
 ```
 
 ---
 
 ## Step 4 — Database import (optional)
 
-Output the following VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
+Ask the user and wait for their reply before continuing:
 
-Do you have a SQL dump to import?
-
-[PICK: Yes, I have a dump | No, continue]
-
-Then wait for the user's choice. If yes, ask for the file path (e.g. `/workspace/backup.sql` or `/workspace/backup.sql.gz`).
-
-**Important:** You MUST output the `[PICK: Yes, I have a dump | No, continue]` line exactly as shown. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
+> **Do you have a SQL dump to import?**
+>
+> Reply with: **Yes** (then provide the file path, e.g. `/workspace/backup.sql`) or **No**
 
 **If yes**, ask for the path and run:
 
@@ -199,15 +345,11 @@ fi
 
 ## Step 5 — File import for sites/default/files (optional)
 
-Output the following VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
+Ask the user and wait for their reply before continuing:
 
-Do you have media/upload files to import? (zip or tar.gz of `sites/default/files`)
-
-[PICK: Yes, I have files | No, continue]
-
-Then wait for the user's choice. If yes, ask for the archive path.
-
-**Important:** You MUST output the `[PICK: Yes, I have files | No, continue]` line exactly as shown. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
+> **Do you have media/upload files to import?** (zip or tar.gz of `sites/default/files`)
+>
+> Reply with: **Yes** (then provide the archive path) or **No**
 
 **If yes**, ask for the path and run:
 
