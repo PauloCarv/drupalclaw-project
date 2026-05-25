@@ -316,12 +316,15 @@ if [[ "${ACTION:-start}" == "start" ]]; then
 fi
 ```
 
-If the image already exists, ask the user:
+If the image already exists, present the choice:
 
 > The `drupal-claw-php` image was previously built.
-> Do you want to do a **new build** or use the existing image?
-> - `new build` — rebuilds the image (slower, picks up Dockerfile changes)
-> - `use existing` — starts directly with the current image (faster)
+> Do you want to rebuild it or use the existing one?
+>
+> [PICK: New build | Use existing]
+>
+> - **New build** — rebuilds the image (slower, picks up Dockerfile changes)
+> - **Use existing** — starts directly with the current image (faster)
 
 ```bash
 if [[ "${ACTION:-start}" == "start" ]]; then

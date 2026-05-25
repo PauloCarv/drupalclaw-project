@@ -324,6 +324,7 @@ export function ChatPanel() {
                   status={status}
                   onCancel={status === 'processing' ? cancelStreaming : undefined}
                   onRetry={status !== 'processing' ? () => handleRetry(msg.id, msg.content) : undefined}
+                  onChoice={msg.role === 'assistant' ? (c) => doSend(c) : undefined}
                 />
                 {showActivity && msg.id === lastUserMsgId && <LiveActivity />}
               </Fragment>
@@ -445,11 +446,11 @@ function StatusIcon({ status }: { status: MsgStatus }) {
 }
 
 function MessageBubble({
-  role, content, streaming = false, timestamp, status, onCancel, onRetry,
+  role, content, streaming = false, timestamp, status, onCancel, onRetry, onChoice,
 }: {
   role: string; content: string; streaming?: boolean
   timestamp?: number; status?: MsgStatus
-  onCancel?: () => void; onRetry?: () => void
+  onCancel?: () => void; onRetry?: () => void; onChoice?: (c: string) => void
 }) {
   const isUser = role === 'user'
   const { text, files } = parseContent(content)
@@ -467,7 +468,7 @@ function MessageBubble({
           {text && (
             isUser || streaming
               ? <pre className="whitespace-pre-wrap font-sans break-words leading-relaxed">{text}</pre>
-              : <MarkdownContent content={text} />
+              : <MarkdownContent content={text} onChoice={onChoice} />
           )}
           {files.length > 0 && (
             <div className={`flex flex-wrap gap-1.5 ${text ? 'mt-2' : ''}`}>

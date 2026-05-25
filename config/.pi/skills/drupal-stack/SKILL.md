@@ -33,8 +33,20 @@ echo "✅ Docker available: $(docker --version)"
 
 ```bash
 WORKSPACE_DIR="/workspace"
-PROJECT_NAME="drupal-dev"
 DB_TYPE="${DB_TYPE:-mariadb}"
+
+# Generate or load a stable workspace ID — used as docker compose project name
+# so containers from different workspaces never collide.
+WORKSPACE_ID_FILE="${WORKSPACE_DIR}/.piclaw/workspace-id"
+mkdir -p "${WORKSPACE_DIR}/.piclaw"
+if [[ -f "$WORKSPACE_ID_FILE" ]]; then
+  WORKSPACE_ID=$(cat "$WORKSPACE_ID_FILE")
+else
+  WORKSPACE_ID=$(cat /proc/sys/kernel/random/uuid 2>/dev/null | tr -d '-' | cut -c1-8)
+  echo "$WORKSPACE_ID" > "$WORKSPACE_ID_FILE"
+fi
+PROJECT_NAME="drupal-${WORKSPACE_ID}"
+echo "🔑 Workspace: ${PROJECT_NAME}"
 
 # docker compose talks to the HOST daemon — volume paths must be
 # host paths, not container paths. Detected via docker inspect on this container.
@@ -304,12 +316,15 @@ if [[ "${ACTION:-start}" == "start" ]]; then
 fi
 ```
 
-If the image already exists, ask the user:
+If the image already exists, present the choice:
 
 > The `drupal-claw-php` image was previously built.
-> Do you want to do a **new build** or use the existing image?
-> - `new build` — rebuilds the image (slower, picks up Dockerfile changes)
-> - `use existing` — starts directly with the current image (faster)
+> Do you want to rebuild it or use the existing one?
+>
+> [PICK: New build | Use existing]
+>
+> - **New build** — rebuilds the image (slower, picks up Dockerfile changes)
+> - **Use existing** — starts directly with the current image (faster)
 
 ```bash
 if [[ "${ACTION:-start}" == "start" ]]; then
@@ -387,12 +402,13 @@ fi
 ```bash
 cat > "${WORKSPACE_DIR}/.piclaw/stack/state.json" << EOF
 {
+  "workspace_id": "$WORKSPACE_ID",
+  "project_name": "$PROJECT_NAME",
   "db_type": "$DB_TYPE",
   "php_port": $PHP_PORT,
   "db_port": ${DB_PORT:-null},
   "drupal_url": "http://localhost:${PHP_PORT}",
   "internal_url": "http://host.docker.internal:${PHP_PORT}",
-  "project_name": "$PROJECT_NAME",
   "started_at": "$(date -Iseconds)"
 }
 EOF

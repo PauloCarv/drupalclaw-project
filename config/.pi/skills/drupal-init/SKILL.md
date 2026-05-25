@@ -38,14 +38,18 @@ fi
 
 > Content already exists in `/workspace/drupal` (`$PROJECT_NAME`).
 > Do you want to **delete everything and start fresh**?
-> - `yes` — deletes the directory and continues
-> - `no` — cancels (default)
+>
+> [PICK: Yes, delete everything | No, cancel]
+>
+> - **Yes, delete everything** — deletes the directory and continues
+> - **No, cancel** — cancels, preserves existing project
 
 If the user answers `yes`:
 ```bash
 # Stop stack if running
 if [[ -f "/workspace/docker-compose.drupal.yml" ]]; then
-  docker compose -f /workspace/docker-compose.drupal.yml -p drupal-dev down -v 2>/dev/null || true
+  STACK_PROJECT=$(jq -r '.project_name // "drupal-dev"' /workspace/.piclaw/stack/state.json 2>/dev/null || echo "drupal-dev")
+  docker compose -f /workspace/docker-compose.drupal.yml -p "$STACK_PROJECT" down -v 2>/dev/null || true
   echo "⏹️  Stack stopped and volumes removed."
 fi
 rm -rf "$DRUPAL_DIR"
@@ -70,8 +74,10 @@ Ask the user:
 
 > How do you want to initialise the Drupal project?
 >
-> 1. **New project** — install Drupal from scratch via Composer
-> 2. **Existing Git repository** — clone from URL (GitHub, GitLab, Bitbucket, etc.)
+> [PICK: New project | Existing Git repository]
+>
+> - **New project** — install Drupal from scratch via Composer
+> - **Existing Git repository** — clone from URL (GitHub, GitLab, Bitbucket, etc.)
 
 Save the choice as `INIT_TYPE=new` or `INIT_TYPE=git`.
 
@@ -146,8 +152,10 @@ echo "NEEDS_COMPOSER=false"
 Ask the user:
 
 > Do you have a SQL dump to import?
-> - `yes` — provide the file path (e.g. `/workspace/backup.sql` or `/workspace/backup.sql.gz`)
-> - `no` — continue without importing
+>
+> [PICK: Yes, I have a dump | No, continue]
+>
+> If yes, ask for the file path (e.g. `/workspace/backup.sql` or `/workspace/backup.sql.gz`).
 
 **If yes**, ask for the path and run:
 
@@ -157,16 +165,17 @@ SQL_FILE="<provided path>"
 
 # Check if stack is running to import via container
 STACK_RUNNING=false
-if docker compose -f "/workspace/docker-compose.drupal.yml" -p drupal-dev ps --status running 2>/dev/null | grep -q "db"; then
+STACK_PROJECT=$(jq -r '.project_name // "drupal-dev"' /workspace/.piclaw/stack/state.json 2>/dev/null || echo "drupal-dev")
+if docker compose -f "/workspace/docker-compose.drupal.yml" -p "$STACK_PROJECT" ps --status running 2>/dev/null | grep -q "db"; then
   STACK_RUNNING=true
 fi
 
 if [[ "$STACK_RUNNING" == "true" ]]; then
   echo "📥 Importing SQL dump via Docker stack..."
   if [[ "$SQL_FILE" == *.gz ]]; then
-    gunzip -c "$SQL_FILE" | docker compose -f /workspace/docker-compose.drupal.yml -p drupal-dev exec -T db mysql -udrupal -pdrupal drupal
+    gunzip -c "$SQL_FILE" | docker compose -f /workspace/docker-compose.drupal.yml -p "$STACK_PROJECT" exec -T db mysql -udrupal -pdrupal drupal
   else
-    docker compose -f /workspace/docker-compose.drupal.yml -p drupal-dev exec -T db mysql -udrupal -pdrupal drupal < "$SQL_FILE"
+    docker compose -f /workspace/docker-compose.drupal.yml -p "$STACK_PROJECT" exec -T db mysql -udrupal -pdrupal drupal < "$SQL_FILE"
   fi
   echo "✅ Database imported."
 else
@@ -184,8 +193,10 @@ fi
 Ask the user:
 
 > Do you have media/upload files to import? (zip or tar.gz of `sites/default/files`)
-> - `yes` — provide the archive path
-> - `no` — continue
+>
+> [PICK: Yes, I have files | No, continue]
+>
+> If yes, ask for the archive path.
 
 **If yes**, ask for the path and run:
 
@@ -237,7 +248,8 @@ echo ""
 # Check if stack is running
 STACK_RUNNING=false
 STATE_FILE="/workspace/.piclaw/stack/state.json"
-if [[ -f "$STATE_FILE" ]] && docker compose -f "/workspace/docker-compose.drupal.yml" -p drupal-dev ps --status running 2>/dev/null | grep -q "php"; then
+STACK_PROJECT=$(jq -r '.project_name // "drupal-dev"' "$STATE_FILE" 2>/dev/null || echo "drupal-dev")
+if [[ -f "$STATE_FILE" ]] && docker compose -f "/workspace/docker-compose.drupal.yml" -p "$STACK_PROJECT" ps --status running 2>/dev/null | grep -q "php"; then
   STACK_RUNNING=true
   STACK_URL=$(jq -r '.drupal_url // ""' "$STATE_FILE" 2>/dev/null)
 fi
@@ -261,4 +273,8 @@ else
   echo "   or with: vendor/bin/drush site:install -y"
   echo "═══════════════════════════════════════════════"
 fi
+
+# Signal the UI file tree to auto-refresh
+mkdir -p /workspace/.piclaw/signals
+touch /workspace/.piclaw/signals/tree-refresh
 ```

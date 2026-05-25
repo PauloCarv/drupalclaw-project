@@ -38,8 +38,11 @@ fi
 
 > Content already exists in `/workspace/drupal` (`$PROJECT_NAME`).
 > Do you want to **delete everything and start fresh**?
-> - `yes` — deletes the directory and continues
-> - `no` — cancels (default)
+>
+> [PICK: Yes, delete everything | No, cancel]
+>
+> - **Yes, delete everything** — deletes the directory and continues
+> - **No, cancel** — cancels, preserves existing project
 
 If the user answers `yes`:
 ```bash
@@ -71,8 +74,10 @@ Ask the user:
 
 > How do you want to initialise the Drupal project?
 >
-> 1. **New project** — install Drupal from scratch via Composer
-> 2. **Existing Git repository** — clone from URL (GitHub, GitLab, Bitbucket, etc.)
+> [PICK: New project | Existing Git repository]
+>
+> - **New project** — install Drupal from scratch via Composer
+> - **Existing Git repository** — clone from URL (GitHub, GitLab, Bitbucket, etc.)
 
 Save the choice as `INIT_TYPE=new` or `INIT_TYPE=git`.
 
@@ -147,8 +152,10 @@ echo "NEEDS_COMPOSER=false"
 Ask the user:
 
 > Do you have a SQL dump to import?
-> - `yes` — provide the file path (e.g. `/workspace/backup.sql` or `/workspace/backup.sql.gz`)
-> - `no` — continue without importing
+>
+> [PICK: Yes, I have a dump | No, continue]
+>
+> If yes, ask for the file path (e.g. `/workspace/backup.sql` or `/workspace/backup.sql.gz`).
 
 **If yes**, ask for the path and run:
 
@@ -186,8 +193,10 @@ fi
 Ask the user:
 
 > Do you have media/upload files to import? (zip or tar.gz of `sites/default/files`)
-> - `yes` — provide the archive path
-> - `no` — continue
+>
+> [PICK: Yes, I have files | No, continue]
+>
+> If yes, ask for the archive path.
 
 **If yes**, ask for the path and run:
 

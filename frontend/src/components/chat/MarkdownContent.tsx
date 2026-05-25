@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useChatStore } from '@/stores/chatStore'
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
@@ -33,6 +34,44 @@ SyntaxHighlighter.registerLanguage('sql', sql)
 
 const CODE_BG = '#0d1117' // slightly lighter than navy-900 to give depth
 
+type ContentPart =
+  | { type: 'text'; value: string }
+  | { type: 'pick'; options: string[] }
+
+function splitOnPick(content: string): ContentPart[] {
+  const parts: ContentPart[] = []
+  const re = /\[PICK:\s*([^\]]+)\]/g
+  let lastIndex = 0
+  for (const match of content.matchAll(re)) {
+    if (match.index! > lastIndex) parts.push({ type: 'text', value: content.slice(lastIndex, match.index) })
+    const options = match[1].split('|').map((o) => o.trim()).filter(Boolean)
+    parts.push({ type: 'pick', options })
+    lastIndex = match.index! + match[0].length
+  }
+  if (lastIndex < content.length) parts.push({ type: 'text', value: content.slice(lastIndex) })
+  return parts
+}
+
+function PickWidget({ options, onChoice }: { options: string[]; onChoice?: (c: string) => void }) {
+  const { isStreaming, isAgentRunning } = useChatStore()
+  const disabled = isStreaming || isAgentRunning || !onChoice
+  return (
+    <div className="flex flex-wrap gap-2 my-2">
+      {options.map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          disabled={disabled}
+          onClick={() => onChoice?.(opt)}
+          className="px-3 py-1.5 rounded-md text-xs border border-drupal-blue text-drupal-blue-light hover:bg-drupal-blue/20 active:bg-drupal-blue/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // Shared SyntaxHighlighter style override to fit our theme
 const codeStyle: React.CSSProperties = {
   margin: 0,
@@ -43,7 +82,23 @@ const codeStyle: React.CSSProperties = {
   padding: '12px',
 }
 
-export function MarkdownContent({ content }: { content: string }) {
+export function MarkdownContent({ content, onChoice }: { content: string; onChoice?: (c: string) => void }) {
+  const parts = splitOnPick(content)
+  if (parts.length === 1 && parts[0].type === 'text') {
+    return <ReactMarkdownBlock content={content} />
+  }
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.type === 'pick'
+          ? <PickWidget key={i} options={part.options} onChoice={onChoice} />
+          : part.value.trim() && <ReactMarkdownBlock key={i} content={part.value} />
+      )}
+    </>
+  )
+}
+
+function ReactMarkdownBlock({ content }: { content: string }) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
