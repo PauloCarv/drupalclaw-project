@@ -73,9 +73,14 @@ fi
 If the `db` parameter was not provided, ask:
 
 > Which database do you want to use?
-> 1. **MariaDB** (recommended, MySQL-compatible)
-> 2. **PostgreSQL** (native Drupal support)
-> 3. **SQLite** (no extra container, local file)
+>
+> [PICK: MariaDB | PostgreSQL | SQLite]
+>
+> - **MariaDB** — recommended, MySQL-compatible
+> - **PostgreSQL** — native Drupal support
+> - **SQLite** — no extra container, local file
+
+**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
 
 ### 5. Start stack via drupal-stack
 
