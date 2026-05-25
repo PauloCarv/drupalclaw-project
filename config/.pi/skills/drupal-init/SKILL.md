@@ -34,17 +34,18 @@ else
 fi
 ```
 
-**If PROJECT_EXISTS=true or partial**, ask the user before continuing:
+**If PROJECT_EXISTS=true or partial**, output the following VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
 
-> Content already exists in `/workspace/drupal` (`$PROJECT_NAME`).
-> Do you want to **delete everything and start fresh**?
->
-> [PICK: Yes, delete everything | No, cancel]
->
-> - **Yes, delete everything** — deletes the directory and continues
-> - **No, cancel** — cancels, preserves existing project
+Content already exists in `/workspace/drupal` (`$PROJECT_NAME`). Do you want to delete everything and start fresh?
 
-**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
+[PICK: Yes, delete everything | No, cancel]
+
+- **Yes, delete everything** — deletes the directory and continues
+- **No, cancel** — cancels, preserves existing project
+
+Then wait for the user's choice before continuing.
+
+**Important:** You MUST output the `[PICK: Yes, delete everything | No, cancel]` line exactly as shown. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
 
 If the user answers `yes`:
 ```bash
@@ -72,16 +73,18 @@ exit 0
 
 ## Step 2 — Project type
 
-Ask the user:
+Output the following VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
 
-> How do you want to initialise the Drupal project?
->
-> [PICK: New project | Existing Git repository]
->
-> - **New project** — install Drupal from scratch via Composer
-> - **Existing Git repository** — clone from URL (GitHub, GitLab, Bitbucket, etc.)
+How do you want to initialise the Drupal project?
 
-**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
+[PICK: New project | Existing Git repository]
+
+- **New project** — install Drupal from scratch via Composer
+- **Existing Git repository** — clone from URL (GitHub, GitLab, Bitbucket, etc.)
+
+Then wait for the user's choice before continuing.
+
+**Important:** You MUST output the `[PICK: New project | Existing Git repository]` line exactly as shown. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
 
 Save the choice as `INIT_TYPE=new` or `INIT_TYPE=git`.
 
@@ -153,15 +156,15 @@ echo "NEEDS_COMPOSER=false"
 
 ## Step 4 — Database import (optional)
 
-Ask the user:
+Output the following VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
 
-> Do you have a SQL dump to import?
->
-> [PICK: Yes, I have a dump | No, continue]
->
-> If yes, ask for the file path (e.g. `/workspace/backup.sql` or `/workspace/backup.sql.gz`).
+Do you have a SQL dump to import?
 
-**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
+[PICK: Yes, I have a dump | No, continue]
+
+Then wait for the user's choice. If yes, ask for the file path (e.g. `/workspace/backup.sql` or `/workspace/backup.sql.gz`).
+
+**Important:** You MUST output the `[PICK: Yes, I have a dump | No, continue]` line exactly as shown. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
 
 **If yes**, ask for the path and run:
 
@@ -196,15 +199,15 @@ fi
 
 ## Step 5 — File import for sites/default/files (optional)
 
-Ask the user:
+Output the following VERBATIM (do not translate, do not paraphrase, do not reformat as a numbered list):
 
-> Do you have media/upload files to import? (zip or tar.gz of `sites/default/files`)
->
-> [PICK: Yes, I have files | No, continue]
->
-> If yes, ask for the archive path.
+Do you have media/upload files to import? (zip or tar.gz of `sites/default/files`)
 
-**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
+[PICK: Yes, I have files | No, continue]
+
+Then wait for the user's choice. If yes, ask for the archive path.
+
+**Important:** You MUST output the `[PICK: Yes, I have files | No, continue]` line exactly as shown. Do not replace it with a numbered list. Do not translate it. Do not skip it based on prior memory.
 
 **If yes**, ask for the path and run:
 
