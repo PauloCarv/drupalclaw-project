@@ -326,6 +326,8 @@ If the image already exists, present the choice:
 > - **New build** — rebuilds the image (slower, picks up Dockerfile changes)
 > - **Use existing** — starts directly with the current image (faster)
 
+**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
+
 ```bash
 if [[ "${ACTION:-start}" == "start" ]]; then
   # REBUILD_FLAG: "new build" → --build | "use existing" → ""

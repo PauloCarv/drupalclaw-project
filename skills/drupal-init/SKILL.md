@@ -44,6 +44,8 @@ fi
 > - **Yes, delete everything** — deletes the directory and continues
 > - **No, cancel** — cancels, preserves existing project
 
+**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
+
 If the user answers `yes`:
 ```bash
 # Stop stack if running
@@ -78,6 +80,8 @@ Ask the user:
 >
 > - **New project** — install Drupal from scratch via Composer
 > - **Existing Git repository** — clone from URL (GitHub, GitLab, Bitbucket, etc.)
+
+**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
 
 Save the choice as `INIT_TYPE=new` or `INIT_TYPE=git`.
 
@@ -157,6 +161,8 @@ Ask the user:
 >
 > If yes, ask for the file path (e.g. `/workspace/backup.sql` or `/workspace/backup.sql.gz`).
 
+**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
+
 **If yes**, ask for the path and run:
 
 ```bash
@@ -197,6 +203,8 @@ Ask the user:
 > [PICK: Yes, I have files | No, continue]
 >
 > If yes, ask for the archive path.
+
+**Important:** Always present this `[PICK:]` to the user and wait for their answer. Never skip or assume based on prior conversation memory or context.
 
 **If yes**, ask for the path and run:
 
