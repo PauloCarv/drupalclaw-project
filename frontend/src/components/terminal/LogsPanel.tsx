@@ -86,7 +86,7 @@ export function LogsPanel() {
 
         {following && (
           <button
-            title="Parar follow (Ctrl+C)"
+            title="Stop follow (Ctrl+C)"
             onClick={stopFollow}
             className="text-[10px] font-mono font-medium px-2 py-0.5 rounded border border-navy-600 bg-navy-700 hover:bg-navy-600 text-accent-red transition-colors"
           >

@@ -147,7 +147,7 @@ export function EditorPanel() {
         ) : activeFile.loading ? (
           <div className="flex-1 flex items-center justify-center text-navy-300 text-sm gap-2">
             <Loader2 size={16} className="animate-spin" />
-            A carregar {activeFile.name}...
+            Loading {activeFile.name}...
           </div>
         ) : (
           <>
@@ -159,7 +159,7 @@ export function EditorPanel() {
               {savedFlash && (
                 <span className="flex items-center gap-1 text-[10px] text-accent-green">
                   <Check size={10} />
-                  Guardado
+                  Saved
                 </span>
               )}
               {activeFile.modified && !savedFlash && (
@@ -167,13 +167,13 @@ export function EditorPanel() {
                   onClick={handleSave}
                   disabled={saving}
                   className="flex items-center gap-1 text-[10px] bg-drupal-blue hover:bg-drupal-blue-light disabled:opacity-50 text-white px-2 py-0.5 rounded transition-colors flex-shrink-0"
-                  title="Guardar (Ctrl+S / ⌘S)"
+                  title="Save (Ctrl+S / ⌘S)"
                 >
                   {saving
                     ? <Loader2 size={9} className="animate-spin" />
                     : <Save size={9} />
                   }
-                  Guardar
+                  Save
                 </button>
               )}
             </div>

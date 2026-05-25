@@ -380,7 +380,7 @@ function ChatsList() {
 
       {creating && (
         <div className="px-3 py-2 text-[10px] text-navy-400 border-t border-navy-500">
-          A criar nova conversa...
+          Creating new conversation...
         </div>
       )}
     </div>

@@ -187,7 +187,7 @@ export function FileTree() {
       {loadingHidden && (
         <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] text-navy-400">
           <Loader2 size={9} className="animate-spin" />
-          <span>A carregar hidden...</span>
+          <span>Loading hidden files...</span>
         </div>
       )}
 
@@ -544,7 +544,7 @@ function TreeNode({ node, depth, isHidden = false, onRefresh, onSiblingDelete, o
                 <button
                   onClick={(e) => { e.stopPropagation(); setRenameValue(node.name); setRenaming(true) }}
                   className="p-0.5 rounded text-gray-400 hover:text-white transition-colors"
-                  title={`Renomear ${node.name}`}
+                  title={`Rename ${node.name}`}
                 >
                   <Pencil size={9} />
                 </button>

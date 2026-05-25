@@ -62,7 +62,7 @@ export function FlowsPanel() {
       <div className="flex-1 min-h-0 overflow-hidden">
         {subTab === 'flows' ? (
           loading ? (
-            <div className="flex items-center justify-center h-full text-navy-400 text-xs">A carregar...</div>
+            <div className="flex items-center justify-center h-full text-navy-400 text-xs">Loading...</div>
           ) : (
             <div className="h-full overflow-y-auto">
               <FlowList
