@@ -33,9 +33,9 @@ export function DockerPanel() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="p-3 text-[11px] text-navy-400 font-mono">a carregar...</div>
+          <div className="p-3 text-[11px] text-navy-400 font-mono">Loading...</div>
         ) : containers.length === 0 ? (
-          <div className="p-3 text-[11px] text-navy-400 font-mono">nenhum container encontrado</div>
+          <div className="p-3 text-[11px] text-navy-400 font-mono">No containers found</div>
         ) : (
           <table className="w-full text-[10px] font-mono border-collapse">
             <thead>
