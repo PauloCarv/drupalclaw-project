@@ -63,6 +63,9 @@ if [[ ! -f "$WORKSPACE/.piclaw/user-prefs.json" ]]; then
   echo '{"interaction_mode":"learning"}' > "$WORKSPACE/.piclaw/user-prefs.json"
 fi
 
+# -- Seed plans directory --
+mkdir -p "$WORKSPACE/.piclaw/plans/runs"
+
 # -- Fix Docker socket permissions (lost on Docker Desktop restart) --
 chmod 666 /var/run/docker.sock 2>/dev/null || true
 

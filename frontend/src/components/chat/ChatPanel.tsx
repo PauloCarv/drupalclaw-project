@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import {
   Send, Square, X, Loader2, Paperclip, FileText, ImageIcon,
-  Check, AlertCircle, RotateCw,
+  Check, AlertCircle, RotateCw, ClipboardPlus,
 } from 'lucide-react'
 import drupalclawIcon from '@/assets/icon.png'
 import { useQuery } from '@tanstack/react-query'
@@ -12,6 +12,7 @@ import { MarkdownContent } from './MarkdownContent'
 import { LiveActivity } from './LiveActivity'
 import { getAllCommands, type Skill } from '@/api/skills'
 import { uploadMedia, type MediaUpload } from '@/api/chat'
+import { NewPlanDialog } from '@/components/plans/NewPlanDialog'
 
 const LOGIN_COMMANDS = ['/login', '/provider', '/providers', '/setup']
 
@@ -44,6 +45,7 @@ export function ChatPanel() {
   const [uploading, setUploading] = useState(false)
   const [isNearBottom, setIsNearBottom] = useState(true)
   const [failedMsgs, setFailedMsgs] = useState<Map<string, string>>(new Map())
+  const [savePlanContent, setSavePlanContent] = useState<string | null>(null)
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -325,6 +327,7 @@ export function ChatPanel() {
                   onCancel={status === 'processing' ? cancelStreaming : undefined}
                   onRetry={status !== 'processing' ? () => handleRetry(msg.id, msg.content) : undefined}
                   onChoice={msg.role === 'assistant' ? (c) => doSend(c) : undefined}
+                  onSavePlan={msg.role === 'assistant' ? () => setSavePlanContent(msg.content) : undefined}
                 />
                 {showActivity && msg.id === lastUserMsgId && <LiveActivity />}
               </Fragment>
@@ -338,6 +341,19 @@ export function ChatPanel() {
 
         <div ref={messagesEndRef} />
       </div>
+
+      {savePlanContent !== null && (
+        <NewPlanDialog
+          prefillContext={savePlanContent.slice(0, 2000)}
+          prefillTitle={(() => {
+            const m = savePlanContent.match(/^#+\s+(.+)/m)
+            if (m) return m[1].trim()
+            return savePlanContent.split('\n')[0].trim().slice(0, 80) || 'Plan from chat'
+          })()}
+          prefillSource="chat"
+          onClose={() => setSavePlanContent(null)}
+        />
+      )}
 
       <form onSubmit={handleSubmit} className="p-3 border-t border-navy-500 flex-shrink-0 relative">
         {showSuggestions && suggestions.length > 0 && (
@@ -446,17 +462,17 @@ function StatusIcon({ status }: { status: MsgStatus }) {
 }
 
 function MessageBubble({
-  role, content, streaming = false, timestamp, status, onCancel, onRetry, onChoice,
+  role, content, streaming = false, timestamp, status, onCancel, onRetry, onChoice, onSavePlan,
 }: {
   role: string; content: string; streaming?: boolean
   timestamp?: number; status?: MsgStatus
-  onCancel?: () => void; onRetry?: () => void; onChoice?: (c: string) => void
+  onCancel?: () => void; onRetry?: () => void; onChoice?: (c: string) => void; onSavePlan?: () => void
 }) {
   const isUser = role === 'user'
   const { text, files } = parseContent(content)
 
   return (
-    <div className={`flex gap-2 ${isUser ? 'justify-end' : 'items-start'}`}>
+    <div className={`group flex gap-2 ${isUser ? 'justify-end' : 'items-start'}`}>
       {!isUser && (
         <img src={drupalclawIcon} alt="DrupalClaw" className="w-7 h-7 rounded-full object-contain flex-shrink-0 mt-0.5" />
       )}
@@ -509,6 +525,16 @@ function MessageBubble({
             <span className="text-[10px] text-navy-400">{formatTimestamp(timestamp)}</span>
           )}
           {isUser && status && <StatusIcon status={status} />}
+          {!isUser && !streaming && onSavePlan && (
+            <button
+              type="button"
+              onClick={onSavePlan}
+              className="text-navy-400 hover:text-ai-teal transition-colors opacity-0 group-hover:opacity-100"
+              title="Save as plan"
+            >
+              <ClipboardPlus size={11} />
+            </button>
+          )}
         </div>
       </div>
       {isUser && (

@@ -9,6 +9,7 @@ import { EditorPanel } from '@/components/editor/EditorPanel'
 import { DevPanel } from '@/components/devpanel/DevPanel'
 import { WatchdogPanel } from '@/components/watchdog/WatchdogPanel'
 import { FlowsPanel } from '@/components/flows/FlowsPanel'
+import { PlansPanel } from '@/components/plans/PlansPanel'
 import { useLayoutStore } from '@/stores/layoutStore'
 
 export function MainLayout() {
@@ -48,6 +49,8 @@ export function MainLayout() {
         return <WatchdogPanel />
       case 'flows':
         return <FlowsPanel />
+      case 'plans':
+        return <PlansPanel />
       default:
         return <ChatPanel />
     }

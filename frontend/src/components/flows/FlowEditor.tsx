@@ -129,6 +129,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
   const [cronPreset, setCronPreset] = useState<CronPreset>(initialCron.preset)
   const [cronCustomDays, setCronCustomDays] = useState<number[]>(initialCron.customDays)
 
+  const [outputMode, setOutputMode] = useState<'chat' | 'plan'>(initial?.outputMode ?? 'chat')
   const [params, setParams] = useState<FlowParam[]>(initial?.params ?? [])
   const [steps, setSteps] = useState<FlowStep[]>(initial?.steps ?? [])
   const [saving, setSaving] = useState(false)
@@ -206,6 +207,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
         schedule,
         params,
         steps,
+        outputMode,
         createdAt: initial?.createdAt ?? Date.now(),
         lastRunAt: initial?.lastRunAt,
       })
@@ -497,9 +499,17 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
 
         {/* Footer */}
         <div className="flex items-center justify-between px-5 py-3 border-t border-navy-500 flex-shrink-0">
-          <p className="text-[10px] text-navy-400">
-            {steps.length === 0 ? 'Add at least one step' : `${steps.length} step${steps.length > 1 ? 's' : ''}`}
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-navy-400">Output:</span>
+            <select
+              value={outputMode}
+              onChange={(e) => setOutputMode(e.target.value as 'chat' | 'plan')}
+              className="bg-navy-700 border border-navy-500 rounded px-2 py-0.5 text-[11px] text-gray-300 outline-none appearance-none"
+            >
+              <option value="chat">Chat</option>
+              <option value="plan">Plan</option>
+            </select>
+          </div>
           <div className="flex gap-2">
             <button onClick={onClose} className="px-3 py-1.5 text-xs text-navy-300 hover:text-white">Cancel</button>
             <button onClick={handleSave} disabled={!name.trim() || steps.length === 0 || saving}

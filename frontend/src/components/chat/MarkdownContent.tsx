@@ -1,8 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { ClipboardPlus, Loader2, Check } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { createPlan } from '@/api/plans'
+import { usePlansStore } from '@/stores/plansStore'
+import { useLayoutStore } from '@/stores/layoutStore'
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
@@ -38,10 +42,68 @@ const CODE_BG = '#0d1117' // slightly lighter than navy-900 to give depth
 type ContentPart =
   | { type: 'text'; value: string }
   | { type: 'pick'; options: string[] }
+  | { type: 'plan'; title: string; body: string }
 
 function stripDidacticBlock(content: string): string {
   // Remove the 💡 How to replicate manually block (from marker to "Want..." line)
   return content.replace(/\n?💡 \*\*How to replicate manually:\*\*[\s\S]*?Want [^\n]*(\n|$)/g, '\n').trimEnd()
+}
+
+function splitOnPlanAndPick(content: string): ContentPart[] {
+  // First split on [PLAN: title]...[/PLAN] blocks
+  const planRe = /\[PLAN:\s*([^\]]+)\]([\s\S]*?)\[\/PLAN\]/g
+  const parts: ContentPart[] = []
+  let lastIndex = 0
+  for (const match of content.matchAll(planRe)) {
+    if (match.index! > lastIndex) {
+      parts.push({ type: 'text', value: content.slice(lastIndex, match.index) })
+    }
+    parts.push({ type: 'plan', title: match[1].trim(), body: match[2].trim() })
+    lastIndex = match.index! + match[0].length
+  }
+  if (lastIndex < content.length) parts.push({ type: 'text', value: content.slice(lastIndex) })
+  // Then split text parts further on PICK
+  return parts.flatMap((p) => p.type === 'text' ? splitOnPick(p.value) : [p])
+}
+
+function PlanSaveCard({ title, body }: { title: string; body: string }) {
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const { loadPlans, selectPlan } = usePlansStore()
+  const { setMainTab } = useLayoutStore()
+
+  const handleSave = async () => {
+    if (saving || saved) return
+    setSaving(true)
+    try {
+      const steps = (body.match(/^- \[[ x]\] .+/gm) ?? []).map((l) => l.replace(/^- \[[ x]\] /, ''))
+      const id = await createPlan({ title, source: 'chat', context: body, steps })
+      await loadPlans()
+      await selectPlan(id)
+      setMainTab('plans')
+      setSaved(true)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="my-2 p-3 rounded-lg border border-ai-teal/30 bg-ai-teal/5 flex items-center gap-3">
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-medium text-ai-teal truncate">Plan: {title}</p>
+        <p className="text-[10px] text-navy-400 truncate">{body.split('\n')[0]}</p>
+      </div>
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving || saved}
+        className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 text-[11px] border border-ai-teal/50 text-ai-teal rounded hover:bg-ai-teal/10 disabled:opacity-50 transition-colors"
+      >
+        {saving ? <Loader2 size={10} className="animate-spin" /> : saved ? <Check size={10} /> : <ClipboardPlus size={10} />}
+        {saved ? 'Saved' : 'Save plan'}
+      </button>
+    </div>
+  )
 }
 
 function splitOnPick(content: string): ContentPart[] {
@@ -91,17 +153,17 @@ const codeStyle: React.CSSProperties = {
 export function MarkdownContent({ content, onChoice }: { content: string; onChoice?: (c: string) => void }) {
   const interactionMode = useSettingsStore((s) => s.interactionMode)
   const processedContent = interactionMode === 'expert' ? stripDidacticBlock(content) : content
-  const parts = splitOnPick(processedContent)
+  const parts = splitOnPlanAndPick(processedContent)
   if (parts.length === 1 && parts[0].type === 'text') {
     return <ReactMarkdownBlock content={processedContent} />
   }
   return (
     <>
-      {parts.map((part, i) =>
-        part.type === 'pick'
-          ? <PickWidget key={i} options={part.options} onChoice={onChoice} />
-          : part.value.trim() && <ReactMarkdownBlock key={i} content={part.value} />
-      )}
+      {parts.map((part, i) => {
+        if (part.type === 'pick') return <PickWidget key={i} options={part.options} onChoice={onChoice} />
+        if (part.type === 'plan') return <PlanSaveCard key={i} title={part.title} body={part.body} />
+        return part.value.trim() ? <ReactMarkdownBlock key={i} content={part.value} /> : null
+      })}
     </>
   )
 }
