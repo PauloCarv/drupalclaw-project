@@ -43,3 +43,19 @@ Exports the Drupal DB to a SQL dump.
    echo "✅ Exported to $DUMP_FILE"
    ls -lh "$DUMP_FILE"
    ```
+
+3. Didactic block:
+   ```bash
+   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+   echo "INTERACTION_MODE=$INTERACTION_MODE"
+   ```
+
+   If INTERACTION_MODE is `learning`, output the following block. If `expert`, skip it entirely.
+
+   💡 **How to replicate manually:**
+   ```bash
+   vendor/bin/drush sql:dump | gzip > backup.sql.gz
+   # or via docker:
+   docker exec -i <php-container> vendor/bin/drush sql:dump | gzip > backup.sql.gz
+   ```
+   Want to learn about backup strategies or automating exports? Just ask.

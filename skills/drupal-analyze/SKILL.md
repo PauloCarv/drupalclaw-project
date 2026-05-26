@@ -44,3 +44,18 @@ Analyses custom code quality with PHPStan and PHPCS.
    ```
 
 4. Summarise results and suggest fixes.
+
+5. Didactic block:
+   ```bash
+   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+   echo "INTERACTION_MODE=$INTERACTION_MODE"
+   ```
+
+   If INTERACTION_MODE is `learning`, output the following block. If `expert`, skip it entirely.
+
+   💡 **How to replicate manually:**
+   ```bash
+   vendor/bin/phpstan analyse web/modules/custom/ --level=5
+   vendor/bin/phpcs --standard=Drupal,DrupalPractice web/modules/custom/
+   ```
+   Want to understand the error levels or configure custom rules? Just ask.

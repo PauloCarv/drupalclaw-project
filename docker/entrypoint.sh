@@ -58,6 +58,11 @@ EOF
   fi
 fi
 
+# -- Seed user-prefs.json if missing (required for frontend PUT to work) --
+if [[ ! -f "$WORKSPACE/.piclaw/user-prefs.json" ]]; then
+  echo '{"interaction_mode":"learning"}' > "$WORKSPACE/.piclaw/user-prefs.json"
+fi
+
 # -- Fix Docker socket permissions (lost on Docker Desktop restart) --
 chmod 666 /var/run/docker.sock 2>/dev/null || true
 

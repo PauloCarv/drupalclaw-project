@@ -72,3 +72,20 @@ Creates a new custom module with base files.
    echo ""
    echo "To enable: vendor/bin/drush en $MODULE_NAME"
    ```
+
+8. Didactic block:
+   ```bash
+   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+   echo "INTERACTION_MODE=$INTERACTION_MODE"
+   ```
+
+   If INTERACTION_MODE is `learning`, output the following block. If `expert`, skip it entirely.
+
+   💡 **How to replicate manually:**
+   ```bash
+   mkdir -p web/modules/custom/<name>/src
+   # Create <name>.info.yml with name, type: module, core_version_requirement
+   # Create <name>.module with <?php header
+   vendor/bin/drush en <name> -y
+   ```
+   Want to understand the module file structure or add routes/controllers? Just ask.

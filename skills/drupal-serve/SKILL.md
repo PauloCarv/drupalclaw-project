@@ -123,3 +123,19 @@ if [[ -f "$STATE_FILE" ]]; then
   echo "  drupal-stack destroy  — remove everything (incl. DB data)"
 fi
 ```
+
+### 7. Didactic block
+
+```bash
+INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+echo "INTERACTION_MODE=$INTERACTION_MODE"
+```
+
+If INTERACTION_MODE is `learning`, output the following block. If `expert`, skip it entirely.
+
+💡 **How to replicate manually:**
+```bash
+docker compose -f docker-compose.drupal.yml -p <project> up -d --build
+docker compose -f docker-compose.drupal.yml -p <project> ps
+```
+Want a step-by-step explanation of how the stack is configured? Just ask.

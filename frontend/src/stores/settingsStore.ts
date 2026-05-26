@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { writeFile } from '@/api/files'
 
 function readInt(key: string, fallback: number): number {
   try { return parseInt(localStorage.getItem(key) ?? '', 10) || fallback } catch { return fallback }
@@ -24,6 +25,10 @@ interface SettingsState {
   setFontSize: (size: number) => void
   scheduleTimezone: string
   setScheduleTimezone: (tz: string) => void
+  interactionMode: 'learning' | 'expert'
+  setInteractionMode: (mode: 'learning' | 'expert') => void
+  autoCompact: boolean
+  setAutoCompact: (value: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsState>(() => ({
@@ -37,5 +42,16 @@ export const useSettingsStore = create<SettingsState>(() => ({
   setScheduleTimezone: (tz) => {
     try { localStorage.setItem('dc-schedule-tz', tz) } catch { /* no-op */ }
     useSettingsStore.setState({ scheduleTimezone: tz })
+  },
+  interactionMode: readStr('dc-interaction-mode', 'learning') as 'learning' | 'expert',
+  setInteractionMode: (mode) => {
+    try { localStorage.setItem('dc-interaction-mode', mode) } catch { /* no-op */ }
+    writeFile('.piclaw/user-prefs.json', JSON.stringify({ interaction_mode: mode }, null, 2)).catch(() => {})
+    useSettingsStore.setState({ interactionMode: mode })
+  },
+  autoCompact: readStr('dc-auto-compact', 'true') === 'true',
+  setAutoCompact: (value) => {
+    try { localStorage.setItem('dc-auto-compact', String(value)) } catch { /* no-op */ }
+    useSettingsStore.setState({ autoCompact: value })
   },
 }))

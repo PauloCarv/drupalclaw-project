@@ -431,3 +431,23 @@ fi
 mkdir -p /workspace/.piclaw/signals
 touch /workspace/.piclaw/signals/tree-refresh
 ```
+
+---
+
+## Step 8 — Didactic block
+
+```bash
+INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+echo "INTERACTION_MODE=$INTERACTION_MODE"
+```
+
+If INTERACTION_MODE is `learning`, output the following block. If `expert`, skip it entirely.
+
+💡 **How to replicate manually:**
+```bash
+composer create-project drupal/recommended-project /workspace/drupal
+cd /workspace/drupal && composer require drush/drush
+cp web/sites/default/default.settings.php web/sites/default/settings.php
+# Create settings.local.php with DB credentials, then include it from settings.php
+```
+Want a step-by-step explanation of the Drupal project structure? Just ask.

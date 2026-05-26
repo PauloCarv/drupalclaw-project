@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ChevronDown, RefreshCw, X, Minus, Plus, Loader2 } from 'lucide-react'
 import { useProviders } from '@/hooks/useProviders'
 import { useSettingsStore } from '@/stores/settingsStore'
@@ -13,23 +13,13 @@ function fmt(n: number) {
 
 export function SettingsPanel() {
   const [showProvider, setShowProvider] = useState(false)
-  const { fontSize, setFontSize } = useSettingsStore()
+  const { fontSize, setFontSize, interactionMode, setInteractionMode, autoCompact, setAutoCompact } = useSettingsStore()
   const { currentModelLabel, currentModel, modelOptions, switchModel, isSwitching } = useProviders()
 
-  // Auto-compact state — null = loading
-  const [autoCompact, setAutoCompact] = useState<boolean | null>(null)
   const [togglingAutoCompact, setTogglingAutoCompact] = useState(false)
 
-  useEffect(() => {
-    sendAgentMessage('/auto-compact').then((res: any) => {
-      const msg: string = res?.command?.message ?? ''
-      if (msg.includes('on')) setAutoCompact(true)
-      else if (msg.includes('off')) setAutoCompact(false)
-    }).catch(() => {})
-  }, [])
-
   const handleAutoCompactToggle = async () => {
-    if (autoCompact === null || togglingAutoCompact) return
+    if (togglingAutoCompact) return
     setTogglingAutoCompact(true)
     const next = !autoCompact
     try {
@@ -137,16 +127,34 @@ export function SettingsPanel() {
 
           <div className="flex items-center justify-between py-1">
             <div className="flex-1 min-w-0 pr-2">
+              <span className="text-[11px] text-navy-300 block">Interaction mode</span>
+              <span className="text-[10px] text-navy-500 block leading-tight">Learning: agent explains steps. Expert: result only, no explanations.</span>
+            </div>
+            <div className="relative flex-shrink-0">
+              <select
+                value={interactionMode}
+                onChange={(e) => setInteractionMode(e.target.value as 'learning' | 'expert')}
+                className="bg-navy-600 border border-navy-500 rounded px-2 py-1 text-[11px] text-gray-200 appearance-none pr-5 cursor-pointer"
+              >
+                <option value="learning">Learning</option>
+                <option value="expert">Expert</option>
+              </select>
+              <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-navy-400" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-1">
+            <div className="flex-1 min-w-0 pr-2">
               <span className="text-[11px] text-navy-300 block">Auto-compact</span>
               <span className="text-[10px] text-navy-500 block leading-tight">Automatically compacts when context is nearly full, before sending</span>
             </div>
             <button
               onClick={handleAutoCompactToggle}
-              disabled={autoCompact === null || togglingAutoCompact}
+              disabled={togglingAutoCompact}
               className="flex-shrink-0"
               title={autoCompact ? 'Disable auto-compact' : 'Enable auto-compact'}
             >
-              {togglingAutoCompact || autoCompact === null ? (
+              {togglingAutoCompact ? (
                 <Loader2 size={12} className="animate-spin text-navy-400" />
               ) : (
                 <div className={`w-8 h-4 rounded-full transition-colors relative ${autoCompact ? 'bg-ai-teal' : 'bg-navy-500'}`}>

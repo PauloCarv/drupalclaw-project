@@ -2,6 +2,7 @@ import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useChatStore } from '@/stores/chatStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
@@ -37,6 +38,11 @@ const CODE_BG = '#0d1117' // slightly lighter than navy-900 to give depth
 type ContentPart =
   | { type: 'text'; value: string }
   | { type: 'pick'; options: string[] }
+
+function stripDidacticBlock(content: string): string {
+  // Remove the 💡 How to replicate manually block (from marker to "Want..." line)
+  return content.replace(/\n?💡 \*\*How to replicate manually:\*\*[\s\S]*?Want [^\n]*(\n|$)/g, '\n').trimEnd()
+}
 
 function splitOnPick(content: string): ContentPart[] {
   const parts: ContentPart[] = []
@@ -83,9 +89,11 @@ const codeStyle: React.CSSProperties = {
 }
 
 export function MarkdownContent({ content, onChoice }: { content: string; onChoice?: (c: string) => void }) {
-  const parts = splitOnPick(content)
+  const interactionMode = useSettingsStore((s) => s.interactionMode)
+  const processedContent = interactionMode === 'expert' ? stripDidacticBlock(content) : content
+  const parts = splitOnPick(processedContent)
   if (parts.length === 1 && parts[0].type === 'text') {
-    return <ReactMarkdownBlock content={content} />
+    return <ReactMarkdownBlock content={processedContent} />
   }
   return (
     <>

@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-import { PanelLeft, PanelRight, Terminal, ChevronDown, Check, Loader2 } from 'lucide-react'
+import { PanelLeft, PanelRight, Terminal, ChevronDown, Check, Loader2, GraduationCap, Zap } from 'lucide-react'
 import drupalclawIcon from '@/assets/icon.png'
 import { useLayoutStore } from '@/stores/layoutStore'
 import { useProviders } from '@/hooks/useProviders'
+import { useSettingsStore } from '@/stores/settingsStore'
 import type { ModelOption } from '@/api/providers'
 
 export function TopBar() {
@@ -10,9 +11,22 @@ export function TopBar() {
   const toggleContextPanel = useLayoutStore((s) => s.toggleContextPanel)
   const toggleBottomPanel = useLayoutStore((s) => s.toggleBottomPanel)
   const { currentModel, currentModelLabel, modelOptions, switchModel, isSwitching } = useProviders()
+  const interactionMode = useSettingsStore((s) => s.interactionMode)
+  const setSidebarSection = useLayoutStore((s) => s.setSidebarSection)
 
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [restartHint, setRestartHint] = useState(false)
+  const prevMode = useRef(interactionMode)
+
+  useEffect(() => {
+    if (prevMode.current !== interactionMode) {
+      prevMode.current = interactionMode
+      setRestartHint(true)
+      const t = setTimeout(() => setRestartHint(false), 6000)
+      return () => clearTimeout(t)
+    }
+  }, [interactionMode])
 
   useEffect(() => {
     if (!open) return
@@ -50,7 +64,7 @@ export function TopBar() {
   }
 
   return (
-    <header className="h-10 flex items-center justify-between px-3 bg-navy-800 border-b border-navy-500 flex-shrink-0">
+    <header className="relative h-10 flex items-center justify-between px-3 bg-navy-800 border-b border-navy-500 flex-shrink-0">
       <div className="flex items-center gap-3">
         <button onClick={toggleSidebar} className="btn-ghost p-1.5">
           <PanelLeft size={16} />
@@ -62,6 +76,23 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Interaction mode badge */}
+        <button
+          onClick={() => setSidebarSection('settings')}
+          title={interactionMode === 'expert' ? 'Expert mode — click to change' : 'Learning mode — click to change'}
+          className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors text-ai-teal ${
+            interactionMode === 'expert'
+              ? 'bg-ai-teal/10 border-ai-teal/40 hover:bg-ai-teal/20'
+              : 'bg-navy-600 border-ai-teal/30 hover:border-ai-teal/50'
+          }`}
+        >
+          {interactionMode === 'expert'
+            ? <Zap size={10} className="flex-shrink-0" />
+            : <GraduationCap size={10} className="flex-shrink-0" />
+          }
+          <span className="hidden sm:inline capitalize">{interactionMode}</span>
+        </button>
+
         {/* Model switcher */}
         <div ref={dropdownRef} className="relative">
           <button
@@ -137,6 +168,19 @@ export function TopBar() {
           <PanelRight size={16} />
         </button>
       </div>
+      {restartHint && (
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-navy-700 border-2 border-ai-teal/60 shadow-2xl shadow-ai-teal/10 whitespace-nowrap animate-pulse-once pointer-events-none">
+          <div className="w-2 h-2 rounded-full bg-ai-teal flex-shrink-0 animate-pulse" />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-semibold text-gray-100">
+              Interaction mode changed to <span className="text-ai-teal capitalize">{interactionMode}</span>
+            </span>
+            <span className="text-[11px] text-navy-300">
+              Type <span className="text-ai-teal font-mono font-medium">/restart</span> in the chat to apply the new mode
+            </span>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

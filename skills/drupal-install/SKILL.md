@@ -59,3 +59,21 @@ Installs a Drupal contrib module.
      echo "⚠ Module downloaded but not enabled (drush not available)."
    fi
    ```
+
+4. Interaction mode — check and show or suppress the didactic block:
+   ```bash
+   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+   echo "INTERACTION_MODE=$INTERACTION_MODE"
+   ```
+
+   If INTERACTION_MODE is `learning`, you MUST output the following block verbatim (fill in the actual module name):
+
+   💡 **How to replicate manually:**
+   ```bash
+   composer require drupal/<module>
+   vendor/bin/drush en <module> -y
+   vendor/bin/drush cache:rebuild
+   ```
+   Want a step-by-step explanation of what each command does? Just ask.
+
+   If INTERACTION_MODE is `expert`, output nothing — skip this block entirely.

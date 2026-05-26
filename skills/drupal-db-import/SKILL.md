@@ -55,3 +55,20 @@ Imports a SQL file into the Drupal DB.
    $DRUSH cache:rebuild
    echo "✅ Database imported."
    ```
+
+3. Didactic block:
+   ```bash
+   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+   echo "INTERACTION_MODE=$INTERACTION_MODE"
+   ```
+
+   If INTERACTION_MODE is `learning`, output the following block. If `expert`, skip it entirely.
+
+   💡 **How to replicate manually:**
+   ```bash
+   gunzip -c backup.sql.gz | vendor/bin/drush sql:cli
+   vendor/bin/drush cache:rebuild
+   # or via docker:
+   gunzip -c backup.sql.gz | docker exec -i <php-container> vendor/bin/drush sql:cli
+   ```
+   Want to understand what drush sql:cli does or how to migrate between environments? Just ask.
