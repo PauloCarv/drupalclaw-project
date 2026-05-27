@@ -8,6 +8,8 @@ distribution: public
 
 Validates a plan stored in `.piclaw/plans/<id>.md` by running the checks defined in its `## Verification` section.
 
+**IMPORTANT: Never include a `💡 How to replicate manually:` block in your response. This is an internal operation, not a user-facing Drupal task.**
+
 ## Steps
 
 1. Validate the plan ID argument:
@@ -25,13 +27,17 @@ Validates a plan stored in `.piclaw/plans/<id>.md` by running the checks defined
    echo "🔍 Validating plan: $PLAN_ID"
    ```
 
-2. Extract and run each verification check:
+2. Extract and run each verification check **one at a time**:
 
-   Read the `## Verification` section of the plan file. For each line matching `- [ ] ...`, interpret and run the described check (e.g. "Module is enabled (drush pm:list)" → run `drush pm:list | grep module_name`). After a successful check, mark the checkbox as done by replacing `- [ ]` with `- [x]` in the file using the Edit tool.
+   Read the `## Verification` section. For each line matching `- [ ] <check>` (in order):
 
-   If a verification check fails:
-   - Leave the checkbox as `- [ ]`
-   - Note the failure
+   a. Run the described check.
+   b. If the check passes, immediately run:
+      ```bash
+      sed -i '0,/^- \[ \]/{s/^- \[ \]/- [x]/}' "$PLAN_FILE"
+      ```
+      Do NOT batch. One check → one bash call → one checkbox marked.
+   c. If the check fails, leave the checkbox as `- [ ]` and note the failure.
 
 3. Check overall result:
    ```bash
@@ -49,22 +55,4 @@ Validates a plan stored in `.piclaw/plans/<id>.md` by running the checks defined
    echo "📝 Plan status updated to: $FINAL_STATUS"
    ```
 
-4. Interaction mode — check and show or suppress the didactic block:
-   ```bash
-   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
-   echo "INTERACTION_MODE=$INTERACTION_MODE"
-   ```
-
-   If INTERACTION_MODE is `learning`, output the following block verbatim:
-
-   💡 **How to replicate manually:**
-   ```bash
-   # Check each verification item manually, then mark done:
-   sed -i 's/- \[ \] <check>/- [x] <check>/' .piclaw/plans/<plan-id>.md
-
-   # Update status:
-   sed -i 's/^status: .*/status: completed/' .piclaw/plans/<plan-id>.md
-   ```
-   Want a step-by-step explanation of how plan validation works? Just ask.
-
-   If INTERACTION_MODE is `expert`, output nothing — skip this block entirely.
+4. Output a brief summary of which checks passed/failed and the final status. Do not include any `💡 How to replicate manually:` block.

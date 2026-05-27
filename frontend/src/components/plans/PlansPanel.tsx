@@ -1,19 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, RefreshCw } from 'lucide-react'
 import { PlansList } from './PlansList'
 import { PlanViewer } from './PlanViewer'
 import { NewPlanDialog } from './NewPlanDialog'
 import { usePlansStore } from '@/stores/plansStore'
-import { usePlanPolling } from '@/hooks/usePlanPolling'
 
 export function PlansPanel() {
   const [showNew, setShowNew] = useState(false)
   const { selectedPlan, loading, loadPlans } = usePlansStore()
 
-  // Poll plan file during execution
-  usePlanPolling()
+  // Load plans on first mount
+  useEffect(() => { loadPlans() }, [])
 
-  return (
+return (
     <div className="flex h-full">
       {/* Left: plans list */}
       <div className="w-64 flex-shrink-0 border-r border-navy-500 flex flex-col bg-navy-700">

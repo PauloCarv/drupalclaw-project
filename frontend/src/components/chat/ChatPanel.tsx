@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import {
   Send, Square, X, Loader2, Paperclip, FileText, ImageIcon,
-  Check, AlertCircle, RotateCw, ClipboardPlus,
+  Check, AlertCircle, RotateCw, ClipboardList,
 } from 'lucide-react'
 import drupalclawIcon from '@/assets/icon.png'
 import { useQuery } from '@tanstack/react-query'
@@ -12,7 +12,6 @@ import { MarkdownContent } from './MarkdownContent'
 import { LiveActivity } from './LiveActivity'
 import { getAllCommands, type Skill } from '@/api/skills'
 import { uploadMedia, type MediaUpload } from '@/api/chat'
-import { NewPlanDialog } from '@/components/plans/NewPlanDialog'
 
 const LOGIN_COMMANDS = ['/login', '/provider', '/providers', '/setup']
 
@@ -45,7 +44,7 @@ export function ChatPanel() {
   const [uploading, setUploading] = useState(false)
   const [isNearBottom, setIsNearBottom] = useState(true)
   const [failedMsgs, setFailedMsgs] = useState<Map<string, string>>(new Map())
-  const [savePlanContent, setSavePlanContent] = useState<string | null>(null)
+  const [planMode, setPlanMode] = useState(false)
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -195,7 +194,10 @@ export function ChatPanel() {
       setAttachments([])
     }
 
-    const content = trimmed || attachments.map((a) => a.file.name).join(', ')
+    const rawContent = trimmed || attachments.map((a) => a.file.name).join(', ')
+    const content = planMode
+      ? `[PLAN MODE] Before executing anything, analyse the request carefully and produce a structured plan using the [PLAN: title]...[/PLAN] format (with ## Context, ## Steps as unchecked checkboxes - [ ], ## Verification as unchecked checkboxes - [ ]). Do NOT execute any steps yet. Do NOT mention file paths or internal storage details. After presenting the plan, ask the user (in Portuguese) whether they want to: save it to Plans, execute it directly, or modify it first.\n\nUser request: ${rawContent}`
+      : rawContent
     setInput('')
     await doSend(content, mediaUploads)
   }
@@ -327,7 +329,6 @@ export function ChatPanel() {
                   onCancel={status === 'processing' ? cancelStreaming : undefined}
                   onRetry={status !== 'processing' ? () => handleRetry(msg.id, msg.content) : undefined}
                   onChoice={msg.role === 'assistant' ? (c) => doSend(c) : undefined}
-                  onSavePlan={msg.role === 'assistant' ? () => setSavePlanContent(msg.content) : undefined}
                 />
                 {showActivity && msg.id === lastUserMsgId && <LiveActivity />}
               </Fragment>
@@ -342,18 +343,6 @@ export function ChatPanel() {
         <div ref={messagesEndRef} />
       </div>
 
-      {savePlanContent !== null && (
-        <NewPlanDialog
-          prefillContext={savePlanContent.slice(0, 2000)}
-          prefillTitle={(() => {
-            const m = savePlanContent.match(/^#+\s+(.+)/m)
-            if (m) return m[1].trim()
-            return savePlanContent.split('\n')[0].trim().slice(0, 80) || 'Plan from chat'
-          })()}
-          prefillSource="chat"
-          onClose={() => setSavePlanContent(null)}
-        />
-      )}
 
       <form onSubmit={handleSubmit} className="p-3 border-t border-navy-500 flex-shrink-0 relative">
         {showSuggestions && suggestions.length > 0 && (
@@ -429,9 +418,25 @@ export function ChatPanel() {
             </button>
           )}
         </div>
-        <p className="mt-1 text-[9px] text-navy-400 pl-1">
-          Enter to send · Shift+Enter for new line · drag files to attach
-        </p>
+        <div className="mt-1.5 flex items-center gap-2 pl-0.5">
+          <button
+            type="button"
+            disabled={isStreaming || isAgentRunning}
+            onClick={() => setPlanMode((v) => !v)}
+            title={planMode ? 'Plan mode active — click to disable' : 'Plan mode — agent plans before executing'}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors disabled:opacity-40 ${
+              planMode
+                ? 'bg-ai-teal/15 border-ai-teal/50 text-ai-teal'
+                : 'bg-transparent border-navy-500 text-navy-400 hover:border-navy-400 hover:text-navy-300'
+            }`}
+          >
+            <ClipboardList size={10} />
+            Plan
+          </button>
+          <p className="text-[9px] text-navy-400">
+            Enter to send · Shift+Enter for new line · drag files to attach
+          </p>
+        </div>
       </form>
     </div>
   )
@@ -462,14 +467,17 @@ function StatusIcon({ status }: { status: MsgStatus }) {
 }
 
 function MessageBubble({
-  role, content, streaming = false, timestamp, status, onCancel, onRetry, onChoice, onSavePlan,
+  role, content, streaming = false, timestamp, status, onCancel, onRetry, onChoice,
 }: {
   role: string; content: string; streaming?: boolean
   timestamp?: number; status?: MsgStatus
-  onCancel?: () => void; onRetry?: () => void; onChoice?: (c: string) => void; onSavePlan?: () => void
+  onCancel?: () => void; onRetry?: () => void; onChoice?: (c: string) => void
 }) {
   const isUser = role === 'user'
-  const { text, files } = parseContent(content)
+  const { text: rawText, files } = parseContent(content)
+  // Strip the internal plan-mode instruction prefix — show only the user's actual request
+  const planModeMatch = rawText.match(/^\[PLAN MODE\][\s\S]*?\nUser request:\s*([\s\S]+)$/)
+  const text = planModeMatch ? `[Plan mode] ${planModeMatch[1].trim()}` : rawText
 
   return (
     <div className={`group flex gap-2 ${isUser ? 'justify-end' : 'items-start'}`}>
@@ -525,16 +533,6 @@ function MessageBubble({
             <span className="text-[10px] text-navy-400">{formatTimestamp(timestamp)}</span>
           )}
           {isUser && status && <StatusIcon status={status} />}
-          {!isUser && !streaming && onSavePlan && (
-            <button
-              type="button"
-              onClick={onSavePlan}
-              className="text-navy-400 hover:text-ai-teal transition-colors opacity-0 group-hover:opacity-100"
-              title="Save as plan"
-            >
-              <ClipboardPlus size={11} />
-            </button>
-          )}
         </div>
       </div>
       {isUser && (

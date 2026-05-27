@@ -8,6 +8,8 @@ distribution: public
 
 Executes a plan stored in `.piclaw/plans/<id>.md`.
 
+**IMPORTANT: Never include a `💡 How to replicate manually:` block in your response. This is an internal operation, not a user-facing Drupal task.**
+
 ## Steps
 
 1. Validate the plan ID argument:
@@ -36,22 +38,26 @@ Executes a plan stored in `.piclaw/plans/<id>.md`.
 
 3. Parse and execute each step in the `## Steps` section:
 
-   Read the Steps section of the plan file. For each line matching `- [ ] ...` (unchecked checkbox), execute the command or instruction described. After successful execution, mark the checkbox as done by replacing `- [ ]` with `- [x]` in the file using the Edit tool.
+   Read the Steps section. For each line matching `- [ ] <step text>` (in order), do the following **one step at a time**:
 
-   Execute steps in order. If a step fails:
-   - Note the failure in your response
-   - DO NOT mark it with `[x]`
-   - Continue to remaining steps if they are independent, or stop if they depend on the failed step
-   - Record the failure at the end
+   a. Execute the action described in that step.
+   b. Immediately after — whether success or failure — run this exact bash command to mark **only the first remaining unchecked checkbox**:
+      ```bash
+      sed -i '0,/^- \[ \]/{s/^- \[ \]/- [x]/}' "$PLAN_FILE"
+      ```
+      Do NOT skip this bash call. Do NOT batch multiple checkboxes in one call. One step → one bash call → one checkbox marked.
 
-   Capture all output to a log file:
-   ```bash
-   TIMESTAMP=$(date -u +%s)
-   LOG_FILE="/workspace/.piclaw/plans/runs/${PLAN_ID}-${TIMESTAMP}.log"
-   mkdir -p /workspace/.piclaw/plans/runs
-   echo "=== Plan run: $PLAN_ID ===" > "$LOG_FILE"
-   echo "Started: $STARTED_AT" >> "$LOG_FILE"
-   ```
+   c. Append the step result to the log:
+      ```bash
+      TIMESTAMP=$(date -u +%s)
+      LOG_FILE="/workspace/.piclaw/plans/runs/${PLAN_ID}-${TIMESTAMP}.log"
+      mkdir -p /workspace/.piclaw/plans/runs
+      echo "=== Plan run: $PLAN_ID ===" > "$LOG_FILE"
+      echo "Started: $STARTED_AT" >> "$LOG_FILE"
+      echo "Step: <step text> → success/failure" >> "$LOG_FILE"
+      ```
+
+   If a step fails, still run the sed command to mark it `[x]` (so the next step becomes active), note the failure in your response, and continue unless subsequent steps depend on it.
 
 4. After all steps, check if any remain unchecked (`- [ ]`):
    ```bash
@@ -83,25 +89,4 @@ Executes a plan stored in `.piclaw/plans/<id>.md`.
    echo "📝 Plan file updated."
    ```
 
-6. Interaction mode — check and show or suppress the didactic block:
-   ```bash
-   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
-   echo "INTERACTION_MODE=$INTERACTION_MODE"
-   ```
-
-   If INTERACTION_MODE is `learning`, output the following block verbatim (fill in the actual plan ID):
-
-   💡 **How to replicate manually:**
-   ```bash
-   # Read the plan
-   cat .piclaw/plans/<plan-id>.md
-
-   # Execute each step manually, then mark as done:
-   sed -i 's/- \[ \] <step>/- [x] <step>/' .piclaw/plans/<plan-id>.md
-
-   # Update status when complete:
-   sed -i 's/^status: .*/status: completed/' .piclaw/plans/<plan-id>.md
-   ```
-   Want a step-by-step explanation of how plan execution works? Just ask.
-
-   If INTERACTION_MODE is `expert`, output nothing — skip this block entirely.
+6. Output a brief summary of what was executed and the final status. Do not include any `💡 How to replicate manually:` block.

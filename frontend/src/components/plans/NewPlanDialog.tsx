@@ -21,7 +21,7 @@ export function NewPlanDialog({ prefillTitle = '', prefillContext = '', prefillS
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const titleRef = useRef<HTMLInputElement>(null)
-  const { loadPlans, selectPlan } = usePlansStore()
+  const { loadPlans, selectPlan, addOrUpdateSummary } = usePlansStore()
   const { setMainTab } = useLayoutStore()
 
   useEffect(() => {
@@ -41,11 +41,14 @@ export function NewPlanDialog({ prefillTitle = '', prefillContext = '', prefillS
         steps: stepsText.split('\n').map((s) => s.trim()).filter(Boolean),
         verification: verificationText.split('\n').map((s) => s.trim()).filter(Boolean),
       })
-      await loadPlans()
-      await selectPlan(id)
+      // Optimistically add to list so UI updates immediately
+      const now = new Date().toISOString()
+      addOrUpdateSummary({ id, title: title.trim(), status: 'draft', source: prefillSource, created: now, updated: now })
       setMainTab('plans')
       onCreated?.(id)
       onClose()
+      await selectPlan(id)
+      setTimeout(() => loadPlans(), 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create plan')
       setSaving(false)

@@ -69,7 +69,7 @@ function splitOnPlanAndPick(content: string): ContentPart[] {
 function PlanSaveCard({ title, body }: { title: string; body: string }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const { loadPlans, selectPlan } = usePlansStore()
+  const { loadPlans, selectPlan, addOrUpdateSummary } = usePlansStore()
   const { setMainTab } = useLayoutStore()
 
   const handleSave = async () => {
@@ -78,10 +78,12 @@ function PlanSaveCard({ title, body }: { title: string; body: string }) {
     try {
       const steps = (body.match(/^- \[[ x]\] .+/gm) ?? []).map((l) => l.replace(/^- \[[ x]\] /, ''))
       const id = await createPlan({ title, source: 'chat', context: body, steps })
-      await loadPlans()
-      await selectPlan(id)
+      const now = new Date().toISOString()
+      addOrUpdateSummary({ id, title, status: 'draft', source: 'chat', created: now, updated: now })
       setMainTab('plans')
       setSaved(true)
+      await selectPlan(id)
+      setTimeout(() => loadPlans(), 1500)
     } finally {
       setSaving(false)
     }
@@ -91,7 +93,9 @@ function PlanSaveCard({ title, body }: { title: string; body: string }) {
     <div className="my-2 p-3 rounded-lg border border-ai-teal/30 bg-ai-teal/5 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <p className="text-[11px] font-medium text-ai-teal truncate">Plan: {title}</p>
-        <p className="text-[10px] text-navy-400 truncate">{body.split('\n')[0]}</p>
+        <p className="text-[10px] text-navy-400 truncate">
+          {body.split('\n').find((l) => l.trim() && !l.startsWith('#')) ?? 'Save to Plans tab'}
+        </p>
       </div>
       <button
         type="button"

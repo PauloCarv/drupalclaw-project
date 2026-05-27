@@ -103,11 +103,7 @@ function buildFlowPrompt(flow: Flow): string {
     if (s.type === 'mcp') return `Step ${i + 1} (MCP ${s.mcpServer ?? ''}): ${s.content}`
     return `Step ${i + 1} (mensagem): ${s.content}`
   }).join('\n')
-  const base = `${flowMarker(flow.id)}\nExecuta o flow "${flow.name}" com os seguintes steps sequencialmente:\n\n${steps}\n\nExecuta cada step por ordem. Se um step falhar, reporta o erro e continua.`
-  if (flow.outputMode === 'plan') {
-    return `${base}\n\nIMPORTANT: After completing all steps, your FINAL output MUST be a single plan block in this exact format:\n[PLAN: <descriptive title>]\n## Context\n<1-2 sentences describing what this plan does>\n## Steps\n- [ ] <step 1>\n- [ ] <step 2>\n## Verification\n- [ ] <verification check>\n[/PLAN]\nThis block will be automatically saved as a plan. Do not include it in the middle of your response — only at the very end.`
-  }
-  return base
+  return `${flowMarker(flow.id)}\nExecuta o flow "${flow.name}" com os seguintes steps sequencialmente:\n\n${steps}\n\nExecuta cada step por ordem. Se um step falhar, reporta o erro e continua.`
 }
 
 export async function registerFlowSchedule(flow: Flow): Promise<void> {

@@ -1,11 +1,60 @@
 import { useState } from 'react'
 import { Play, CheckCircle2, Pencil, Trash2, Loader2, ChevronDown, ChevronRight, RotateCw } from 'lucide-react'
 import { MarkdownContent } from '@/components/chat/MarkdownContent'
-import { executePlan, validatePlan, deletePlan } from '@/api/plans'
+import { deletePlan, savePlan } from '@/api/plans'
 import { usePlansStore } from '@/stores/plansStore'
-import { useLayoutStore } from '@/stores/layoutStore'
+import { useChatStore } from '@/stores/chatStore'
+import { postMessage } from '@/api/chat'
 import { PlanEditor } from './PlanEditor'
 import type { PlanDetail } from '@/api/plans'
+
+function PlanRunningBody({ body }: { body: string }) {
+  // Parse sections: everything outside Steps/Verification renders as-is,
+  // Steps and Verification get custom rendering with active-step highlight.
+  const lines = body.split('\n')
+  let activeFound = false
+
+  return (
+    <div className="space-y-1">
+      {lines.map((line, i) => {
+        const done = /^- \[x\]/i.test(line)
+        const pending = /^- \[ \]/.test(line)
+        const isActive = pending && !activeFound
+        if (isActive) activeFound = true
+
+        if (isActive) {
+          return (
+            <div key={i} className="flex items-start gap-2 px-2 py-1 rounded-md bg-ai-teal/10 border border-ai-teal/30">
+              <Loader2 size={13} className="text-ai-teal animate-spin flex-shrink-0 mt-0.5" />
+              <span className="text-ai-teal text-sm font-medium">{line.replace(/^- \[ \] /, '')}</span>
+            </div>
+          )
+        }
+        if (done) {
+          return (
+            <div key={i} className="flex items-start gap-2 px-2 py-1">
+              <span className="text-accent-green flex-shrink-0 mt-0.5">✓</span>
+              <span className="text-navy-400 text-sm line-through decoration-navy-500">{line.replace(/^- \[x\] /i, '')}</span>
+            </div>
+          )
+        }
+        if (pending) {
+          return (
+            <div key={i} className="flex items-start gap-2 px-2 py-1 opacity-40">
+              <span className="text-navy-400 flex-shrink-0 mt-0.5">○</span>
+              <span className="text-navy-300 text-sm">{line.replace(/^- \[ \] /, '')}</span>
+            </div>
+          )
+        }
+        if (line.startsWith('## ')) {
+          return <h3 key={i} className="text-xs font-semibold text-gray-200 mt-4 mb-1 first:mt-0">{line.replace(/^## /, '')}</h3>
+        }
+        if (!line.trim()) return <div key={i} className="h-1" />
+        return <p key={i} className="text-sm text-gray-300 px-2">{line}</p>
+      })}
+    </div>
+  )
+}
 
 const STATUS_STYLES: Record<string, string> = {
   draft: 'text-navy-400 border-navy-500',
@@ -17,35 +66,44 @@ const STATUS_STYLES: Record<string, string> = {
 
 export function PlanViewer({ plan }: { plan: PlanDetail }) {
   const [editing, setEditing] = useState(false)
-  const [executing, setExecuting] = useState(false)
-  const [validating, setValidating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showRuns, setShowRuns] = useState(false)
-  const { setRunning, removePlan, loadPlans, selectPlan } = usePlansStore()
-  const { setMainTab } = useLayoutStore()
+  const { runningPlanId, setRunning, removePlan, loadPlans, selectPlan } = usePlansStore()
+  // Derive executing/validating from global store — survives tab switches
+  const executing = runningPlanId === plan.meta.id
+  const validating = false // validate sets runningPlanId too, so 'executing' covers both
+
+  const triggerSkill = async (command: string) => {
+    const store = useChatStore.getState()
+    const now = Date.now()
+    store.setStreamingStartedAt(now)
+    store.setStreaming(true)
+    store.setAgentRunning(true)
+    store.clearActivity()
+    await postMessage(command)
+  }
 
   const handleExecute = async () => {
     if (executing) return
-    setExecuting(true)
-    try {
-      await executePlan(plan.meta.id)
-      setRunning(plan.meta.id)
-      setMainTab('chat')
-    } finally {
-      setExecuting(false)
-    }
+    // Reset checkboxes and status so progress is visible on re-runs
+    const reset = plan.raw
+      .replace(/^- \[x\]/gm, '- [ ]')
+      .replace(/^status:\s*.+$/m, 'status: draft')
+    await savePlan(plan.meta.id, reset)
+    await selectPlan(plan.meta.id)
+    setRunning(plan.meta.id)
+    await triggerSkill(`/skill:drupal-plan-run ${plan.meta.id}`)
   }
 
   const handleValidate = async () => {
-    if (validating) return
-    setValidating(true)
-    try {
-      await validatePlan(plan.meta.id)
-      setRunning(plan.meta.id)
-      setMainTab('chat')
-    } finally {
-      setValidating(false)
-    }
+    if (executing) return
+    // Reset verification checkboxes and status so polling doesn't fire immediately
+    const reset = plan.raw
+      .replace(/^status:\s*.+$/m, 'status: draft')
+    await savePlan(plan.meta.id, reset)
+    await selectPlan(plan.meta.id)
+    setRunning(plan.meta.id)
+    await triggerSkill(`/skill:drupal-plan-validate ${plan.meta.id}`)
   }
 
   const handleDelete = async () => {
@@ -60,7 +118,19 @@ export function PlanViewer({ plan }: { plan: PlanDetail }) {
     }
   }
 
-  const isRunning = plan.meta.status === 'running'
+  const handleResetStatus = async () => {
+    const updated = plan.raw.replace(/^status:\s*.+$/m, 'status: draft')
+    await savePlan(plan.meta.id, updated)
+    setRunning(null)
+    await loadPlans()
+    selectPlan(plan.meta.id)
+  }
+
+  const status = plan.meta.status
+  const isRunning = status === 'running'
+  // Show progress view as soon as Execute is clicked, not just when file reaches 'running'
+  const showProgress = executing || isRunning
+  const canValidate = status === 'completed' || status === 'failed'
 
   if (editing) {
     return <PlanEditor id={plan.meta.id} raw={plan.raw} onClose={() => setEditing(false)} />
@@ -99,13 +169,24 @@ export function PlanViewer({ plan }: { plan: PlanDetail }) {
         <button
           type="button"
           onClick={handleValidate}
-          disabled={isRunning || validating}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs border border-ai-teal/40 text-ai-teal rounded hover:bg-ai-teal/10 disabled:opacity-40 transition-colors"
-          title="Validate plan"
+          disabled={!canValidate || executing}
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs border border-ai-teal/40 text-ai-teal rounded hover:bg-ai-teal/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          title={canValidate ? 'Validate plan' : 'Execute the plan first before validating'}
         >
           {validating ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
           Validate
         </button>
+        {showProgress && (
+          <button
+            type="button"
+            onClick={handleResetStatus}
+            className="flex items-center gap-1 px-2 py-1 text-xs border border-navy-500 text-navy-400 rounded hover:border-accent-red/50 hover:text-accent-red transition-colors"
+            title="Reset stuck running status back to draft"
+          >
+            <RotateCw size={11} />
+            Reset
+          </button>
+        )}
         <div className="flex-1" />
         <button
           type="button"
@@ -135,7 +216,7 @@ export function PlanViewer({ plan }: { plan: PlanDetail }) {
 
       {/* Body */}
       <div className="flex-1 px-4 py-3 overflow-y-auto min-h-0 text-sm">
-        <MarkdownContent content={plan.body} />
+        {showProgress ? <PlanRunningBody body={plan.body} /> : <MarkdownContent content={plan.body} />}
       </div>
 
       {/* Run history */}

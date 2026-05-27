@@ -280,6 +280,7 @@ Want a step-by-step explanation of what happened? Just ask.
 - Status/info checks (`drupal-status`, `drupal-stack status`)
 - Log viewing (`drupal-logs`, `drupal-debug`, `drupal-perf`)
 - Simple DB queries (`drupal-db-query`)
+- Plan execution and validation (`drupal-plan-run`, `drupal-plan-validate`) — these are internal workspace operations, never show the didactic block
 
 **Rules:**
 - Keep the commands block to 2–4 lines max — show the essence, not every flag

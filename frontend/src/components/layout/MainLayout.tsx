@@ -11,9 +11,11 @@ import { WatchdogPanel } from '@/components/watchdog/WatchdogPanel'
 import { FlowsPanel } from '@/components/flows/FlowsPanel'
 import { PlansPanel } from '@/components/plans/PlansPanel'
 import { useLayoutStore } from '@/stores/layoutStore'
+import { usePlanPolling } from '@/hooks/usePlanPolling'
 
 export function MainLayout() {
   const { sidebarOpen, contextPanelOpen, activeMainTab, bottomPanelOpen, bottomPanelHeight, setBottomPanelHeight } = useLayoutStore()
+  usePlanPolling()
   const dragRef = useRef<{ startY: number; startHeight: number } | null>(null)
 
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
@@ -37,22 +39,14 @@ export function MainLayout() {
     window.addEventListener('mouseup', onUp)
   }, [bottomPanelHeight, setBottomPanelHeight])
 
-  const renderMainTab = () => {
+  const renderOverlayTab = () => {
     switch (activeMainTab) {
-      case 'chat':
-        return <ChatPanel />
-      case 'editor':
-        return <EditorPanel />
-      case 'devpanel':
-        return <DevPanel />
-      case 'watchdog':
-        return <WatchdogPanel />
-      case 'flows':
-        return <FlowsPanel />
-      case 'plans':
-        return <PlansPanel />
-      default:
-        return <ChatPanel />
+      case 'editor':   return <EditorPanel />
+      case 'devpanel': return <DevPanel />
+      case 'watchdog': return <WatchdogPanel />
+      case 'flows':    return <FlowsPanel />
+      case 'plans':    return <PlansPanel />
+      default:         return null
     }
   }
 
@@ -65,8 +59,16 @@ export function MainLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <TabStrip />
           <div className="flex-1 min-h-0 flex flex-col">
-            <div className="flex-1 min-h-0 overflow-hidden">
-              {renderMainTab()}
+            <div className="flex-1 min-h-0 overflow-hidden relative">
+              {/* ChatPanel stays always mounted so SSE/useChat never disconnects */}
+              <div className={`absolute inset-0 ${activeMainTab === 'chat' ? '' : 'invisible pointer-events-none'}`}>
+                <ChatPanel />
+              </div>
+              {activeMainTab !== 'chat' && (
+                <div className="absolute inset-0">
+                  {renderOverlayTab()}
+                </div>
+              )}
             </div>
             {bottomPanelOpen && (
               <>
