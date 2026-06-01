@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import {
   Send, Square, X, Loader2, Paperclip, FileText, ImageIcon,
-  Check, AlertCircle, RotateCw,
+  Check, AlertCircle, RotateCw, ClipboardList,
 } from 'lucide-react'
 import drupalclawIcon from '@/assets/icon.png'
 import { useQuery } from '@tanstack/react-query'
 import { useChat } from '@/hooks/useChat'
 import { useSession } from '@/hooks/useSession'
 import { OobeSetup } from '@/components/oobe/OobeSetup'
-import { MarkdownContent } from './MarkdownContent'
+import { MarkdownContent, PlanSaveCard, extractPlans, stripPlans } from './MarkdownContent'
 import { LiveActivity } from './LiveActivity'
 import { getAllCommands, type Skill } from '@/api/skills'
 import { uploadMedia, type MediaUpload } from '@/api/chat'
@@ -44,6 +44,7 @@ export function ChatPanel() {
   const [uploading, setUploading] = useState(false)
   const [isNearBottom, setIsNearBottom] = useState(true)
   const [failedMsgs, setFailedMsgs] = useState<Map<string, string>>(new Map())
+  const [planMode, setPlanMode] = useState(false)
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -193,7 +194,10 @@ export function ChatPanel() {
       setAttachments([])
     }
 
-    const content = trimmed || attachments.map((a) => a.file.name).join(', ')
+    const rawContent = trimmed || attachments.map((a) => a.file.name).join(', ')
+    const content = planMode
+      ? `[PLAN MODE] Before executing anything, analyse the request carefully and produce a structured plan using the [PLAN: title]...[/PLAN] format (with ## Context, ## Steps as unchecked checkboxes - [ ], ## Verification as unchecked checkboxes - [ ]). Do NOT execute any steps yet. Do NOT mention file paths or internal storage details. After presenting the plan, ask the user (in Portuguese) whether they want to: save it to Plans, execute it directly, or modify it first.\n\nUser request: ${rawContent}`
+      : rawContent
     setInput('')
     await doSend(content, mediaUploads)
   }
@@ -295,7 +299,7 @@ export function ChatPanel() {
 
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4"
         onScroll={handleMessagesScroll}
       >
         {messages.length === 0 && !isStreaming && (
@@ -338,6 +342,7 @@ export function ChatPanel() {
 
         <div ref={messagesEndRef} />
       </div>
+
 
       <form onSubmit={handleSubmit} className="p-3 border-t border-navy-500 flex-shrink-0 relative">
         {showSuggestions && suggestions.length > 0 && (
@@ -413,9 +418,25 @@ export function ChatPanel() {
             </button>
           )}
         </div>
-        <p className="mt-1 text-[9px] text-navy-400 pl-1">
-          Enter to send · Shift+Enter for new line · drag files to attach
-        </p>
+        <div className="mt-1.5 flex items-center gap-2 pl-0.5">
+          <button
+            type="button"
+            disabled={isStreaming || isAgentRunning}
+            onClick={() => setPlanMode((v) => !v)}
+            title={planMode ? 'Plan mode active — click to disable' : 'Plan mode — agent plans before executing'}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors disabled:opacity-40 ${
+              planMode
+                ? 'bg-ai-teal/15 border-ai-teal/50 text-ai-teal'
+                : 'bg-transparent border-navy-500 text-navy-400 hover:border-navy-400 hover:text-navy-300'
+            }`}
+          >
+            <ClipboardList size={10} />
+            Plan
+          </button>
+          <p className="text-[9px] text-navy-400">
+            Enter to send · Shift+Enter for new line · drag files to attach
+          </p>
+        </div>
       </form>
     </div>
   )
@@ -453,25 +474,33 @@ function MessageBubble({
   onCancel?: () => void; onRetry?: () => void; onChoice?: (c: string) => void
 }) {
   const isUser = role === 'user'
-  const { text, files } = parseContent(content)
+  const { text: rawText, files } = parseContent(content)
+  // Strip the internal plan-mode instruction prefix — show only the user's actual request
+  const planModeMatch = rawText.match(/^\[PLAN MODE\][\s\S]*?\nUser request:\s*([\s\S]+)$/)
+  const text = planModeMatch ? `[Plan mode] ${planModeMatch[1].trim()}` : rawText
+
+  // Extract plan cards from assistant messages and render them outside the bubble
+  const planCards = (!isUser && !streaming) ? extractPlans(text) : []
+  const bubbleText = planCards.length > 0 ? stripPlans(text) : text
 
   return (
-    <div className={`flex gap-2 ${isUser ? 'justify-end' : 'items-start'}`}>
+    <div className={`group flex gap-2 ${isUser ? 'justify-end' : 'items-start'}`}>
       {!isUser && (
         <img src={drupalclawIcon} alt="DrupalClaw" className="w-7 h-7 rounded-full object-contain flex-shrink-0 mt-0.5" />
       )}
-      <div className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'} max-w-[80%]`}>
+      <div className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'} max-w-[80%] min-w-0`}>
+        {(bubbleText || files.length > 0) && (
         <div
           className={`rounded-lg px-3 py-2 ${isUser ? 'bg-drupal-blue text-white' : 'bg-navy-600 text-gray-200'} ${streaming ? 'border border-ai-teal/40 animate-pulse' : ''}`}
           style={{ fontSize: 'var(--dc-font-size)' }}
         >
-          {text && (
+          {bubbleText && (
             isUser || streaming
-              ? <pre className="whitespace-pre-wrap font-sans break-words leading-relaxed">{text}</pre>
-              : <MarkdownContent content={text} onChoice={onChoice} />
+              ? <pre className="whitespace-pre-wrap font-sans break-words leading-relaxed">{bubbleText}</pre>
+              : <MarkdownContent content={bubbleText} onChoice={onChoice} />
           )}
           {files.length > 0 && (
-            <div className={`flex flex-wrap gap-1.5 ${text ? 'mt-2' : ''}`}>
+            <div className={`flex flex-wrap gap-1.5 ${bubbleText ? 'mt-2' : ''}`}>
               {files.map((name, i) => (
                 <span
                   key={i}
@@ -484,6 +513,12 @@ function MessageBubble({
             </div>
           )}
         </div>
+        )}
+        {planCards.map((plan, i) => (
+          <div key={i} className="w-full">
+            <PlanSaveCard title={plan.title} body={plan.body} />
+          </div>
+        ))}
 
         {/* Meta row: actions + timestamp + status */}
         <div className="flex items-center gap-1.5 px-1">

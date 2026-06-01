@@ -10,7 +10,8 @@ DrupalClaw wraps [PiClaw](https://github.com/rcarmo/piclaw) (a Bun/TypeScript AI
 - **Terminal** — full PTY terminal inside the browser
 - **Editor** — Monaco-based code editor with file browser
 - **Dev Panel** — one-click Drupal commands (cache rebuild, status, module install, DB export/import, logs, analysis)
-- **Flows** — automated multi-step workflows triggered manually or on a schedule
+- **Flows** — automated multi-step workflows triggered manually or on a schedule, with run history and chat/plan output
+- **Plans** — durable, executable strategy documents created from chat or flows, with step-by-step execution and validation
 - **MCP support** — connect external tools (GitHub, Jira, etc.) via the Model Context Protocol
 
 The AI agent knows Drupal: it reads SKILL.md files for 15+ Drupal-specific operations and executes them step by step, including orchestrating Docker containers for the PHP-FPM + nginx + database dev stack.
@@ -130,6 +131,90 @@ cd frontend
 npm run dev
 # open http://localhost:5173
 ```
+
+## Interaction modes
+
+DrupalClaw has two interaction modes, switchable via the top bar:
+
+| Mode | Description |
+|---|---|
+| **Learning** | After each non-trivial operation, the agent appends a `💡 How to replicate manually:` block with the equivalent shell commands and offers to go deeper. Useful when you want to understand what's happening under the hood. |
+| **Expert** | Responses are concise — no didactic blocks, no explanations unless asked. Optimised for speed and reduced noise. |
+
+The mode is persisted in `/workspace/.piclaw/user-prefs.json` and respected by all Drupal skills.
+
+## Flows
+
+Flows are multi-step automations that the agent executes sequentially. Each flow can contain:
+- **Skill steps** — invoke any Drupal skill (`/skill:drupal-cr`, etc.)
+- **Message steps** — send an instruction to the agent
+- **MCP steps** — interact with a connected MCP server (GitHub, Jira, etc.)
+
+Flows can be triggered **manually** or on a **schedule** (interval or cron expression). Run history is available in the Flows tab, with options to analyse output in chat or create a Plan from the result.
+
+Parameters (`{{param}}`) can be defined on a flow and filled in at run time.
+
+## Plans
+
+Plans are Markdown files stored at `.piclaw/plans/<id>.md` with YAML frontmatter. They represent a strategy document with executable steps and verification criteria.
+
+### Creating a plan
+
+- **From chat** — use Plan Mode (the `Plan` toggle in the chat input) to ask the agent to propose a plan before executing. The agent produces a `[PLAN: title]...[/PLAN]` block with a "Save plan" button.
+- **Manually** — click `+` in the Plans tab.
+- **From a flow** — click "Create plan" in the flow run history to send the output to the agent for analysis.
+
+### Plan lifecycle
+
+```
+draft → (Execute) → running → completed / failed → (Validate) → completed / failed
+```
+
+| Status | Meaning |
+|---|---|
+| `draft` | Created, not yet executed |
+| `running` | Execution or validation in progress |
+| `completed` | All steps and/or verification checks passed |
+| `failed` | One or more steps failed |
+
+### Executing a plan
+
+Click **Execute** in the Plans tab. The agent runs each step in order, marking checkboxes (`- [ ]` → `- [x]`) as it goes. Progress is visible live in the Plans tab. When finished, the view switches automatically to Chat with the agent's final report.
+
+### Validating a plan
+
+Click **Validate** (available after execution). The agent runs the `## Verification` checks and updates their checkboxes. Sets status to `completed` if all pass, `failed` otherwise.
+
+### Plan file format
+
+```markdown
+---
+id: install-admin-toolbar
+title: "Install Admin Toolbar"
+status: draft
+source: chat
+created: 2026-05-26T10:00:00Z
+updated: 2026-05-26T10:00:00Z
+runs: []
+---
+
+## Context
+
+Why this plan exists and what it achieves.
+
+## Steps
+
+- [ ] composer require drupal/admin_toolbar
+- [ ] drush en admin_toolbar admin_toolbar_tools -y
+- [ ] drush cr
+
+## Verification
+
+- [ ] Module appears in drush pm:list --status=enabled
+- [ ] Admin toolbar visible in /admin
+```
+
+Plans are plain Markdown and can be read and edited directly in any text editor or via the built-in Monaco editor in the Plans tab.
 
 ## Drupal skills
 

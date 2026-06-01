@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 
-export type MainTab = 'chat' | 'editor' | 'devpanel' | 'watchdog' | 'flows'
+export type MainTab = 'chat' | 'editor' | 'devpanel' | 'watchdog' | 'flows' | 'plans'
 export type BottomTab = 'terminal' | 'drush' | 'logs' | 'docker'
-export type SidebarSection = 'explorer' | 'skills' | 'chats' | 'settings'
+export type SidebarSection = 'explorer' | 'skills' | 'chats' | 'settings' | 'plans'
 
 interface LayoutState {
   sidebarOpen: boolean

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Play, Pencil, Trash2, Zap, MessageSquare, Loader2, Clock, Calendar, ChevronRight, ChevronDown, History, MousePointerClick, Send, Puzzle } from 'lucide-react'
+import { Play, Pencil, Trash2, Zap, MessageSquare, Loader2, Clock, Calendar, ChevronRight, ChevronDown, History, MousePointerClick, Send, Puzzle, ClipboardPlus } from 'lucide-react'
 import type { Flow, FlowRun } from '@/api/flows'
 import { getFlowRuns } from '@/api/flows'
 import { postMessage } from '@/api/chat'
@@ -32,9 +32,10 @@ interface RunStatusBadgeProps {
   run: FlowRun
   flowName: string
   onSendToChat: (text: string) => void
+  onCreatePlan: (output: string, flowName: string) => void
 }
 
-function RunStatusBadge({ run, flowName, onSendToChat }: RunStatusBadgeProps) {
+function RunStatusBadge({ run, flowName, onSendToChat, onCreatePlan }: RunStatusBadgeProps) {
   const [expanded, setExpanded] = useState(false)
   const ok = run.status === 'completed' || run.status === 'success'
   const isRunningStatus = run.status === 'running'
@@ -51,6 +52,12 @@ function RunStatusBadge({ run, flowName, onSendToChat }: RunStatusBadgeProps) {
     e.stopPropagation()
     const output = run.error ? `ERRO:\n${run.error}\n\n${run.result ?? ''}` : (run.result ?? '')
     onSendToChat(`Analyse the results of flow "${flowName}":\n\n${output}`)
+  }
+
+  const handleCreatePlan = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const output = run.error ? `ERROR:\n${run.error}\n\n${run.result ?? ''}` : (run.result ?? '')
+    onCreatePlan(output, flowName)
   }
 
   return (
@@ -83,12 +90,20 @@ function RunStatusBadge({ run, flowName, onSendToChat }: RunStatusBadgeProps) {
             </pre>
           </div>
           {(run.result || run.error) && (
-            <button
-              onClick={handleSendToChat}
-              className="mt-1.5 flex items-center gap-1.5 px-2.5 py-1 text-[10px] text-navy-300 hover:text-white border border-navy-600 hover:border-navy-400 rounded-lg transition-colors"
-            >
-              <Send size={9} /> Analyse in chat
-            </button>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <button
+                onClick={handleSendToChat}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] text-navy-300 hover:text-white border border-navy-600 hover:border-navy-400 rounded-lg transition-colors"
+              >
+                <Send size={9} /> Analyse in chat
+              </button>
+              <button
+                onClick={handleCreatePlan}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] text-ai-teal border border-ai-teal/40 hover:bg-ai-teal/10 rounded-lg transition-colors"
+              >
+                <ClipboardPlus size={9} /> Create plan
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -297,6 +312,12 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
     }
   }, [setMainTab])
 
+  const handleCreatePlan = useCallback((output: string, flowName: string) => {
+    handleSendToChat(
+      `Based on the following flow output, create an executable plan in [PLAN: title]...[/PLAN] format.\n\nRules:\n- You MUST produce a [PLAN: ...] block. Do not suggest skills, do not explain — output the plan block only.\n- Include ## Context, ## Steps (checkbox list of concrete actions), ## Verification (checkbox list of checks).\n- Title should be short and action-oriented.\n\nFlow: "${flowName}"\n\nOutput:\n${output}`
+    )
+  }, [handleSendToChat])
+
   if (flows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center py-16">
@@ -441,7 +462,7 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
                   <p className="text-[9px] text-navy-300 uppercase tracking-wider pt-2 pb-1.5">Recent runs</p>
                   {runsCache[flow.id]?.length > 0
                     ? runsCache[flow.id].map((run, i) => (
-                        <RunStatusBadge key={i} run={run} flowName={flow.name} onSendToChat={handleSendToChat} />
+                        <RunStatusBadge key={i} run={run} flowName={flow.name} onSendToChat={handleSendToChat} onCreatePlan={handleCreatePlan} />
                       ))
                     : <p className="text-[10px] text-navy-300 py-1">No history available</p>
                   }

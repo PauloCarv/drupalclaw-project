@@ -129,6 +129,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
   const [cronPreset, setCronPreset] = useState<CronPreset>(initialCron.preset)
   const [cronCustomDays, setCronCustomDays] = useState<number[]>(initialCron.customDays)
 
+  const [outputMode] = useState<'chat' | 'plan'>(initial?.outputMode ?? 'chat')
   const [params, setParams] = useState<FlowParam[]>(initial?.params ?? [])
   const [steps, setSteps] = useState<FlowStep[]>(initial?.steps ?? [])
   const [saving, setSaving] = useState(false)
@@ -206,6 +207,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
         schedule,
         params,
         steps,
+        outputMode,
         createdAt: initial?.createdAt ?? Date.now(),
         lastRunAt: initial?.lastRunAt,
       })

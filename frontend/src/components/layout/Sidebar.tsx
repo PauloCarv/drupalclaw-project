@@ -1,10 +1,11 @@
-import { FolderTree, Zap, MessageSquare, Settings, Plus, Pencil, Trash2, Check, X, Archive, ArchiveRestore } from 'lucide-react'
+import { FolderTree, Zap, MessageSquare, Settings, ClipboardList, Plus, Pencil, Trash2, Check, X, Archive, ArchiveRestore } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLayoutStore, type SidebarSection } from '@/stores/layoutStore'
 import { FileTree } from '@/components/files/FileTree'
 import { SkillsList } from '@/components/skills/SkillsList'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
+import { PlansList } from '@/components/plans/PlansList'
 import { getAgentContext, getSystemMetrics } from '@/api/providers'
 import { useSession } from '@/hooks/useSession'
 import type { Session } from '@/api/sessions'
@@ -14,6 +15,7 @@ const sections: { id: SidebarSection; icon: typeof FolderTree; label: string }[]
   { id: 'skills', icon: Zap, label: 'Skills' },
   { id: 'chats', icon: MessageSquare, label: 'Chats' },
   { id: 'settings', icon: Settings, label: 'Settings' },
+  { id: 'plans', icon: ClipboardList, label: 'Plans' },
 ]
 
 export function Sidebar() {
@@ -63,6 +65,8 @@ export function Sidebar() {
         return <ChatsList />
       case 'settings':
         return <SettingsPanel />
+      case 'plans':
+        return <PlansList compact />
       default:
         return <FileTree />
     }

@@ -36,6 +36,7 @@ export interface Flow {
   schedule?: FlowSchedule
   params: FlowParam[]
   steps: FlowStep[]
+  outputMode?: 'chat' | 'plan'  // default: 'chat'
   createdAt: number
   lastRunAt?: number
 }
