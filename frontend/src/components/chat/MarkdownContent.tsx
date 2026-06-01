@@ -66,7 +66,20 @@ function splitOnPlanAndPick(content: string): ContentPart[] {
   return parts.flatMap((p) => p.type === 'text' ? splitOnPick(p.value) : [p])
 }
 
-function PlanSaveCard({ title, body }: { title: string; body: string }) {
+export function extractPlans(content: string): { title: string; body: string }[] {
+  const planRe = /\[PLAN:\s*([^\]]+)\]([\s\S]*?)\[\/PLAN\]/g
+  const plans: { title: string; body: string }[] = []
+  for (const match of content.matchAll(planRe)) {
+    plans.push({ title: match[1].trim(), body: match[2].trim() })
+  }
+  return plans
+}
+
+export function stripPlans(content: string): string {
+  return content.replace(/\[PLAN:\s*([^\]]+)\]([\s\S]*?)\[\/PLAN\]/g, '').trim()
+}
+
+export function PlanSaveCard({ title, body }: { title: string; body: string }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const { loadPlans, selectPlan, addOrUpdateSummary } = usePlansStore()
@@ -90,7 +103,7 @@ function PlanSaveCard({ title, body }: { title: string; body: string }) {
   }
 
   return (
-    <div className="my-2 p-3 rounded-lg border border-ai-teal/30 bg-ai-teal/5 flex items-center gap-3">
+    <div className="my-2 p-3 rounded-lg border border-ai-teal/30 bg-ai-teal/5 flex items-center gap-3 overflow-hidden">
       <div className="flex-1 min-w-0">
         <p className="text-[11px] font-medium text-ai-teal truncate">Plan: {title}</p>
         <p className="text-[10px] text-navy-400 truncate">

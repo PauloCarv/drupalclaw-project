@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useChat } from '@/hooks/useChat'
 import { useSession } from '@/hooks/useSession'
 import { OobeSetup } from '@/components/oobe/OobeSetup'
-import { MarkdownContent } from './MarkdownContent'
+import { MarkdownContent, PlanSaveCard, extractPlans, stripPlans } from './MarkdownContent'
 import { LiveActivity } from './LiveActivity'
 import { getAllCommands, type Skill } from '@/api/skills'
 import { uploadMedia, type MediaUpload } from '@/api/chat'
@@ -299,7 +299,7 @@ export function ChatPanel() {
 
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4"
         onScroll={handleMessagesScroll}
       >
         {messages.length === 0 && !isStreaming && (
@@ -479,23 +479,28 @@ function MessageBubble({
   const planModeMatch = rawText.match(/^\[PLAN MODE\][\s\S]*?\nUser request:\s*([\s\S]+)$/)
   const text = planModeMatch ? `[Plan mode] ${planModeMatch[1].trim()}` : rawText
 
+  // Extract plan cards from assistant messages and render them outside the bubble
+  const planCards = (!isUser && !streaming) ? extractPlans(text) : []
+  const bubbleText = planCards.length > 0 ? stripPlans(text) : text
+
   return (
     <div className={`group flex gap-2 ${isUser ? 'justify-end' : 'items-start'}`}>
       {!isUser && (
         <img src={drupalclawIcon} alt="DrupalClaw" className="w-7 h-7 rounded-full object-contain flex-shrink-0 mt-0.5" />
       )}
-      <div className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'} max-w-[80%]`}>
+      <div className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'} max-w-[80%] min-w-0`}>
+        {(bubbleText || files.length > 0) && (
         <div
           className={`rounded-lg px-3 py-2 ${isUser ? 'bg-drupal-blue text-white' : 'bg-navy-600 text-gray-200'} ${streaming ? 'border border-ai-teal/40 animate-pulse' : ''}`}
           style={{ fontSize: 'var(--dc-font-size)' }}
         >
-          {text && (
+          {bubbleText && (
             isUser || streaming
-              ? <pre className="whitespace-pre-wrap font-sans break-words leading-relaxed">{text}</pre>
-              : <MarkdownContent content={text} onChoice={onChoice} />
+              ? <pre className="whitespace-pre-wrap font-sans break-words leading-relaxed">{bubbleText}</pre>
+              : <MarkdownContent content={bubbleText} onChoice={onChoice} />
           )}
           {files.length > 0 && (
-            <div className={`flex flex-wrap gap-1.5 ${text ? 'mt-2' : ''}`}>
+            <div className={`flex flex-wrap gap-1.5 ${bubbleText ? 'mt-2' : ''}`}>
               {files.map((name, i) => (
                 <span
                   key={i}
@@ -508,6 +513,12 @@ function MessageBubble({
             </div>
           )}
         </div>
+        )}
+        {planCards.map((plan, i) => (
+          <div key={i} className="w-full">
+            <PlanSaveCard title={plan.title} body={plan.body} />
+          </div>
+        ))}
 
         {/* Meta row: actions + timestamp + status */}
         <div className="flex items-center gap-1.5 px-1">

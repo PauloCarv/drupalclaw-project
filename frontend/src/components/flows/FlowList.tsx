@@ -314,7 +314,7 @@ export function FlowList({ flows, runningFlowId, onEdit, onDelete, onRun }: Prop
 
   const handleCreatePlan = useCallback((output: string, flowName: string) => {
     handleSendToChat(
-      `Analyse the following flow output and, if appropriate, create an executable plan using the [PLAN: title]...[/PLAN] format (with ## Context, ## Steps with checkboxes, ## Verification with checkboxes). If a plan is not warranted, explain why.\n\nFlow: "${flowName}"\n\nOutput:\n${output}`
+      `Based on the following flow output, create an executable plan in [PLAN: title]...[/PLAN] format.\n\nRules:\n- You MUST produce a [PLAN: ...] block. Do not suggest skills, do not explain — output the plan block only.\n- Include ## Context, ## Steps (checkbox list of concrete actions), ## Verification (checkbox list of checks).\n- Title should be short and action-oriented.\n\nFlow: "${flowName}"\n\nOutput:\n${output}`
     )
   }, [handleSendToChat])
 
