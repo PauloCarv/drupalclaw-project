@@ -1,6 +1,6 @@
 services:
   drupalclaw:
-    image: drupalclaw:latest
+    image: ghcr.io/paulocarv/drupalclaw-project:latest
     build:
       context: ..
       dockerfile: docker/Dockerfile
