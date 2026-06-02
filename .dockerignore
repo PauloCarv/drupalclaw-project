@@ -1,0 +1,20 @@
+# Sensitive runtime files — must never be baked into the image
+config/.pi/agent/auth.json
+config/.pi/agent/messages.db
+config/.pi/agent/settings.local.json
+config/.pi/agent/mcp-cache.json
+workspace/.piclaw/
+workspace/.pi/messages.db
+workspace/.pi/mcp.json
+
+# Dev/local
+.claude/
+.git/
+*.md
+!README.md
+!backend/config/AGENTS.md
+!skills/**/*.md
+frontend/node_modules/
+frontend/dist/
+site/
+wiki/
