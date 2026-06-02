@@ -48,26 +48,22 @@ git clone https://github.com/PauloCarv/drupalclaw-project.git
 cd drupalclaw-project
 ```
 
-### 2. Start (pre-built image — recommended)
+### 2. Start
 
 ```bash
 cd docker
 docker compose up -d
 ```
 
-The image is pulled automatically from `ghcr.io/paulocarv/drupalclaw-project:latest`. No build step required.
+The image is pulled automatically from `ghcr.io/paulocarv/drupalclaw-project:latest` — no build step required.
 
-### Alternative: build locally
-
-If you want to build from source (e.g. to customise the image):
-
-```bash
-cd docker
-DOCKER_BUILDKIT=0 docker compose build
-docker compose up -d
-```
-
-> `DOCKER_BUILDKIT=0` is required when building locally — the Dockerfile uses the classic builder.
+> **No registry access?** If you can't reach GHCR (restricted network, air-gapped machine), build locally instead:
+> ```bash
+> cd docker
+> DOCKER_BUILDKIT=0 docker compose build
+> docker compose up -d
+> ```
+> `DOCKER_BUILDKIT=0` is required — the Dockerfile uses the classic builder. The local build takes precedence over the registry image once built.
 
 ### 3. Open in browser
 
