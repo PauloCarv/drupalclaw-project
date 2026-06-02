@@ -61,7 +61,12 @@ export function useChat() {
         // reset the timer, the quiet check never passes after 'done' fires.
         const isAgentProcessing = eventType === 'agent_thought' || eventType === 'agent_draft' ||
           eventType === 'agent_status'
-        if (isAgentProcessing) lastSseActivityAt.current = Date.now()
+        if (isAgentProcessing) {
+          lastSseActivityAt.current = Date.now()
+          // Reset watchdog on each agent event — so it's "10min of silence", not "10min absolute"
+          // This lets long-running skills (drupal-serve, drupal-init) run beyond 10 minutes
+          if (useChatStore.getState().isAgentRunning) scheduleWatchdog()
+        }
 
         if (eventType === 'new_post' || eventType === 'agent_response') {
           queryClient.invalidateQueries({ queryKey: ['timeline'] })
