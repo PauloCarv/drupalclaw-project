@@ -69,12 +69,12 @@ mkdir -p "$WORKSPACE/.piclaw/plans/runs"
 # -- Fix Docker socket permissions (lost on Docker Desktop restart) --
 chmod 666 /var/run/docker.sock 2>/dev/null || true
 
-# -- Ensure DrupalClaw redirect is in place (overrides any stale PiClaw index.html) --
-# Find static dir dynamically — path can vary across PiClaw versions and platforms
+# -- Ensure DrupalClaw redirect is in place --
+# PiClaw routes GET / to static/classic/index.html (dispatch-shell.ts), never to static/index.html
 PICLAW_STATIC=$(find /usr/local/lib/bun -path "*/piclaw/runtime/web/static" -type d 2>/dev/null | head -1)
 if [[ -n "$PICLAW_STATIC" ]]; then
   echo '<!DOCTYPE html><html><head><script>window.location.replace("/static/drupalclaw/index.html")</script></head><body></body></html>' \
-    > "$PICLAW_STATIC/index.html"
+    > "$PICLAW_STATIC/classic/index.html"
 fi
 
 # -- Hand off to original PiClaw entrypoint --

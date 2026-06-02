@@ -55,9 +55,10 @@ WORKDIR ${PICLAW_DIR}
 # -- Copy React frontend build into PiClaw static serving --
 COPY --from=frontend-build /app/dist/ ${PICLAW_DIR}/runtime/web/static/drupalclaw/
 
-# -- Replace PiClaw index.html with redirect to DrupalClaw UI --
+# -- Replace PiClaw classic/index.html with redirect to DrupalClaw UI --
+# PiClaw routes GET / to static/classic/index.html (dispatch-shell.ts), never to static/index.html
 RUN echo '<!DOCTYPE html><html><head><script>window.location.replace("/static/drupalclaw/index.html")</script></head><body></body></html>' \
-    > ${PICLAW_DIR}/runtime/web/static/index.html
+    > ${PICLAW_DIR}/runtime/web/static/classic/index.html
 
 # -- Copy Drupal skills --
 COPY skills/ /home/agent/.pi/skills/
