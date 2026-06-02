@@ -7,6 +7,7 @@ import drupalclawIcon from '@/assets/icon.png'
 import { useQuery } from '@tanstack/react-query'
 import { useChat } from '@/hooks/useChat'
 import { useChatStore } from '@/stores/chatStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { useSession } from '@/hooks/useSession'
 import { OobeSetup } from '@/components/oobe/OobeSetup'
 import { MarkdownContent, PlanSaveCard, extractPlans, stripPlans } from './MarkdownContent'
@@ -476,8 +477,10 @@ function MessageBubble({
 }) {
   const isUser = role === 'user'
   const userName = useChatStore((s) => s.userName)
-  const userInitials = userName
-    ? userName.split(/[\s._-]+/).map((p) => p[0]?.toUpperCase() ?? '').filter(Boolean).slice(0, 2).join('')
+  const displayName = useSettingsStore((s) => s.displayName)
+  const effectiveName = displayName.trim() || userName || ''
+  const userInitials = effectiveName
+    ? effectiveName.split(/[\s._-]+/).map((p) => p[0]?.toUpperCase() ?? '').filter(Boolean).slice(0, 2).join('')
     : 'You'
   const { text: rawText, files } = parseContent(content)
   // Strip the internal plan-mode instruction prefix — show only the user's actual request

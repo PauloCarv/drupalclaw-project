@@ -13,7 +13,7 @@ function fmt(n: number) {
 
 export function SettingsPanel() {
   const [showProvider, setShowProvider] = useState(false)
-  const { fontSize, setFontSize, interactionMode, setInteractionMode, autoCompact, setAutoCompact } = useSettingsStore()
+  const { fontSize, setFontSize, interactionMode, setInteractionMode, autoCompact, setAutoCompact, displayName, setDisplayName } = useSettingsStore()
   const { currentModelLabel, currentModel, modelOptions, switchModel, isSwitching } = useProviders()
 
   const [togglingAutoCompact, setTogglingAutoCompact] = useState(false)
@@ -119,6 +119,25 @@ export function SettingsPanel() {
           >
             Mudar Provider
           </button>
+        </section>
+
+        {/* ── Identity ─────────────────────────────────── */}
+        <section>
+          <h4 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Identidade</h4>
+          <div className="flex items-center justify-between py-1 gap-3">
+            <div className="flex-1 min-w-0">
+              <span className="text-[11px] text-navy-300 block">Display name</span>
+              <span className="text-[10px] text-navy-500 block leading-tight">Shown as initials in the chat. Leave empty to use "You".</span>
+            </div>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Your name"
+              maxLength={40}
+              className="flex-shrink-0 w-28 bg-navy-600 border border-navy-500 rounded px-2 py-1 text-[11px] text-gray-200 placeholder-navy-500 focus:outline-none focus:border-drupal-blue"
+            />
+          </div>
         </section>
 
         {/* ── Agent behaviour ──────────────────────────── */}

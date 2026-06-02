@@ -29,6 +29,8 @@ interface SettingsState {
   setInteractionMode: (mode: 'learning' | 'expert') => void
   autoCompact: boolean
   setAutoCompact: (value: boolean) => void
+  displayName: string
+  setDisplayName: (name: string) => void
 }
 
 export const useSettingsStore = create<SettingsState>(() => ({
@@ -53,5 +55,10 @@ export const useSettingsStore = create<SettingsState>(() => ({
   setAutoCompact: (value) => {
     try { localStorage.setItem('dc-auto-compact', String(value)) } catch { /* no-op */ }
     useSettingsStore.setState({ autoCompact: value })
+  },
+  displayName: readStr('dc-display-name', ''),
+  setDisplayName: (name) => {
+    try { localStorage.setItem('dc-display-name', name) } catch { /* no-op */ }
+    useSettingsStore.setState({ displayName: name })
   },
 }))
