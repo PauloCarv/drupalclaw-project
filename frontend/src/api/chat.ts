@@ -88,8 +88,16 @@ export async function getTimeline(limit = 100, chatJid?: string, before?: number
   const params = new URLSearchParams({ limit: String(limit) })
   if (chatJid) params.set('chat_jid', chatJid)
   if (before !== undefined) params.set('before', String(before))
-  const data = await apiGet<{ posts: TimelinePost[] } | TimelinePost[]>(`/timeline?${params}`)
-  if (data && !Array.isArray(data) && Array.isArray(data.posts)) return data.posts
+  const data = await apiGet<{ posts: TimelinePost[]; identity?: { user_name?: string | null } } | TimelinePost[]>(`/timeline?${params}`)
+  if (data && !Array.isArray(data) && Array.isArray(data.posts)) {
+    // Persist user_name from identity if present — used for user avatar initials
+    const userName = data.identity?.user_name ?? null
+    if (userName) {
+      const { useChatStore } = await import('@/stores/chatStore')
+      useChatStore.getState().setUserName(userName)
+    }
+    return data.posts
+  }
   if (Array.isArray(data)) return data
   return []
 }

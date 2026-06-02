@@ -28,8 +28,10 @@ interface ChatState {
   streamingContent: string
   streamingStartedAt: number | null
   agentActivity: AgentActivity
+  userName: string | null
 
   setSessions: (sessions: ChatSession[]) => void
+  setUserName: (name: string | null) => void
   setActiveSession: (id: string | null) => void
   setMessages: (messages: ChatMessage[]) => void
   addMessage: (message: ChatMessage) => void
@@ -56,8 +58,10 @@ export const useChatStore = create<ChatState>((set) => ({
   streamingContent: '',
   streamingStartedAt: null,
   agentActivity: EMPTY_ACTIVITY,
+  userName: null,
 
   setSessions: (sessions) => set({ sessions }),
+  setUserName: (userName) => set({ userName }),
   setActiveSession: (id) => set({ activeSessionId: id }),
   setMessages: (messages) => set({ messages }),
   addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),

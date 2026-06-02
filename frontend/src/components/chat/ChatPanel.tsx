@@ -6,6 +6,7 @@ import {
 import drupalclawIcon from '@/assets/icon.png'
 import { useQuery } from '@tanstack/react-query'
 import { useChat } from '@/hooks/useChat'
+import { useChatStore } from '@/stores/chatStore'
 import { useSession } from '@/hooks/useSession'
 import { OobeSetup } from '@/components/oobe/OobeSetup'
 import { MarkdownContent, PlanSaveCard, extractPlans, stripPlans } from './MarkdownContent'
@@ -474,6 +475,10 @@ function MessageBubble({
   onCancel?: () => void; onRetry?: () => void; onChoice?: (c: string) => void
 }) {
   const isUser = role === 'user'
+  const userName = useChatStore((s) => s.userName)
+  const userInitials = userName
+    ? userName.split(/[\s._-]+/).map((p) => p[0]?.toUpperCase() ?? '').filter(Boolean).slice(0, 2).join('')
+    : 'You'
   const { text: rawText, files } = parseContent(content)
   // Strip the internal plan-mode instruction prefix — show only the user's actual request
   const planModeMatch = rawText.match(/^\[PLAN MODE\][\s\S]*?\nUser request:\s*([\s\S]+)$/)
@@ -547,7 +552,7 @@ function MessageBubble({
         </div>
       </div>
       {isUser && (
-        <div className="w-7 h-7 rounded-full bg-navy-500 flex items-center justify-center text-[10px] text-drupal-blue-light flex-shrink-0 font-medium mt-0.5">PC</div>
+        <div className="w-7 h-7 rounded-full bg-navy-500 flex items-center justify-center text-[10px] text-drupal-blue-light flex-shrink-0 font-medium mt-0.5">{userInitials}</div>
       )}
     </div>
   )
