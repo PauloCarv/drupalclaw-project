@@ -8,16 +8,12 @@ WORKSPACE="/workspace"
 SKILLS_SRC="/home/agent/.pi/skills"
 TEMPLATES_SRC="/home/agent/.pi/templates"
 
-# -- Sync Drupal skills to workspace --
+# -- Sync Drupal skills to workspace (always overwrite — image is authoritative) --
 if [[ -d "$SKILLS_SRC" ]]; then
   mkdir -p "$WORKSPACE/.pi/skills"
   for skill_dir in "$SKILLS_SRC"/*/; do
     if [[ -d "$skill_dir" ]]; then
-      skill_name=$(basename "$skill_dir")
-      if [[ ! -f "$WORKSPACE/.pi/skills/$skill_name/SKILL.md" ]] || \
-         [[ "$skill_dir/SKILL.md" -nt "$WORKSPACE/.pi/skills/$skill_name/SKILL.md" ]]; then
-        cp -r "$skill_dir" "$WORKSPACE/.pi/skills/"
-      fi
+      cp -r "$skill_dir" "$WORKSPACE/.pi/skills/"
     fi
   done
 fi
