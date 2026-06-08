@@ -243,6 +243,27 @@ Plans are plain Markdown and can be read and edited directly in any text editor 
 | `drupal-debug` | Full diagnostic report |
 | `drupal-perf` | Performance analysis |
 
+## Updating
+
+DrupalClaw uses [semantic versioning](https://semver.org). Docker images are published to GHCR with version tags (`v1.0.0`, `v1.0`) and `:latest`.
+
+**Your data is safe.** The Drupal project, chat history, flows, plans, and provider credentials all live in Docker volumes — they are never touched by an image update.
+
+To update to the latest version:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+To pin to a specific version, edit `docker-compose.yml`:
+
+```yaml
+image: ghcr.io/paulocarv/drupalclaw-project:1.0.0
+```
+
+The app shows the installed version and checks for updates automatically (Settings → Version). A badge appears in the top bar when a new release is available.
+
 ## License
 
 MIT
