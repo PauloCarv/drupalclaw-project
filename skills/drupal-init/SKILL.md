@@ -213,9 +213,19 @@ else
   SITES_DIR="${DRUPAL_DIR}/sites/default"
 fi
 
+# Generate hash_salt (always fresh — required by Drupal)
+HASH_SALT=$(openssl rand -base64 55 | tr -d '\n')
+
 # Skip if settings.local.php already exists with DB config
 if [[ -f "${SITES_DIR}/settings.local.php" ]] && grep -q "databases\[" "${SITES_DIR}/settings.local.php" 2>/dev/null; then
-  echo "ℹ️  settings.local.php already has DB config — skipping."
+  # Update hash_salt even if file exists
+  if grep -q "hash_salt" "${SITES_DIR}/settings.local.php"; then
+    sed -i "s|.*hash_salt.*|\$settings['hash_salt'] = '${HASH_SALT}';|" "${SITES_DIR}/settings.local.php"
+  else
+    echo "" >> "${SITES_DIR}/settings.local.php"
+    echo "\$settings['hash_salt'] = '${HASH_SALT}';" >> "${SITES_DIR}/settings.local.php"
+  fi
+  echo "ℹ️  settings.local.php already has DB config — updated hash_salt."
 else
   # Read DB type from stack state
   DB_DRIVER="mysql"
@@ -235,14 +245,14 @@ else
   fi
 
   if [[ "$DB_DRIVER" == "sqlite" ]]; then
-    cat > "${SITES_DIR}/settings.local.php" << 'LOCALEOF'
+    cat > "${SITES_DIR}/settings.local.php" << LOCALEOF
 <?php
 
-$databases['default']['default'] = [
+\$databases['default']['default'] = [
   'driver' => 'sqlite',
   'database' => '../sites/default/files/.sqlite',
   'prefix' => '',
-  'namespace' => 'Drupal\\sqlite\\Driver\\Database\\sqlite',
+  'namespace' => 'Drupal\\\\sqlite\\\\Driver\\\\Database\\\\sqlite',
   'autoload' => 'core/modules/sqlite/src/Driver/Database/sqlite/',
 ];
 LOCALEOF
@@ -264,41 +274,83 @@ LOCALEOF
 LOCALEOF
   fi
 
-  # Append local dev overrides
-  cat >> "${SITES_DIR}/settings.local.php" << 'LOCALEOF'
+  # Append hash_salt and local dev overrides
+  cat >> "${SITES_DIR}/settings.local.php" << LOCALEOF
+
+\$settings['hash_salt'] = '${HASH_SALT}';
 
 // Local development settings — not safe for production.
-$settings['skip_permissions_hardening'] = TRUE;
-$settings['rebuild_access'] = TRUE;
-$config['system.performance']['cache']['page']['use_internal'] = FALSE;
-$config['system.performance']['css']['preprocess'] = FALSE;
-$config['system.performance']['js']['preprocess'] = FALSE;
+\$settings['skip_permissions_hardening'] = TRUE;
+\$settings['rebuild_access'] = TRUE;
+\$config['system.performance']['cache']['page']['use_internal'] = FALSE;
+\$config['system.performance']['css']['preprocess'] = FALSE;
+\$config['system.performance']['js']['preprocess'] = FALSE;
 LOCALEOF
 
   chmod 644 "${SITES_DIR}/settings.local.php"
-  echo "✅ settings.local.php created with ${DB_DRIVER} config (host: ${DB_HOST}:${DB_PORT})."
+  echo "✅ settings.local.php created with ${DB_DRIVER} config and hash_salt."
 fi
 ```
 
 ```bash
 DRUPAL_DIR="/workspace/drupal"
 
-# Add settings.local.php to .gitignore
-GITIGNORE="${DRUPAL_DIR}/.gitignore"
-ENTRY="sites/default/settings.local.php"
+# Detect web root
+if [[ -d "${DRUPAL_DIR}/web/sites/default" ]]; then
+  SITES_DIR="${DRUPAL_DIR}/web/sites/default"
+  WEB_ROOT="${DRUPAL_DIR}/web"
+elif [[ -d "${DRUPAL_DIR}/docroot/sites/default" ]]; then
+  SITES_DIR="${DRUPAL_DIR}/docroot/sites/default"
+  WEB_ROOT="${DRUPAL_DIR}/docroot"
+else
+  SITES_DIR="${DRUPAL_DIR}/sites/default"
+  WEB_ROOT="${DRUPAL_DIR}"
+fi
 
+# Create services.local.yml with debug/development settings if missing
+SERVICES_LOCAL="${SITES_DIR}/services.local.yml"
+if [[ ! -f "$SERVICES_LOCAL" ]]; then
+  cat > "$SERVICES_LOCAL" << 'SVCEOF'
+# Local development services — enables Twig debug and disables caching.
+# Not safe for production.
+parameters:
+  http.response.debug_cacheability_headers: true
+  twig.config:
+    debug: true
+    auto_reload: true
+    cache: false
+services:
+  cache.backend.null:
+    class: Drupal\Core\Cache\NullBackendFactory
+SVCEOF
+  chmod 644 "$SERVICES_LOCAL"
+  echo "✅ services.local.yml created (Twig debug ON, cache disabled)."
+else
+  echo "ℹ️  services.local.yml already exists — skipping."
+fi
+
+# Ensure services.local.yml is referenced in settings.local.php
+if [[ -f "${SITES_DIR}/settings.local.php" ]] && ! grep -q "services.local.yml" "${SITES_DIR}/settings.local.php"; then
+  cat >> "${SITES_DIR}/settings.local.php" << 'LOCALEOF'
+
+// Enable local services (Twig debug, null cache backend).
+$settings['container_yamls'][] = DRUPAL_ROOT . '/sites/default/services.local.yml';
+LOCALEOF
+  echo "✅ services.local.yml reference added to settings.local.php."
+fi
+
+# Add both local config files to .gitignore
+GITIGNORE="${DRUPAL_DIR}/.gitignore"
 if [[ -f "$GITIGNORE" ]]; then
-  if ! grep -q "$ENTRY" "$GITIGNORE"; then
-    echo "" >> "$GITIGNORE"
-    echo "# Local settings — not committed" >> "$GITIGNORE"
-    echo "$ENTRY" >> "$GITIGNORE"
-    echo "✅ settings.local.php added to .gitignore"
+  if ! grep -q "settings.local.php" "$GITIGNORE"; then
+    printf "\n# Local settings — not committed\nsites/default/settings.local.php\nsites/default/services.local.yml\n" >> "$GITIGNORE"
+    echo "✅ settings.local.php and services.local.yml added to .gitignore"
   else
-    echo "ℹ️  settings.local.php already in .gitignore"
+    echo "ℹ️  Local settings already in .gitignore"
   fi
 else
-  printf "# Local settings — not committed\n%s\n" "$ENTRY" > "$GITIGNORE"
-  echo "✅ .gitignore created with settings.local.php entry"
+  printf "# Local settings — not committed\nsites/default/settings.local.php\nsites/default/services.local.yml\n" > "$GITIGNORE"
+  echo "✅ .gitignore created with local settings entries"
 fi
 ```
 
@@ -339,7 +391,68 @@ else
 fi
 ```
 
-**If no**, continue.
+**If no**, continue to Step 4b.
+
+---
+
+## Step 4b — Auto-install Drupal (only if no DB dump was imported)
+
+```bash
+DRUPAL_DIR="/workspace/drupal"
+STATE_FILE="/workspace/.piclaw/stack/state.json"
+
+# Detect web root
+if [[ -d "${DRUPAL_DIR}/web/sites/default" ]]; then
+  WEB_ROOT="${DRUPAL_DIR}/web"
+elif [[ -d "${DRUPAL_DIR}/docroot/sites/default" ]]; then
+  WEB_ROOT="${DRUPAL_DIR}/docroot"
+else
+  WEB_ROOT="${DRUPAL_DIR}"
+fi
+
+# Generate admin credentials
+ADMIN_USER="admin"
+ADMIN_PASS=$(cat /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 8)$(cat /dev/urandom | tr -dc '0-9' | head -c 2)$(cat /dev/urandom | tr -dc '!@#' | head -c 2)
+ADMIN_EMAIL="admin@localhost.dev"
+
+# Check if stack is running
+STACK_RUNNING=false
+PROJECT_NAME=""
+if [[ -f "$STATE_FILE" ]]; then
+  PROJECT_NAME=$(jq -r '.project_name // empty' "$STATE_FILE" 2>/dev/null)
+  if [[ -n "$PROJECT_NAME" ]]; then
+    PHP_CONTAINER=$(docker ps --filter "status=running" --filter "label=com.docker.compose.project=${PROJECT_NAME}" --format '{{.Names}}' 2>/dev/null | grep -iE 'php|fpm' | head -1)
+    [[ -n "$PHP_CONTAINER" ]] && STACK_RUNNING=true
+  fi
+fi
+
+if [[ "$STACK_RUNNING" == "true" ]]; then
+  echo "🔧 Installing Drupal via Drush..."
+  docker exec -w /var/www/html "$PHP_CONTAINER" \
+    vendor/bin/drush site:install standard \
+    --account-name="$ADMIN_USER" \
+    --account-pass="$ADMIN_PASS" \
+    --account-mail="$ADMIN_EMAIL" \
+    --site-name="My Drupal Site" \
+    --locale=en \
+    -y 2>&1
+  echo "DRUPAL_INSTALLED=true"
+  echo "ADMIN_USER=$ADMIN_USER"
+  echo "ADMIN_PASS=$ADMIN_PASS"
+  echo "✅ Drupal installed successfully."
+else
+  # Save credentials for later reference
+  ADMIN_PASS=$(cat /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 8)$(cat /dev/urandom | tr -dc '0-9' | head -c 2)$(cat /dev/urandom | tr -dc '!@#' | head -c 2)
+  mkdir -p /workspace/.piclaw
+  printf '{"admin_user":"%s","admin_pass":"%s","admin_email":"%s"}' \
+    "$ADMIN_USER" "$ADMIN_PASS" "$ADMIN_EMAIL" \
+    > /workspace/.piclaw/pending-install.json
+  echo "DRUPAL_INSTALLED=false"
+  echo "ADMIN_USER=$ADMIN_USER"
+  echo "ADMIN_PASS=$ADMIN_PASS"
+  echo "ℹ️  Stack not running — credentials saved. Start the stack with 'drupal-serve' then run: vendor/bin/drush site:install standard --account-name=$ADMIN_USER --account-pass=$ADMIN_PASS -y"
+fi
+```
 
 ---
 
@@ -391,40 +504,66 @@ echo "📦 Docker stack structure prepared in .piclaw/stack/"
 
 ---
 
-## Step 7 — Check stack and report result
+## Step 7 — Final report
 
 ```bash
-echo ""
-echo "✅ Drupal project initialised in /workspace/drupal"
-echo ""
-
-# Check if stack is running
-STACK_RUNNING=false
 STATE_FILE="/workspace/.piclaw/stack/state.json"
-STACK_PROJECT=$(jq -r '.project_name // "drupal-dev"' "$STATE_FILE" 2>/dev/null || echo "drupal-dev")
-if [[ -f "$STATE_FILE" ]] && docker compose -f "/workspace/docker-compose.drupal.yml" -p "$STACK_PROJECT" ps --status running 2>/dev/null | grep -q "php"; then
-  STACK_RUNNING=true
-  STACK_URL=$(jq -r '.drupal_url // ""' "$STATE_FILE" 2>/dev/null)
+STACK_URL=$(jq -r '.drupal_url // ""' "$STATE_FILE" 2>/dev/null)
+
+# Read install credentials if available
+ADMIN_USER=""
+ADMIN_PASS=""
+if [[ -f "/workspace/.piclaw/pending-install.json" ]]; then
+  ADMIN_USER=$(jq -r '.admin_user // ""' /workspace/.piclaw/pending-install.json 2>/dev/null)
+  ADMIN_PASS=$(jq -r '.admin_pass // ""' /workspace/.piclaw/pending-install.json 2>/dev/null)
 fi
 
-if [[ "$STACK_RUNNING" == "true" ]]; then
-  echo "═══════════════════════════════════════════════"
-  echo "✅ Stack is already running!"
-  echo "   Complete the Drupal installation via browser:"
-  echo "   🌐 $STACK_URL"
+echo ""
+echo "═══════════════════════════════════════════════════"
+echo "✅  Drupal project ready at /workspace/drupal"
+echo "═══════════════════════════════════════════════════"
+echo ""
+echo "📁 Configuration files:"
+echo "   settings.php         → includes settings.local.php"
+echo "   settings.local.php   → DB credentials, hash_salt, dev settings"
+echo "   services.local.yml   → Twig debug ON, cache backend: null"
+echo ""
+echo "   settings.local.php is gitignored — safe for local secrets."
+echo "   services.local.yml  is gitignored — development-only."
+echo ""
+
+if [[ "$DRUPAL_INSTALLED" == "true" ]]; then
+  echo "═══════════════════════════════════════════════════"
+  echo "🎉  Drupal installed!"
   echo ""
-  echo "   Or install via drush (if you did not import a DB):"
-  echo "   vendor/bin/drush site:install --db-url=mysql://drupal:drupal@db/drupal -y"
-  echo "═══════════════════════════════════════════════"
+  echo "   🌐  URL:       $STACK_URL"
+  echo "   👤  Username:  $ADMIN_USER"
+  echo "   🔑  Password:  $ADMIN_PASS"
+  echo ""
+  echo "   Save these credentials — they will not be shown again."
+  echo "═══════════════════════════════════════════════════"
+elif [[ -n "$ADMIN_USER" ]]; then
+  echo "═══════════════════════════════════════════════════"
+  echo "👉  Next: start the stack, then install Drupal"
+  echo ""
+  echo "   1. Run: drupal-serve"
+  echo "   2. Drupal will install automatically with these credentials:"
+  echo ""
+  echo "   👤  Username:  $ADMIN_USER"
+  echo "   🔑  Password:  $ADMIN_PASS"
+  echo ""
+  echo "   Or install manually after the stack starts:"
+  echo "   vendor/bin/drush site:install standard --account-name=$ADMIN_USER --account-pass='$ADMIN_PASS' -y"
+  echo "═══════════════════════════════════════════════════"
 else
-  echo "═══════════════════════════════════════════════"
-  echo "👉 Next step: start the Docker stack"
-  echo "   Use 'drupal-serve' to start the containers (PHP + nginx + DB)."
-  echo "   DB options: mariadb (recommended) | postgres | sqlite"
-  echo ""
-  echo "   Once the stack is running, complete the installation via browser"
-  echo "   or with: vendor/bin/drush site:install -y"
-  echo "═══════════════════════════════════════════════"
+  echo "═══════════════════════════════════════════════════"
+  if [[ -n "$STACK_URL" ]]; then
+    echo "✅  Stack running — visit your site:"
+    echo "   🌐  $STACK_URL"
+  else
+    echo "👉  Next: run 'drupal-serve' to start the stack."
+  fi
+  echo "═══════════════════════════════════════════════════"
 fi
 
 # Signal the UI file tree to auto-refresh
