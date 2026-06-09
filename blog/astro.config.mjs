@@ -6,8 +6,7 @@ import { defineConfig, fontProviders } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://paulocarv.github.io',
-	base: '/drupalclaw-project',
+	site: 'https://blog.drupalclaw.dev',
 	integrations: [mdx(), sitemap()],
 	fonts: [
 		{
