@@ -1,8 +1,14 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
 ---
 
 <!doctype html>
@@ -12,38 +18,202 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 	</head>
 	<body>
 		<Header />
+
+		<section class="hero">
+			<div class="hero-image-wrap">
+				<img src="/banner.png" alt="DrupalClaw — AI-powered Drupal IDE" />
+			</div>
+			<div class="hero-caption">
+				<div class="hero-badge">Open source · Self-hosted · AI-first</div>
+				<div class="hero-cta">
+					<a href="https://github.com/PauloCarv/drupalclaw-project" class="btn-primary" target="_blank" rel="noopener noreferrer">
+						★ Star on GitHub
+					</a>
+					<a href="/blog" class="btn-ghost">Read the blog →</a>
+				</div>
+			</div>
+		</section>
+
 		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template
-				serves as a lightweight, minimally-styled starting point for anyone looking to build a personal
-				website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to
-				<a href="https://docs.astro.build/">read the docs</a>
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+			<section class="posts-section">
+				<h2 class="section-label">Latest articles</h2>
+				<ul class="post-list">
+					{posts.map((post) => (
+						<li>
+							<a href={`/blog/${post.id}/`} class="post-card">
+								<span class="post-date"><FormattedDate date={post.data.pubDate} /></span>
+								<h3>{post.data.title}</h3>
+								<p>{post.data.description}</p>
+								<span class="read-more">Read article →</span>
+							</a>
+						</li>
+					))}
+				</ul>
+				{posts.length === 0 && (
+					<p class="empty">No articles yet. Check back soon.</p>
+				)}
+			</section>
 		</main>
+
 		<Footer />
 	</body>
 </html>
+
+<style>
+	.hero {
+		width: 100%;
+		background: #0a0e1a;
+		border-bottom: 1px solid #1a2035;
+	}
+	.hero-image-wrap {
+		width: 100%;
+		line-height: 0;
+	}
+	.hero-image-wrap img {
+		width: 100%;
+		height: auto;
+		display: block;
+		border-radius: 0;
+	}
+	.hero-caption {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 1em;
+		padding: 1em 2em;
+		background: #0a0e1a;
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+	.hero-badge {
+		display: inline-block;
+		padding: 0.3em 0.9em;
+		border: 1px solid rgba(45, 212, 191, 0.35);
+		border-radius: 100px;
+		font-size: 0.78em;
+		color: #2dd4bf;
+		letter-spacing: 0.04em;
+		background: rgba(45, 212, 191, 0.05);
+	}
+	.hero-cta {
+		display: flex;
+		gap: 0.75em;
+		flex-wrap: wrap;
+	}
+	.btn-primary {
+		background: #0678be;
+		color: #fff;
+		padding: 0.5em 1.25em;
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 0.88em;
+		transition: background 0.15s;
+	}
+	.btn-primary:hover {
+		background: #0e90d9;
+		color: #fff;
+	}
+	.btn-ghost {
+		background: transparent;
+		color: #8899b8;
+		padding: 0.5em 1.25em;
+		border-radius: 6px;
+		border: 1px solid #2e3f5c;
+		font-size: 0.88em;
+		transition: border-color 0.15s, color 0.15s;
+	}
+	.btn-ghost:hover {
+		color: #e2e8f4;
+		border-color: #4a5980;
+	}
+
+	main {
+		width: 760px;
+		max-width: calc(100% - 2em);
+		margin: 0 auto;
+		padding: 3em 1em 4em;
+	}
+
+	.section-label {
+		font-size: 0.75em;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: #4a5980;
+		font-weight: 600;
+		margin-bottom: 1.5em;
+	}
+
+	.post-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+	.post-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4em;
+		padding: 1.5em 1.75em;
+		background: #111827;
+		border: 1px solid #1a2035;
+		border-radius: 10px;
+		color: inherit;
+		transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+		margin-bottom: 0.75em;
+	}
+	.post-card:hover {
+		border-color: #0678be;
+		background: #131e30;
+		box-shadow: 0 0 0 1px rgba(6,120,190,0.15), 0 4px 16px rgba(6,120,190,0.08);
+		color: inherit;
+	}
+	.post-date {
+		font-size: 0.78em;
+		color: #2dd4bf;
+		letter-spacing: 0.02em;
+	}
+	.post-card h3 {
+		margin: 0;
+		font-size: 1.1em;
+		color: #fff;
+		font-weight: 700;
+		line-height: 1.3;
+	}
+	.post-card p {
+		margin: 0;
+		font-size: 0.88em;
+		color: #8899b8;
+		line-height: 1.55;
+	}
+	.read-more {
+		font-size: 0.82em;
+		color: #0678be;
+		margin-top: 0.25em;
+		font-weight: 500;
+	}
+	.post-card:hover .read-more {
+		color: #0e90d9;
+	}
+
+	.empty {
+		color: #4a5980;
+		font-style: italic;
+		text-align: center;
+		padding: 3em 0;
+	}
+
+	@media (max-width: 640px) {
+		.hero-image-wrap img {
+			height: 260px;
+		}
+		.hero-caption {
+			padding: 0.75em 1em;
+		}
+		main {
+			padding: 2em 1em;
+		}
+	}
+</style>

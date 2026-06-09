@@ -2,7 +2,6 @@
 title: 'DrupalClaw: Bringing Agent-First Development to Drupal'
 description: 'Every developer ecosystem is getting its AI moment. Drupal was being left behind — so I built a self-hosted workspace where an AI agent builds, debugs, and teaches Drupal.'
 pubDate: '2026-06-09'
-heroImage: '../../assets/blog-placeholder-1.jpg'
 ---
 
 Every developer ecosystem is getting its AI moment. Cursor, Windsurf, Claude Code, Copilot Workspaces — the whole industry is converging on agent-first environments, where you stop memorising commands and start describing intent. The editor stopped being a place you type into and became a place you *delegate* from.
