@@ -5,7 +5,7 @@ import HeaderLink from './HeaderLink.astro';
 <header>
 	<nav>
 		<a href="/" class="site-title">
-			<span class="claw">🐾</span>
+			<img src="/logo.png" alt="DrupalClaw" class="logo-icon" />
 			DrupalClaw
 		</a>
 		<div class="links">
@@ -35,13 +35,19 @@ import HeaderLink from './HeaderLink.astro';
 	.site-title {
 		display: flex;
 		align-items: center;
-		gap: 0.4em;
+		gap: 0.5em;
 		font-weight: 700;
 		font-size: 1em;
 		color: #fff;
 		text-decoration: none;
 	}
 	.site-title:hover { color: #2dd4bf; }
+	.logo-icon {
+		width: 28px;
+		height: 28px;
+		object-fit: contain;
+		border-radius: 0;
+	}
 	.links {
 		display: flex;
 		align-items: center;
