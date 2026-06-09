@@ -32,6 +32,7 @@ docker/.env
 CLAUDE.md
 PLAN.md
 GITFLOW.md
+launch-linkedin.md
 
 # Institutional website (managed separately)
 site/
@@ -41,3 +42,4 @@ wiki/
 
 # OS
 .DS_Store
+launch-banner.png
