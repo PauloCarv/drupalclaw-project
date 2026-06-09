@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-import { PanelLeft, PanelRight, Terminal, ChevronDown, Check, Loader2, GraduationCap, Zap, ArrowUpCircle } from 'lucide-react'
+import { PanelLeft, PanelRight, Terminal, ChevronDown, Check, Loader2, GraduationCap, Zap } from 'lucide-react'
 import drupalclawIcon from '@/assets/icon.png'
 import { useLayoutStore } from '@/stores/layoutStore'
 import { useProviders } from '@/hooks/useProviders'
 import { useSettingsStore } from '@/stores/settingsStore'
-import { useVersionCheck } from '@/hooks/useVersionCheck'
 import type { ModelOption } from '@/api/providers'
 
 export function TopBar() {
@@ -14,8 +13,6 @@ export function TopBar() {
   const { currentModel, currentModelLabel, modelOptions, switchModel, isSwitching } = useProviders()
   const interactionMode = useSettingsStore((s) => s.interactionMode)
   const setSidebarSection = useLayoutStore((s) => s.setSidebarSection)
-
-  const { data: versionInfo } = useVersionCheck()
 
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -95,18 +92,6 @@ export function TopBar() {
           }
           <span className="hidden sm:inline capitalize">{interactionMode}</span>
         </button>
-
-        {/* Update available badge */}
-        {versionInfo?.hasUpdate && (
-          <button
-            onClick={() => setSidebarSection('settings')}
-            title={`v${versionInfo.latest} available — click to see update instructions`}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-amber-500/10 border-amber-500/40 text-amber-400 hover:bg-amber-500/20 transition-colors"
-          >
-            <ArrowUpCircle size={10} className="flex-shrink-0" />
-            <span className="hidden sm:inline">v{versionInfo.latest}</span>
-          </button>
-        )}
 
         {/* Model switcher */}
         <div ref={dropdownRef} className="relative">

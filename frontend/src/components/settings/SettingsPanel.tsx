@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { ChevronDown, RefreshCw, X, Minus, Plus, Loader2, ArrowUpCircle, CheckCircle2 } from 'lucide-react'
+import { ChevronDown, RefreshCw, X, Minus, Plus, Loader2, ExternalLink } from 'lucide-react'
 import { useProviders } from '@/hooks/useProviders'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { sendAgentMessage } from '@/api/providers'
 import { OobeSetup } from '@/components/oobe/OobeSetup'
-import { useVersionCheck } from '@/hooks/useVersionCheck'
 
 function fmt(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
@@ -17,7 +16,6 @@ export function SettingsPanel() {
   const { fontSize, setFontSize, interactionMode, setInteractionMode, autoCompact, setAutoCompact, displayName, setDisplayName } = useSettingsStore()
   const { currentModelLabel, currentModel, modelOptions, switchModel, isSwitching } = useProviders()
 
-  const { data: versionInfo } = useVersionCheck()
   const [togglingAutoCompact, setTogglingAutoCompact] = useState(false)
 
   const handleAutoCompactToggle = async () => {
@@ -219,47 +217,21 @@ export function SettingsPanel() {
             <span className="text-[11px] font-mono text-gray-200">v{__APP_VERSION__}</span>
           </div>
 
-          {versionInfo && (
-            <div className="flex items-center justify-between py-1">
-              <span className="text-[11px] text-navy-300">Latest</span>
-              <span className={`text-[11px] font-mono ${versionInfo.hasUpdate ? 'text-amber-400' : 'text-accent-green'}`}>
-                v{versionInfo.latest}
-              </span>
-            </div>
-          )}
+          <div className="mt-2 space-y-1">
+            <button
+              onClick={() => window.open('https://github.com/PauloCarv/drupalclaw-project/releases', '_blank', 'noopener,noreferrer')}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] text-navy-300 hover:text-ai-teal border border-navy-500 hover:border-ai-teal/40 rounded transition-colors"
+            >
+              <ExternalLink size={10} />
+              Check for updates
+            </button>
+          </div>
 
-          {versionInfo?.hasUpdate ? (
-            <div className="mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <div className="flex items-center gap-1.5 mb-2">
-                <ArrowUpCircle size={11} className="text-amber-400 flex-shrink-0" />
-                <span className="text-[11px] font-semibold text-amber-300">Update available</span>
-              </div>
-              <p className="text-[10px] text-navy-300 mb-2 leading-relaxed">
-                Run these two commands — your data and Drupal project are safe, they live in Docker volumes.
-              </p>
-              <div className="space-y-1">
-                <code className="block text-[10px] font-mono bg-navy-800 rounded px-2 py-1 text-gray-300 select-all">
-                  docker compose pull
-                </code>
-                <code className="block text-[10px] font-mono bg-navy-800 rounded px-2 py-1 text-gray-300 select-all">
-                  docker compose up -d
-                </code>
-              </div>
-              <a
-                href={versionInfo.releaseUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 block text-[10px] text-drupal-blue-light hover:text-ai-teal transition-colors"
-              >
-                Release notes →
-              </a>
-            </div>
-          ) : versionInfo && (
-            <div className="flex items-center gap-1.5 py-1">
-              <CheckCircle2 size={11} className="text-accent-green flex-shrink-0" />
-              <span className="text-[10px] text-navy-400">Up to date</span>
-            </div>
-          )}
+          <div className="mt-2 space-y-1">
+            <p className="text-[10px] text-navy-500 leading-relaxed">To update — your data is safe (Docker volumes):</p>
+            <code className="block text-[10px] font-mono bg-navy-800 rounded px-2 py-1 text-gray-300 select-all">docker compose pull</code>
+            <code className="block text-[10px] font-mono bg-navy-800 rounded px-2 py-1 text-gray-300 select-all">docker compose up -d</code>
+          </div>
         </section>
 
       </div>
