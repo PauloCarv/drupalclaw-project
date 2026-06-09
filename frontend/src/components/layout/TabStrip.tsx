@@ -7,6 +7,7 @@ const tabs: { id: MainTab; label: string }[] = [
   { id: 'watchdog', label: 'Watchdog' },
   { id: 'flows', label: 'Flows' },
   { id: 'plans', label: 'Plans' },
+  { id: 'usage', label: 'Usage' },
 ]
 
 export function TabStrip() {

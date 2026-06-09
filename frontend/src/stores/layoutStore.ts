@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type MainTab = 'chat' | 'editor' | 'devpanel' | 'watchdog' | 'flows' | 'plans'
+export type MainTab = 'chat' | 'editor' | 'devpanel' | 'watchdog' | 'flows' | 'plans' | 'usage'
 export type BottomTab = 'terminal' | 'drush' | 'logs' | 'docker'
 export type SidebarSection = 'explorer' | 'skills' | 'chats' | 'settings' | 'plans'
 

@@ -10,6 +10,7 @@ import { DevPanel } from '@/components/devpanel/DevPanel'
 import { WatchdogPanel } from '@/components/watchdog/WatchdogPanel'
 import { FlowsPanel } from '@/components/flows/FlowsPanel'
 import { PlansPanel } from '@/components/plans/PlansPanel'
+import { UsagePanel } from '@/components/usage/UsagePanel'
 import { useLayoutStore } from '@/stores/layoutStore'
 import { usePlanPolling } from '@/hooks/usePlanPolling'
 
@@ -46,6 +47,7 @@ export function MainLayout() {
       case 'watchdog': return <WatchdogPanel />
       case 'flows':    return <FlowsPanel />
       case 'plans':    return <PlansPanel />
+      case 'usage':    return <UsagePanel />
       default:         return null
     }
   }
