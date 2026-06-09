@@ -1,0 +1,16 @@
+name: Store traffic stats
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run github-repo-stats
+        uses: jgehrcke/github-repo-stats@main
+        with:
+          ghtoken: ${{ secrets.GHRS_TOKEN }}
+          repo: PauloCarv/drupalclaw-project
