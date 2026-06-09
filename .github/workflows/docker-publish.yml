@@ -6,6 +6,11 @@ on:
     tags: ['v*.*.*']
     paths-ignore:
       - 'blog/**'
+      - '.github/workflows/traffic.yml'
+      - '.github/workflows/deploy-blog.yml'
+      - '**.md'
+      - 'wiki/**'
+      - 'site/**'
   workflow_dispatch:
 
 env:
