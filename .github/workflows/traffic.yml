@@ -18,26 +18,15 @@ jobs:
 
       - name: Fetch and append traffic data
         env:
-          GHRS_TOKEN: ${{ secrets.GHRS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GHRS_TOKEN }}
           REPO: PauloCarv/drupalclaw-project
         run: |
           DATE=$(date -u +"%Y-%m-%d")
           mkdir -p traffic
 
-          # Clones
-          gh api repos/$REPO/traffic/clones \
-            --header "Authorization: Bearer $GHRS_TOKEN" \
-            > /tmp/clones.json
-
-          # Views
-          gh api repos/$REPO/traffic/views \
-            --header "Authorization: Bearer $GHRS_TOKEN" \
-            > /tmp/views.json
-
-          # Referrers
-          gh api repos/$REPO/traffic/popular/referrers \
-            --header "Authorization: Bearer $GHRS_TOKEN" \
-            > /tmp/referrers.json
+          gh api repos/$REPO/traffic/clones    > /tmp/clones.json
+          gh api repos/$REPO/traffic/views     > /tmp/views.json
+          gh api repos/$REPO/traffic/popular/referrers > /tmp/referrers.json
 
           # Init CSV headers if files don't exist
           [ -f traffic/clones.csv ] || echo "date,count,uniques" > traffic/clones.csv
