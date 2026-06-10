@@ -8,9 +8,63 @@ on:
 jobs:
   stats:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
-      - name: Run github-repo-stats
-        uses: jgehrcke/github-repo-stats@main
+      - uses: actions/checkout@v4
         with:
-          ghtoken: ${{ secrets.GHRS_TOKEN }}
-          repo: PauloCarv/drupalclaw-project
+          ref: main
+
+      - name: Fetch and append traffic data
+        env:
+          GHRS_TOKEN: ${{ secrets.GHRS_TOKEN }}
+          REPO: PauloCarv/drupalclaw-project
+        run: |
+          DATE=$(date -u +"%Y-%m-%d")
+          mkdir -p traffic
+
+          # Clones
+          gh api repos/$REPO/traffic/clones \
+            --header "Authorization: Bearer $GHRS_TOKEN" \
+            > /tmp/clones.json
+
+          # Views
+          gh api repos/$REPO/traffic/views \
+            --header "Authorization: Bearer $GHRS_TOKEN" \
+            > /tmp/views.json
+
+          # Referrers
+          gh api repos/$REPO/traffic/popular/referrers \
+            --header "Authorization: Bearer $GHRS_TOKEN" \
+            > /tmp/referrers.json
+
+          # Init CSV headers if files don't exist
+          [ -f traffic/clones.csv ] || echo "date,count,uniques" > traffic/clones.csv
+          [ -f traffic/views.csv ]  || echo "date,count,uniques" > traffic/views.csv
+
+          # Append today's totals (avoid duplicates)
+          CLONE_COUNT=$(jq '.count' /tmp/clones.json)
+          CLONE_UNIQ=$(jq  '.uniques' /tmp/clones.json)
+          VIEW_COUNT=$(jq  '.count' /tmp/views.json)
+          VIEW_UNIQ=$(jq   '.uniques' /tmp/views.json)
+
+          grep -q "^$DATE," traffic/clones.csv || \
+            echo "$DATE,$CLONE_COUNT,$CLONE_UNIQ" >> traffic/clones.csv
+
+          grep -q "^$DATE," traffic/views.csv || \
+            echo "$DATE,$VIEW_COUNT,$VIEW_UNIQ" >> traffic/views.csv
+
+          # Save full snapshots as JSON (overwrite daily)
+          cp /tmp/clones.json    traffic/clones-latest.json
+          cp /tmp/views.json     traffic/views-latest.json
+          cp /tmp/referrers.json traffic/referrers-latest.json
+
+      - name: Commit traffic data
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add traffic/
+          git diff --cached --quiet || \
+            git commit -m "chore: update traffic stats $(date -u +%Y-%m-%d)"
+          git push
