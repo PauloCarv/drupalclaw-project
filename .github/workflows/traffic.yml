@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
+          token: ${{ secrets.GHRS_TOKEN }}
 
       - name: Fetch and append traffic data
         env:
