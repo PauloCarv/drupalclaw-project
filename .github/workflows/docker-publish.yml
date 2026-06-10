@@ -6,6 +6,7 @@ on:
     tags: ['v*.*.*']
     paths-ignore:
       - 'blog/**'
+      - 'traffic/**'
       - '.github/workflows/traffic.yml'
       - '.github/workflows/deploy-blog.yml'
       - '**.md'
