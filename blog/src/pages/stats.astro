@@ -1,0 +1,264 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title="DrupalClaw — Stats" description="Project traffic statistics" />
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<Header />
+
+		<main>
+			<h1 class="page-title">Project Stats</h1>
+			<p class="page-sub">Traffic data collected daily from GitHub API.</p>
+
+			<div id="summary" class="summary-grid">
+				<div class="stat-card"><span class="stat-label">Total views</span><span class="stat-value" id="total-views">—</span></div>
+				<div class="stat-card"><span class="stat-label">Unique viewers</span><span class="stat-value" id="total-view-uniq">—</span></div>
+				<div class="stat-card"><span class="stat-label">Total clones</span><span class="stat-value" id="total-clones">—</span></div>
+				<div class="stat-card"><span class="stat-label">Unique cloners</span><span class="stat-value" id="total-clone-uniq">—</span></div>
+			</div>
+
+			<div class="chart-block">
+				<h2 class="chart-title">Views</h2>
+				<canvas id="views-chart"></canvas>
+			</div>
+
+			<div class="chart-block">
+				<h2 class="chart-title">Clones</h2>
+				<canvas id="clones-chart"></canvas>
+			</div>
+
+			<div class="referrers-block">
+				<h2 class="chart-title">Top referrers</h2>
+				<table id="referrers-table" class="ref-table">
+					<thead><tr><th>Source</th><th>Views</th><th>Unique</th></tr></thead>
+					<tbody></tbody>
+				</table>
+			</div>
+		</main>
+
+		<Footer />
+	</body>
+</html>
+
+<script>
+	const RAW = 'https://raw.githubusercontent.com/PauloCarv/drupalclaw-project/main/traffic';
+
+	function parseCSV(text) {
+		const [header, ...rows] = text.trim().split('\n');
+		const keys = header.split(',');
+		return rows.map(r => {
+			const vals = r.split(',');
+			return Object.fromEntries(keys.map((k, i) => [k, vals[i]]));
+		});
+	}
+
+	function sum(rows, key) {
+		return rows.reduce((acc, r) => acc + (parseInt(r[key]) || 0), 0);
+	}
+
+	function makeChart(id, labels, counts, uniques, color) {
+		const ctx = document.getElementById(id);
+		new Chart(ctx, {
+			type: 'line',
+			data: {
+				labels,
+				datasets: [
+					{
+						label: 'Total',
+						data: counts,
+						borderColor: color,
+						backgroundColor: color + '22',
+						tension: 0.3,
+						fill: true,
+						pointRadius: 4,
+					},
+					{
+						label: 'Unique',
+						data: uniques,
+						borderColor: '#8899b8',
+						backgroundColor: 'transparent',
+						borderDash: [4, 4],
+						tension: 0.3,
+						pointRadius: 3,
+					},
+				],
+			},
+			options: {
+				responsive: true,
+				plugins: {
+					legend: { labels: { color: '#8899b8', font: { size: 12 } } },
+				},
+				scales: {
+					x: { ticks: { color: '#4a5980' }, grid: { color: '#1a2035' } },
+					y: { ticks: { color: '#4a5980' }, grid: { color: '#1a2035' }, beginAtZero: true },
+				},
+			},
+		});
+	}
+
+	function formatDate(iso) {
+		return iso.slice(0, 10);
+	}
+
+	async function load() {
+		const [viewsJSON, clonesJSON, referrersJSON] = await Promise.all([
+			fetch(`${RAW}/views-latest.json`).then(r => r.json()),
+			fetch(`${RAW}/clones-latest.json`).then(r => r.json()),
+			fetch(`${RAW}/referrers-latest.json`).then(r => r.json()),
+		]);
+
+		document.getElementById('total-views').textContent = viewsJSON.count.toLocaleString();
+		document.getElementById('total-view-uniq').textContent = viewsJSON.uniques.toLocaleString();
+		document.getElementById('total-clones').textContent = clonesJSON.count.toLocaleString();
+		document.getElementById('total-clone-uniq').textContent = clonesJSON.uniques.toLocaleString();
+
+		makeChart('views-chart',
+			viewsJSON.views.map(r => formatDate(r.timestamp)),
+			viewsJSON.views.map(r => r.count),
+			viewsJSON.views.map(r => r.uniques),
+			'#0678be'
+		);
+
+		makeChart('clones-chart',
+			clonesJSON.clones.map(r => formatDate(r.timestamp)),
+			clonesJSON.clones.map(r => r.count),
+			clonesJSON.clones.map(r => r.uniques),
+			'#2dd4bf'
+		);
+
+		const tbody = document.querySelector('#referrers-table tbody');
+		for (const ref of referrersJSON) {
+			const tr = document.createElement('tr');
+			tr.innerHTML = `<td>${ref.referrer}</td><td>${ref.count}</td><td>${ref.uniques}</td>`;
+			tbody.appendChild(tr);
+		}
+	}
+
+	load().catch(err => {
+		document.getElementById('summary').insertAdjacentHTML('beforebegin',
+			`<p class="error">Failed to load stats: ${err.message}</p>`
+		);
+	});
+</script>
+
+<style>
+	main {
+		width: 820px;
+		max-width: calc(100% - 2em);
+		margin: 0 auto;
+		padding: 3em 1em 5em;
+	}
+
+	.page-title {
+		font-size: 1.6em;
+		font-weight: 700;
+		color: #fff;
+		margin: 0 0 0.25em;
+	}
+
+	.page-sub {
+		color: #4a5980;
+		font-size: 0.88em;
+		margin: 0 0 2.5em;
+	}
+
+	.summary-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 1em;
+		margin-bottom: 3em;
+	}
+
+	.stat-card {
+		background: #111827;
+		border: 1px solid #1a2035;
+		border-radius: 10px;
+		padding: 1.25em 1.5em;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4em;
+	}
+
+	.stat-label {
+		font-size: 0.75em;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #4a5980;
+		font-weight: 600;
+	}
+
+	.stat-value {
+		font-size: 1.9em;
+		font-weight: 700;
+		color: #fff;
+		line-height: 1;
+	}
+
+	.chart-block {
+		background: #111827;
+		border: 1px solid #1a2035;
+		border-radius: 10px;
+		padding: 1.5em;
+		margin-bottom: 1.5em;
+	}
+
+	.chart-title {
+		font-size: 0.8em;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #4a5980;
+		font-weight: 600;
+		margin: 0 0 1.25em;
+	}
+
+	.referrers-block {
+		background: #111827;
+		border: 1px solid #1a2035;
+		border-radius: 10px;
+		padding: 1.5em;
+	}
+
+	.ref-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.88em;
+	}
+
+	.ref-table th {
+		text-align: left;
+		color: #4a5980;
+		font-weight: 600;
+		font-size: 0.8em;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		padding: 0 0 0.75em;
+		border-bottom: 1px solid #1a2035;
+	}
+
+	.ref-table td {
+		padding: 0.6em 0;
+		color: #8899b8;
+		border-bottom: 1px solid #1a2035;
+	}
+
+	.ref-table td:first-child { color: #e2e8f4; }
+
+	.ref-table tr:last-child td { border-bottom: none; }
+
+	.error {
+		color: #ef4444;
+		font-size: 0.88em;
+		margin-bottom: 1.5em;
+	}
+
+	@media (max-width: 640px) {
+		.summary-grid { grid-template-columns: repeat(2, 1fr); }
+	}
+</style>
