@@ -24,6 +24,8 @@ Open one URL and you have:
 
 Everything runs locally, in one container. Your code never leaves your machine except for the LLM API calls you explicitly configure. It's open source, and it's free.
 
+It's also provider-agnostic. Connect GitHub Copilot (your existing subscription, no extra cost), OpenAI, or Anthropic. No new accounts, no new subscriptions if you already have one.
+
 ## You describe what you want. It does the work.
 
 This is the part that matters. The agent isn't a chatbot bolted onto an editor; it's wired into more than 20 Drupal-specific skills, each one a real, executable workflow. You stay in control; it does the labour.
