@@ -12,7 +12,9 @@ I wanted to push further, to see what it actually looks like when a Drupal workf
 
 ## What it is
 
-DrupalClaw is a self-hosted, browser-based Drupal IDE that runs entirely in Docker. Open one URL and you get a workspace where an AI agent (one that genuinely understands Drupal, not just generic PHP) sits next to your code and does the work:
+DrupalClaw is a complete Drupal development environment, built agent-first from the ground up. One `docker compose up` gives you the full stack: PHP runtime, nginx, database, browser IDE, and an AI agent that genuinely understands Drupal. Not a plugin layered over your existing setup. The whole environment, designed to work by delegation.
+
+Open one URL and you have:
 
 - A **chat-driven AI agent** with real-time streaming responses
 - An integrated **terminal** (real PTY), **Monaco editor**, and **file browser**
