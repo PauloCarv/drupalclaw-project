@@ -43,3 +43,7 @@ wiki/
 # OS
 .DS_Store
 launch-banner.png
+
+# Playwright test artefacts
+.playwright-mcp/
+*.png
