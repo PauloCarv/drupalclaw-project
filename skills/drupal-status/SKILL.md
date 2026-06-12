@@ -82,6 +82,6 @@ Shows the full Drupal project status.
    ```bash
    echo ""
    echo "=== Disk ==="
-   du -sh . 2>/dev/null
-   du -sh vendor/ web/core/ web/modules/contrib/ 2>/dev/null || true
+   df -h . 2>/dev/null | tail -1
+   timeout 10 du -sh vendor/ web/core/ web/modules/contrib/ 2>/dev/null || true
    ```

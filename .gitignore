@@ -40,6 +40,9 @@ site/
 # GitHub Wiki (separate git repo)
 wiki/
 
+# Analysis / exploration (local only)
+analysis/
+
 # OS
 .DS_Store
 launch-banner.png
