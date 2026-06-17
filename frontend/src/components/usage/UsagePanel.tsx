@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, Zap, DollarSign, BarChart2, Leaf, Clock, ChevronDown, ChevronRight, TreeDeciduous, Wind, Droplets } from 'lucide-react'
+import { RefreshCw, Zap, DollarSign, BarChart2, Leaf, Clock, ChevronDown, ChevronRight, TreeDeciduous, Wind, Droplets, Layers, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useUsage } from '@/hooks/useUsage'
 import { useUsageStore } from '@/stores/usageStore'
@@ -140,12 +140,47 @@ function TurnRow({ turn, index }: { turn: TurnStats; index: number }) {
   )
 }
 
+// ── Provider/Model breakdown ─────────────────────────────────────
+
+interface ProviderGroup {
+  key: string
+  provider: string
+  model: string
+  turnCount: number
+  totalTokens: number
+  totalCost: number
+  avgCacheHitRate: number
+}
+
+function computeProviderGroups(turns: TurnStats[]): ProviderGroup[] {
+  const map = new Map<string, ProviderGroup>()
+  for (const turn of turns) {
+    const provider = turn.provider || 'unknown'
+    const model = turn.model || 'unknown'
+    const key = `${provider}/${model}`
+    if (!map.has(key)) {
+      map.set(key, { key, provider, model, turnCount: 0, totalTokens: 0, totalCost: 0, avgCacheHitRate: 0 })
+    }
+    const g = map.get(key)!
+    g.turnCount++
+    g.totalTokens += turn.totalTokens
+    g.totalCost += turn.costTotal
+    g.avgCacheHitRate += turn.cacheHitRate
+  }
+  for (const g of map.values()) {
+    g.avgCacheHitRate = g.turnCount > 0 ? g.avgCacheHitRate / g.turnCount : 0
+  }
+  return [...map.values()].sort((a, b) => b.totalTokens - a.totalTokens)
+}
+
 // ── Main panel ───────────────────────────────────────────────────
 
 export function UsagePanel() {
   const { data, isLoading, lastUpdated } = useUsage()
   const turns = useUsageStore((s) => s.turns)
+  const clearTurns = useUsageStore((s) => s.clearTurns)
   const queryClient = useQueryClient()
+  const providerGroups = computeProviderGroups(turns)
 
   const { totals, latest } = data
 
@@ -416,6 +451,46 @@ export function UsagePanel() {
           </p>
         </div>
 
+        {/* By provider / model */}
+        {providerGroups.length > 0 && (
+          <div className="bg-navy-800 border border-navy-500 rounded-lg p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Layers size={13} className="text-drupal-blue-light" />
+              <span className="text-[11px] uppercase tracking-wider text-navy-300 font-semibold">By Provider / Model</span>
+              <span className="text-[10px] text-navy-500">accumulated across refreshes</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[11px] border-collapse">
+                <thead>
+                  <tr className="text-navy-400 text-[9px] uppercase tracking-wider border-b border-navy-600">
+                    <th className="text-left pb-1.5 pr-3 font-medium">Provider / Model</th>
+                    <th className="text-right pb-1.5 px-3 font-medium">Turns</th>
+                    <th className="text-right pb-1.5 px-3 font-medium">Tokens</th>
+                    <th className="text-right pb-1.5 px-3 font-medium">Avg Cache</th>
+                    <th className="text-right pb-1.5 pl-3 font-medium">Cost</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-navy-700">
+                  {providerGroups.map((g) => (
+                    <tr key={g.key} className="hover:bg-navy-700/30 transition-colors">
+                      <td className="py-1.5 pr-3">
+                        <div className="font-mono text-gray-300 truncate max-w-[140px]" title={g.model}>{g.model}</div>
+                        <div className="text-[9px] text-navy-400">{g.provider}</div>
+                      </td>
+                      <td className="py-1.5 px-3 text-right text-navy-300">{g.turnCount}</td>
+                      <td className="py-1.5 px-3 text-right font-mono text-gray-300">{fmtTokens(g.totalTokens)}</td>
+                      <td className={`py-1.5 px-3 text-right font-mono font-semibold ${cacheHitColor(g.avgCacheHitRate)}`}>
+                        {fmtRate(g.avgCacheHitRate)}
+                      </td>
+                      <td className="py-1.5 pl-3 text-right font-mono text-amber-400">{fmtCost(g.totalCost)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Turn history */}
         {turns.length > 0 && (
           <div className="bg-navy-800 border border-navy-500 rounded-lg p-4 space-y-3">
@@ -425,15 +500,23 @@ export function UsagePanel() {
                 <span className="text-[11px] uppercase tracking-wider text-navy-300 font-semibold">
                   Turn History
                 </span>
-                <span className="text-[10px] text-navy-500">this page session · {turns.length} turns</span>
+                <span className="text-[10px] text-navy-500">persists across refreshes · {turns.length} turns</span>
               </div>
+              <button
+                onClick={clearTurns}
+                className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-navy-400 hover:text-accent-red border border-navy-600 hover:border-accent-red/40 rounded transition-colors"
+                title="Clear turn history"
+              >
+                <Trash2 size={9} />
+                Clear
+              </button>
             </div>
             <div className="space-y-1.5">
               {turns.map((turn, i) => (
                 <TurnRow key={turn.runAt + i} turn={turn} index={i} />
               ))}
             </div>
-            <p className="text-[9px] text-navy-500">Captured since this page was opened. Resets on page refresh.</p>
+            <p className="text-[9px] text-navy-500">Saved to localStorage · survives page refresh · max 50 turns.</p>
           </div>
         )}
 

@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { getUsageData } from '@/api/usage'
 import { useUsageStore } from '@/stores/usageStore'
-import { useChatStore } from '@/stores/chatStore'
 
 export function useUsage() {
   const { data, isLoading, dataUpdatedAt } = useQuery({
@@ -13,14 +12,12 @@ export function useUsage() {
   })
 
   const addTurn = useUsageStore((s) => s.addTurn)
-  const isAgentRunning = useChatStore((s) => s.isAgentRunning)
 
-  // When agent finishes a turn, capture the latest snapshot
+  // Capture every new turn snapshot as soon as it appears (addTurn dedups by runAt)
   useEffect(() => {
-    if (isAgentRunning) return
     if (!data?.latest) return
     addTurn(data.latest)
-  }, [isAgentRunning, data?.latest?.runAt])
+  }, [data?.latest?.runAt])
 
   return {
     data: data ?? { latest: null, totals: null },

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   CheckCircle, Loader2, RefreshCw, ExternalLink, AlertCircle,
   Github, Key, Cloud, Server, Cpu, ChevronRight, Copy,
@@ -46,6 +47,7 @@ const PROVIDER_ICONS: Record<string, typeof Github> = {
 }
 
 export function OobeSetup({ onComplete, embedded = false, reconfigure = false }: OobeSetupProps) {
+  const queryClient = useQueryClient()
   const [step, setStep] = useState<SetupStep>('checking')
   const [error, setError] = useState<string | null>(null)
   const [providers, setProviders] = useState<ProviderInfo[]>([])
@@ -286,8 +288,39 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
       return
     }
 
+    // External auth card — provider is pre-configured outside PiClaw (e.g. via extension with
+    // a static apiKey). buildCard2ExternalInfo has only TextBlocks and no actions.
+    // Fetch models directly from the registry and advance to model picker.
+    const hasNoInputsOrActions = !body.some((b: any) => b.type?.startsWith('Input')) && actions.length === 0
+    if (hasNoInputsOrActions) {
+      proceedToModelPickerForProvider(providerId)
+      return
+    }
+
     setError('Unexpected card format')
     setStep('error')
+  }
+
+  // ── Fetch models for an externally-configured provider and show model picker ──
+
+  const proceedToModelPickerForProvider = async (providerId: string) => {
+    setStep('loading')
+    setStatusMsg('Loading models...')
+    try {
+      const data = await providersApi.getModelOptions()
+      const providerModels = data.model_options.filter(m => m.provider === providerId)
+      if (providerModels.length === 0) {
+        setError(`No models found for "${providerId}". Make sure the provider extension loaded correctly.`)
+        setStep('error')
+        return
+      }
+      setModels(providerModels.map(m => ({ id: m.id, name: m.name })))
+      setSelectedModel(providerModels[0].id)
+      setStep('pick-model')
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch models')
+      setStep('error')
+    }
   }
 
   // ── Submit method choice via __step1method ──
@@ -426,6 +459,7 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
     const msg = command.message || ''
     if (msg.includes('✓') || msg.includes('Selected model') || msg.includes('activated')) {
       setStep('done')
+      queryClient.invalidateQueries({ queryKey: ['model-options'] })
       setTimeout(onComplete, 1500)
     } else if (command.status === 'error') {
       setError(msg || 'Error')
@@ -435,6 +469,7 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
     } else {
       // Assume success if no error
       setStep('done')
+      queryClient.invalidateQueries({ queryKey: ['model-options'] })
       setTimeout(onComplete, 1500)
     }
   }
