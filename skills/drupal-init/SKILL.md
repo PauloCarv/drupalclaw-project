@@ -98,7 +98,7 @@ cd /workspace/drupal
 # Install dependencies if composer.json exists
 if [[ -f "composer.json" ]]; then
   echo "📦 Installing Composer dependencies..."
-  composer install --no-interaction
+  composer install --no-interaction --no-progress 2>&1 | tail -5
 fi
 
 echo "✅ Repository cloned successfully."
@@ -116,19 +116,20 @@ After cloning, proceed to **Step 3c** (settings setup).
 mkdir -p /workspace/drupal
 cd /workspace/drupal
 echo "📦 Creating Drupal project via Composer (may take a few minutes)..."
-composer create-project drupal/recommended-project . --no-interaction
+composer create-project drupal/recommended-project . --no-interaction --no-progress 2>&1 | tail -5
+echo "✅ Drupal project files downloaded."
 ```
 
 ```bash
 cd /workspace/drupal
 echo "🔧 Installing Drush..."
-composer require drush/drush --no-interaction
+composer require drush/drush --no-interaction --no-progress 2>&1 | tail -3
 ```
 
 ```bash
 cd /workspace/drupal
 echo "📦 Installing essential contrib modules..."
-composer require drupal/admin_toolbar drupal/pathauto drupal/token drupal/metatag --no-interaction
+composer require drupal/admin_toolbar drupal/pathauto drupal/token drupal/metatag --no-interaction --no-progress 2>&1 | tail -3
 ```
 
 ```bash
@@ -435,7 +436,7 @@ if [[ "$STACK_RUNNING" == "true" ]]; then
     --account-mail="$ADMIN_EMAIL" \
     --site-name="My Drupal Site" \
     --locale=en \
-    -y 2>&1
+    -y 2>&1 | tail -5
   echo "DRUPAL_INSTALLED=true"
   echo "ADMIN_USER=$ADMIN_USER"
   echo "ADMIN_PASS=$ADMIN_PASS"

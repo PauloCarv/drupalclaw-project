@@ -26,7 +26,7 @@ Analyses custom code quality with PHPStan and PHPCS.
    ```bash
    echo "=== PHPStan ==="
    if [[ -x vendor/bin/phpstan ]]; then
-     vendor/bin/phpstan analyse web/modules/custom/ web/themes/custom/ --level=5 --no-progress 2>&1 | tail -30
+     vendor/bin/phpstan analyse web/modules/custom/ web/themes/custom/ --level=5 --no-progress 2>&1 | tail -15
    else
      echo "phpstan not available"
    fi
@@ -37,7 +37,7 @@ Analyses custom code quality with PHPStan and PHPCS.
    echo ""
    echo "=== PHPCS (Drupal standard) ==="
    if [[ -x vendor/bin/phpcs ]]; then
-     vendor/bin/phpcs --standard=Drupal,DrupalPractice --extensions=php,module,inc,install,theme web/modules/custom/ web/themes/custom/ 2>&1 | tail -40
+     vendor/bin/phpcs --standard=Drupal,DrupalPractice --extensions=php,module,inc,install,theme web/modules/custom/ web/themes/custom/ 2>&1 | tail -20
    else
      echo "phpcs not available"
    fi

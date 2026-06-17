@@ -329,7 +329,7 @@ if [[ "${ACTION:-start}" == "start" ]]; then
   # REBUILD_FLAG: "new build" → --build | "use existing" → ""
   # If image did not exist → --build without asking
 
-  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d $REBUILD_FLAG
+  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d $REBUILD_FLAG 2>&1 | tail -8
 
   sleep 3
 
@@ -412,3 +412,23 @@ cat > "${WORKSPACE_DIR}/.piclaw/stack/state.json" << EOF
 EOF
 echo "💾 State saved to .piclaw/stack/state.json"
 ```
+
+### 13. Didactic block (start action only)
+
+```bash
+if [[ "${ACTION:-start}" == "start" ]]; then
+  INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+  echo "INTERACTION_MODE=$INTERACTION_MODE"
+fi
+```
+
+If ACTION is `start` and INTERACTION_MODE is `learning`, output the following block. If `expert` or any other action, skip it entirely.
+
+💡 **How to replicate manually:**
+```bash
+docker compose -f docker-compose.drupal.yml -p <project> up -d --build
+docker compose -f docker-compose.drupal.yml -p <project> ps
+# Stop: docker compose ... stop
+# Destroy: docker compose ... down -v
+```
+Want to understand the compose file structure or how the PHP image is built? Just ask.

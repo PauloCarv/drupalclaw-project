@@ -20,22 +20,32 @@ Installs a Drupal contrib module.
      exit 1
    fi
 
-   PHP_CONTAINER=$(docker ps --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -E "drupal.*(php|fpm)" | head -1)
+   STACK_STATE="/workspace/.piclaw/stack/state.json"
+   if [[ ! -f "$STACK_STATE" ]]; then
+     echo "❌ No Drupal stack configured for this workspace."
+     echo "   Run 'drupal-serve' to initialize the stack."
+     exit 1
+   fi
+   PROJECT_NAME=$(jq -r '.project_name // empty' "$STACK_STATE")
+   PHP_CONTAINER=$(docker ps \
+     --filter "status=running" \
+     --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
+     --format '{{.Names}}' 2>/dev/null | grep -iE "php|fpm" | head -1)
    if [[ -n "$PHP_CONTAINER" ]]; then
-     echo "🐳 Active stack: $PHP_CONTAINER"
+     echo "🐳 Stack: ${PROJECT_NAME} ($PHP_CONTAINER)"
      DRUSH="docker exec -i -w /var/www/html $PHP_CONTAINER vendor/bin/drush"
      COMPOSER_CMD="docker exec -i -w /var/www/html $PHP_CONTAINER composer"
    elif [[ -x "vendor/bin/drush" ]]; then
      DRUSH="vendor/bin/drush"
      COMPOSER_CMD="composer"
    else
-     echo "❌ Docker stack not active and local drush not found."
-     echo "   To start the stack: use drupal-serve"
+     echo "❌ Stack '${PROJECT_NAME}' is not running."
+     echo "   Run 'drupal-serve' to start it."
      exit 1
    fi
 
    echo "📦 Installing drupal/$MODULE..."
-   $COMPOSER_CMD require "drupal/$MODULE" --no-interaction
+   $COMPOSER_CMD require "drupal/$MODULE" --no-interaction --no-progress 2>&1 | tail -5
    ```
 
 3. Enable with Drush:
@@ -49,3 +59,21 @@ Installs a Drupal contrib module.
      echo "⚠ Module downloaded but not enabled (drush not available)."
    fi
    ```
+
+4. Interaction mode — check and show or suppress the didactic block:
+   ```bash
+   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+   echo "INTERACTION_MODE=$INTERACTION_MODE"
+   ```
+
+   If INTERACTION_MODE is `learning`, you MUST output the following block verbatim (fill in the actual module name):
+
+   💡 **How to replicate manually:**
+   ```bash
+   composer require drupal/<module>
+   vendor/bin/drush en <module> -y
+   vendor/bin/drush cache:rebuild
+   ```
+   Want a step-by-step explanation of what each command does? Just ask.
+
+   If INTERACTION_MODE is `expert`, output nothing — skip this block entirely.

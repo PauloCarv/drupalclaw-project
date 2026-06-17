@@ -45,7 +45,7 @@ Installs a Drupal contrib module.
    fi
 
    echo "📦 Installing drupal/$MODULE..."
-   $COMPOSER_CMD require "drupal/$MODULE" --no-interaction
+   $COMPOSER_CMD require "drupal/$MODULE" --no-interaction --no-progress 2>&1 | tail -5
    ```
 
 3. Enable with Drush:

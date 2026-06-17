@@ -329,7 +329,7 @@ if [[ "${ACTION:-start}" == "start" ]]; then
   # REBUILD_FLAG: "new build" → --build | "use existing" → ""
   # If image did not exist → --build without asking
 
-  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d $REBUILD_FLAG
+  docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d $REBUILD_FLAG 2>&1 | tail -8
 
   sleep 3
 
