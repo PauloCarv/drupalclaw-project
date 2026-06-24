@@ -4,11 +4,11 @@ description: 'Every developer ecosystem is getting its AI moment. Drupal was bei
 pubDate: '2026-06-09'
 ---
 
-Every developer ecosystem is getting its AI moment. Cursor, Windsurf, Claude Code, Copilot Workspaces. The whole industry is converging on agent-first environments, where you stop memorising commands and start describing intent. The editor stopped being a place you type into and became a place you *delegate* from.
+Every developer ecosystem is getting its AI moment. Cursor, Codex, Claude Code, Copilot Workspaces. The whole industry is converging on agent-first environments, where you stop memorising commands and start describing intent. The editor stopped being a place you type into and became a place you *delegate* from.
 
 Drupal sat outside that wave. The CMS that quietly powers governments, universities, and a huge slice of the open web, while most of the AI-tooling energy was flowing everywhere else. Generic AI assistants can write you a PHP function, sure. But they have no idea what your project looks like, they can't run Drush, they can't bring up your stack, and they certainly can't install Drupal for you.
 
-I wanted to push further, to see what it actually looks like when a Drupal workflow is genuinely agent-first, not just assisted. So I built **DrupalClaw**.
+I wanted to push further, to see what it actually looks like when a Drupal workflow is genuinely agent-first, not just assisted. So I built **DrupalClaw** — your Drupal coworker.
 
 ## What it is
 
