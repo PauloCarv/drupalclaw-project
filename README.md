@@ -242,6 +242,25 @@ Plans are plain Markdown and can be read and edited directly in any text editor 
 | `drupal-logs` | Recent watchdog + container logs |
 | `drupal-debug` | Full diagnostic report |
 | `drupal-perf` | Performance analysis |
+| `drupal-index` | **Code intelligence index** — see below |
+
+### Code intelligence: drupal-index
+
+`drupal-index` builds a knowledge graph of your Drupal codebase using [GitNexus](https://github.com/abhigyanpatwari/GitNexus) and registers it as an MCP server. Once active, the agent can answer architecture and dependency questions with a single query instead of exploring files one by one.
+
+```
+drupal-index
+```
+
+What it indexes: classes, functions, hooks, and the relationships between them (call graphs, dependencies, blast radius of a change). The index is scoped to `/workspace/drupal` — it never touches the workspace root or config directories.
+
+After indexing, run `/restart` in chat to activate the GitNexus MCP. You can then ask questions like:
+
+- *"Which modules call the `node_access` hook?"*
+- *"What is the blast radius of changing `MyService`?"*
+- *"Show me the call graph for `FaqController::item`."*
+
+On the first run, indexing a full Drupal project takes 5–10 minutes. Subsequent runs update only what changed. Use `drupal-index --force` to rebuild from scratch after a major refactor.
 
 ## Updating
 
