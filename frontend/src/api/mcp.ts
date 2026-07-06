@@ -129,6 +129,16 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     scriptNote: 'This integration uses session cookies stored in /workspace/.pi/jira.env.\n\nTo renew the cookie:\n1. Open Jira in the browser and log in\n2. Open DevTools → Application → Cookies\n3. Copy the values of JSESSIONID, atlassian.xsrf.token, INGRESSCOOKIE\n4. Ask the agent in chat: "update the Jira cookie"\n\nCookies are stored only in .pi/jira.env (gitignored). They never pass through the UI.',
   },
   {
+    id: 'gitnexus',
+    name: 'GitNexus',
+    description: 'Code intelligence index — query symbol relationships, call graphs and blast radius',
+    category: 'dev',
+    command: 'npx',
+    args: ['-y', 'gitnexus@latest', 'mcp'],
+    envKeys: [],
+    docsUrl: 'https://github.com/abhigyanpatwari/GitNexus',
+  },
+  {
     id: 'filesystem',
     name: 'Filesystem',
     description: 'Direct access to files in the workspace',

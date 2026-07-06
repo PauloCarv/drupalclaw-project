@@ -87,6 +87,14 @@ The workspace uses sibling Docker containers for the development environment:
 8. After DB type change, `drupal-stack destroy` then `drupal-stack start` is needed
 9. NEVER suggest php -S — always use the Docker stack
 
+## Code Intelligence (GitNexus)
+
+If a `gitnexus` MCP server is registered (check `/workspace/.pi/mcp.json`), it indexes `/workspace/drupal` only and exposes tools to query code relationships directly: `query`, `context`, `impact`, `detect_changes`, `cypher`.
+
+**Rule**: when a task requires understanding cross-file relationships in the Drupal codebase (e.g. "who calls this service", "what depends on this class", "impact of changing this hook"), prefer the GitNexus MCP tools over sequential `grep`/`find`/`cat` exploration. For simple single-file lookups where you already know the path, plain bash is still fine — the index doesn't replace basic file reads.
+
+If no `gitnexus` MCP server is registered and the task involves non-trivial cross-file exploration, suggest running `drupal-index` to set it up.
+
 ## Project commands
 
 | Command | Description |
@@ -94,6 +102,7 @@ The workspace uses sibling Docker containers for the development environment:
 | `drupal-serve` | Start Docker stack (PHP + nginx + DB) |
 | `drupal-stack [action]` | Stack management: start/stop/status/restart/destroy |
 | `drupal-init` | Create Drupal project via Composer |
+| `drupal-index` | Index Drupal code with GitNexus, register MCP server |
 | `drupal-cr` | Cache rebuild (drush cr) |
 | `drupal-status` | Project status: modules, DB, config |
 | `drupal-module [name]` | Scaffold a custom module |
