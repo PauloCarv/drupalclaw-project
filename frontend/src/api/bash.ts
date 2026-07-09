@@ -39,7 +39,7 @@ export async function runWorkspaceCommand(cmd: string, timeoutMs = 15000, storag
   const conn = connectTerminal(
     (data) => {
       buffer += stripAnsi(data)
-      if (buffer.includes(MARKER)) settle(true)
+      if (buffer.includes(MARKER + '\n')) settle(true)
     },
     () => { if (!settled) settle(false, new Error('Connection closed')) },
     (send) => {

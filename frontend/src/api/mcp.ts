@@ -29,6 +29,7 @@ export interface McpCatalogEntry {
   docsUrl?: string
   scriptBased?: boolean   // integration via scripts/curl, not a real MCP server
   scriptNote?: string     // shown in the info modal instead of credential form
+  marketplace?: string    // slug of the marketplace this entry came from
 }
 
 export const MCP_CATALOG: McpCatalogEntry[] = [

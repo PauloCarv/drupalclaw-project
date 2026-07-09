@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { Plus, Zap, Puzzle } from 'lucide-react'
+import { Plus, Zap, Puzzle, ShoppingBag } from 'lucide-react'
 import { useFlows } from '@/hooks/useFlows'
 import { FlowList } from './FlowList'
 import { FlowEditor } from './FlowEditor'
 import { McpManager } from './McpManager'
+import { MarketplacePanel } from '@/components/marketplace/MarketplacePanel'
 import type { Flow } from '@/api/flows'
 
-type SubTab = 'flows' | 'mcp'
+type SubTab = 'flows' | 'mcp' | 'marketplace'
 
 export function FlowsPanel() {
   const [subTab, setSubTab] = useState<SubTab>('flows')
@@ -22,6 +23,7 @@ export function FlowsPanel() {
           {([
             { id: 'flows' as SubTab, label: 'Flows', icon: Zap },
             { id: 'mcp' as SubTab, label: 'MCPs', icon: Puzzle },
+            { id: 'marketplace' as SubTab, label: 'Marketplace', icon: ShoppingBag },
           ] as const).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -74,8 +76,10 @@ export function FlowsPanel() {
               />
             </div>
           )
-        ) : (
+        ) : subTab === 'mcp' ? (
           <McpManager />
+        ) : (
+          <MarketplacePanel />
         )}
       </div>
 
