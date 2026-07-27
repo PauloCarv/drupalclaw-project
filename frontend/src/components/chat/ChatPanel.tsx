@@ -84,9 +84,18 @@ export function ChatPanel() {
     staleTime: 60000,
   })
 
-  const showSuggestions = input.startsWith('/') && !isStreaming
+  const trimmedInput = input.trim()
+  const isBareSkillMatch = trimmedInput.length >= 3 &&
+    !trimmedInput.startsWith('/') &&
+    allCommands.some(c => c.name.replace(/^\/skill:/, '').startsWith(trimmedInput.toLowerCase()))
+  const showSuggestions = (input.startsWith('/') || isBareSkillMatch) && !isStreaming
   const suggestions: Skill[] = showSuggestions
-    ? allCommands.filter((c) => c.name.toLowerCase().includes(input.toLowerCase())).slice(0, 8)
+    ? allCommands.filter((c) => {
+        const bare = c.name.replace(/^\/skill:/, '')
+        return input.startsWith('/')
+          ? c.name.toLowerCase().includes(input.toLowerCase())
+          : bare.startsWith(trimmedInput.toLowerCase())
+      }).slice(0, 8)
     : []
 
   useEffect(() => {
@@ -167,9 +176,12 @@ export function ChatPanel() {
     if (!isCurrentSession && currentSession) switchSession(currentSession.id)
 
     if (showSuggestions && suggestions.length > 0) {
-      const exact = allCommands.find((c) => c.name === input.trim())
+      const t = input.trim()
+      const exact = allCommands.find((c) => c.name === t || c.name.replace(/^\/skill:/, '') === t)
       if (!exact) {
-        selectSuggestion(suggestions[suggestionIndex]?.name ?? input)
+        const chosen = suggestions[suggestionIndex]?.name ?? input
+        // For bare-name matches, strip /skill: prefix so input stays clean
+        selectSuggestion(isBareSkillMatch ? chosen.replace(/^\/skill:/, '') : chosen)
         return
       }
     }
