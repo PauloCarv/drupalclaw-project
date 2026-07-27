@@ -65,16 +65,37 @@ fi
 # -- Seed plans directory --
 mkdir -p "$WORKSPACE/.piclaw/plans/runs"
 
-# -- Clear stale stack state if project containers no longer exist --
+# -- Heal stack state: ensure state.json and workspace-id match running containers --
 STATE_FILE="$WORKSPACE/.piclaw/stack/state.json"
+WORKSPACE_ID_FILE="$WORKSPACE/.piclaw/workspace-id"
 if [[ -f "$STATE_FILE" ]]; then
   PROJECT_NAME=$(grep -o '"project_name":"[^"]*"' "$STATE_FILE" 2>/dev/null | cut -d'"' -f4)
   if [[ -n "$PROJECT_NAME" ]]; then
     RUNNING=$(docker ps -a --filter "label=com.docker.compose.project=${PROJECT_NAME}" --format '{{.Names}}' 2>/dev/null | head -1)
     if [[ -z "$RUNNING" ]]; then
-      rm -f "$STATE_FILE"
+      # State is stale — try to find actual running Drupal project
+      ACTUAL_PROJECT=$(docker ps --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null | grep '^drupal-' | head -1)
+      if [[ -n "$ACTUAL_PROJECT" ]]; then
+        ACTUAL_ID="${ACTUAL_PROJECT#drupal-}"
+        python3 -c "
+import json, sys
+with open('$STATE_FILE') as f: s = json.load(f)
+s['project_name'] = '$ACTUAL_PROJECT'
+s['workspace_id'] = '$ACTUAL_ID'
+with open('$STATE_FILE', 'w') as f: json.dump(s, f, indent=2)
+" 2>/dev/null || true
+        echo "$ACTUAL_ID" > "$WORKSPACE_ID_FILE"
+      else
+        rm -f "$STATE_FILE"
+      fi
     fi
   fi
+fi
+# Ensure workspace-id is consistent with valid state.json
+if [[ -f "$STATE_FILE" && ! -f "$WORKSPACE_ID_FILE" ]]; then
+  PROJECT_NAME=$(grep -o '"project_name":"[^"]*"' "$STATE_FILE" 2>/dev/null | cut -d'"' -f4)
+  WS_ID="${PROJECT_NAME#drupal-}"
+  [[ -n "$WS_ID" ]] && echo "$WS_ID" > "$WORKSPACE_ID_FILE"
 fi
 
 # -- Fix Docker socket permissions (lost on Docker Desktop restart) --
