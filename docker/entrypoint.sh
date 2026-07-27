@@ -65,6 +65,18 @@ fi
 # -- Seed plans directory --
 mkdir -p "$WORKSPACE/.piclaw/plans/runs"
 
+# -- Clear stale stack state if project containers no longer exist --
+STATE_FILE="$WORKSPACE/.piclaw/stack/state.json"
+if [[ -f "$STATE_FILE" ]]; then
+  PROJECT_NAME=$(grep -o '"project_name":"[^"]*"' "$STATE_FILE" 2>/dev/null | cut -d'"' -f4)
+  if [[ -n "$PROJECT_NAME" ]]; then
+    RUNNING=$(docker ps -a --filter "label=com.docker.compose.project=${PROJECT_NAME}" --format '{{.Names}}' 2>/dev/null | head -1)
+    if [[ -z "$RUNNING" ]]; then
+      rm -f "$STATE_FILE"
+    fi
+  fi
+fi
+
 # -- Fix Docker socket permissions (lost on Docker Desktop restart) --
 chmod 666 /var/run/docker.sock 2>/dev/null || true
 
