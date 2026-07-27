@@ -12,6 +12,7 @@ DrupalClaw wraps [PiClaw](https://github.com/rcarmo/piclaw) (a Bun/TypeScript AI
 - **Dev Panel** — one-click Drupal commands (cache rebuild, status, module install, DB export/import, logs, analysis)
 - **Flows** — automated multi-step workflows triggered manually or on a schedule, with run history and chat/plan output
 - **Plans** — durable, executable strategy documents created from chat or flows, with step-by-step execution and validation
+- **Marketplace** — browse and install skills from any compatible skill catalog; ships with sdlc-plugins support out of the box
 - **MCP support** — connect external tools (GitHub, Jira, etc.) via the Model Context Protocol
 
 The AI agent knows Drupal: it reads SKILL.md files for 15+ Drupal-specific operations and executes them step by step, including orchestrating Docker containers for the PHP-FPM + nginx + database dev stack.
@@ -261,6 +262,27 @@ After indexing, run `/restart` in chat to activate the GitNexus MCP. You can the
 - *"Show me the call graph for `FaqController::item`."*
 
 On the first run, indexing a full Drupal project takes 5–10 minutes. Subsequent runs update only what changed. Use `drupal-index --force` to rebuild from scratch after a major refactor.
+
+## Marketplace
+
+The Marketplace tab lets you browse and install skills from external catalogs without leaving the workspace.
+
+### Built-in support: sdlc-plugins
+
+DrupalClaw ships with native support for the [sdlc-plugins](https://github.com/NTT-EMEAL-COPILOT-IBIOL/sdlc-plugins) catalog format. Open the Marketplace tab to browse available plugins — no API key required for public catalogs.
+
+### Installing a skill
+
+1. Open the **Marketplace** tab
+2. Browse or search the catalog
+3. Click **Install** next to a skill
+4. Send `/restart` in chat to reload the agent with the new skill
+
+Installed skills appear in the Skills panel and in the chat autocomplete, alongside built-in ones.
+
+### Adding a custom catalog
+
+Any catalog that follows the `drupalclaw-marketplace.json` format can be added via URL. Community-maintained catalogs are also supported. See the [Wiki](https://github.com/PauloCarv/drupalclaw-project/wiki) for the catalog format specification.
 
 ## Updating
 
