@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "postbuild": "cp -r node_modules/monaco-editor/min/vs dist/monaco-vs",
+    "postbuild": "cp -r node_modules/monaco-editor/min/vs dist/monaco-vs || true",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx"
   },
