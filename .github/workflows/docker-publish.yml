@@ -10,6 +10,7 @@ on:
       - 'skills/**'
       - 'config/**'
       - 'backend/**'
+      - 'VERSION'
   workflow_dispatch:
 
 env:
