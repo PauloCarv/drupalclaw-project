@@ -58,6 +58,7 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
   const [deviceCode, setDeviceCode] = useState('')
   const [redirectUrl, setRedirectUrl] = useState('')
   const [codeCopied, setCodeCopied] = useState(false)
+  const oauthCheckDataRef = useRef<Record<string, string>>({ method: 'oauth_check' })
 
   // API Key state
   const [apiKeyInput, setApiKeyInput] = useState('')
@@ -230,18 +231,18 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
     // OAuth card — has Action.OpenUrl
     const openUrl = actions.find((a: any) => a.type === 'Action.OpenUrl')
     if (openUrl) {
-      setAuthUrl(openUrl.url)
-      // Extract device code from body text
-      const codeBlock = body.find((b: any) => b.text && /code[:\s]/i.test(b.text))
-      if (codeBlock) {
-        const match = codeBlock.text.match(/([A-Z0-9]{4}-[A-Z0-9]{4})/i)
-        if (match) setDeviceCode(match[1])
+      setAuthUrl(openUrl.url || (fallback.match(/https?:\/\/\S+/)?.[0] ?? ''))
+      // Extract device code — search all TextBlocks for XXXX-XXXX pattern
+      for (const b of body) {
+        if (b.text) {
+          const match = b.text.match(/([A-Z0-9]{4}-[A-Z0-9]{4})/i)
+          if (match) { setDeviceCode(match[1]); break }
+        }
       }
-      // Also check fallback_text for URL
-      if (!openUrl.url && fallback) {
-        const urlMatch = fallback.match(/https?:\/\/\S+/)
-        if (urlMatch) setAuthUrl(urlMatch[0])
-      }
+      // Store check action data in a ref so the poll closure always reads the current value
+      const checkAction = actions.find((a: any) => a.type === 'Action.Submit' && a.data?.method)
+      const { intent: _i, provider: _p, ...checkExtra } = (checkAction?.data ?? {}) as Record<string, string>
+      oauthCheckDataRef.current = Object.keys(checkExtra).length ? checkExtra : { method: 'oauth_check' }
       setStep('waiting-oauth')
       startOAuthPolling(providerId)
       return
@@ -386,21 +387,29 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
       const result = await providersApi.sendAgentMessage(
         `/login __step2 ${JSON.stringify({
           provider: providerId,
-          method: 'oauth_check',
           redirect_url: redirectUrl || '',
+          ...oauthCheckDataRef.current,
         })}`
       )
 
       const command = result?.command
       if (!command) return
 
-      // Still waiting
-      if (command.status === 'error' && command.message?.includes("didn't complete")) return
-
-      // Success — stop polling
-      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+      // Error: only keep polling if it's a "still waiting" message
+      if (command.status === 'error') {
+        if (command.message?.includes("didn't complete")) return
+        // Fatal — stop and report
+        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+        handleCommandMessage(command)
+        return
+      }
 
       const card = command.contentBlocks?.[0]
+      // If the card still has Action.OpenUrl it means OAuth isn't done yet — keep polling
+      if (card?.payload?.actions?.some((a: any) => a.type === 'Action.OpenUrl')) return
+
+      // Success — stop polling and advance
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
       if (card?.payload) {
         processCard(card, providerId)
       } else {
