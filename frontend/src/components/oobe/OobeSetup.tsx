@@ -66,6 +66,7 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
   // Custom config state
   const [customFields, setCustomFields] = useState<Array<{ key: string; label: string; placeholder: string }>>([])
   const [customValues, setCustomValues] = useState<Record<string, string>>({})
+  const [customActionData, setCustomActionData] = useState<Record<string, string>>({})
 
   // Model picker state
   const [models, setModels] = useState<Array<{ id: string; name: string }>>([])
@@ -254,14 +255,43 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
       return
     }
 
-    // Custom config card (multiple Input.Text fields)
+    // Custom config card (Input.Text fields + Action.Submit)
     const inputFields = body.filter((b: any) => b.type === 'Input.Text')
     if (inputFields.length > 0) {
+      const vals: Record<string, string> = {}
+      inputFields.forEach((f: any) => { vals[f.id] = f.value || '' })
+
+      // Extract the method/auth_type from the card's Action.Submit data so
+      // we can call __step2 with exactly what PiClaw expects (not "configure").
+      const submitAction = actions.find((a: any) => a.type === 'Action.Submit' && a.data?.method)
+      const { intent: _i, provider: _p, ...actionExtra } = (submitAction?.data ?? {}) as Record<string, string>
+      const actionData: Record<string, string> = actionExtra
+
+      // Auto-skip if all fields are optional (e.g. GitHub Enterprise URL).
+      if (inputFields.every((f: any) => !f.isRequired)) {
+        setStep('loading')
+        setStatusMsg('Connecting...');
+        (async () => {
+          try {
+            const result = await providersApi.sendAgentMessage(
+              `/login __step2 ${JSON.stringify({ provider: providerId, ...actionData, ...vals })}`
+            )
+            const command = result?.command
+            const nextCard = command?.contentBlocks?.[0]
+            if (nextCard?.payload) processCard(nextCard, providerId)
+            else handleCommandMessage(command)
+          } catch (err: any) {
+            setError(err.message)
+            setStep('pick-provider')
+          }
+        })()
+        return
+      }
+
+      setCustomActionData(actionData)
       setCustomFields(inputFields.map((f: any) => ({
         key: f.id, label: f.label || f.id, placeholder: f.placeholder || '',
       })))
-      const vals: Record<string, string> = {}
-      inputFields.forEach((f: any) => { vals[f.id] = f.value || '' })
       setCustomValues(vals)
       setStep('custom-config')
       return
@@ -421,11 +451,14 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
       const result = await providersApi.sendAgentMessage(
         `/login __step2 ${JSON.stringify({
           provider: selectedProvider,
-          method: 'configure',
+          ...customActionData,
           ...customValues,
         })}`
       )
-      handleCommandMessage(result?.command)
+      const command = result?.command
+      const card = command?.contentBlocks?.[0]
+      if (card?.payload) processCard(card, selectedProvider)
+      else handleCommandMessage(command)
     } catch (err: any) {
       setError(err.message)
       setStep('custom-config')
