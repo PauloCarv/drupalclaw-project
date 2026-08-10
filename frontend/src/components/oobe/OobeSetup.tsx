@@ -377,12 +377,21 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
 
   // ── OAuth polling ──
 
+  const checkInFlightRef = useRef(false)
+
   const startOAuthPolling = (providerId: string) => {
     if (pollRef.current) clearInterval(pollRef.current)
     pollRef.current = setInterval(() => checkOAuth(providerId), 4000)
   }
 
   const checkOAuth = async (providerId: string) => {
+    // Guard against overlapping requests: a slow network round-trip (VPN, proxy)
+    // can make one tick still be in flight when the next timer fires, or a manual
+    // "Check & Continue" click can race the auto-poll — either way, sending two
+    // concurrent checks doubles our request rate against GitHub's device-flow
+    // endpoint and risks tripping its rate limit.
+    if (checkInFlightRef.current) return
+    checkInFlightRef.current = true
     try {
       const result = await providersApi.sendAgentMessage(
         `/login __step2 ${JSON.stringify({
@@ -395,9 +404,11 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
       const command = result?.command
       if (!command) return
 
-      // Error: only keep polling if it's a "still waiting" message
+      // Error: keep polling on "still waiting" or a transient rate limit from
+      // GitHub's device-flow endpoint (429) — the next tick, 4s later, is
+      // usually past it. Anything else is treated as fatal.
       if (command.status === 'error') {
-        if (command.message?.includes("didn't complete")) return
+        if (command.message?.includes("didn't complete") || command.message?.includes('429')) return
         // Fatal — stop and report
         if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
         handleCommandMessage(command)
@@ -417,6 +428,8 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
       }
     } catch {
       // Keep polling
+    } finally {
+      checkInFlightRef.current = false
     }
   }
 
