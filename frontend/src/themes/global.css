@@ -32,6 +32,24 @@
     scrollbar-color: var(--color-navy-500) transparent;
   }
 
+  /* Chrome/Safari ignore scrollbar-width/-color and auto-hide native scrollbars on macOS
+     until actively dragged — force a persistently visible thin bar so horizontally
+     scrollable content (long code lines, wide tables) is discoverable. */
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-navy-500);
+    border-radius: 4px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-navy-400);
+  }
+
   body {
     font-family: 'Inter', system-ui, sans-serif;
     overflow: hidden;

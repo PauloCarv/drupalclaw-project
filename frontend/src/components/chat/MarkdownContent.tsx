@@ -185,130 +185,135 @@ export function MarkdownContent({ content, onChoice }: { content: string; onChoi
   )
 }
 
+// Defined once at module scope — react-markdown treats each key as a component
+// type, so recreating this object (and its function identities) on every render
+// forces a full unmount/remount of all rendered markdown (code blocks, tables, ...),
+// wiping out DOM-only state like horizontal scroll position on every re-render.
+const markdownComponents = {
+  // Block code: react-markdown v10 wraps <code> in <pre> for fenced blocks.
+  // We intercept at <pre> level to pass the language to SyntaxHighlighter.
+  pre({ children }: { children?: React.ReactNode }) {
+    const child = React.Children.toArray(children)[0] as React.ReactElement<{
+      className?: string
+      children?: React.ReactNode
+    }>
+    if (!child) return <pre>{children}</pre>
+
+    const className = child.props.className ?? ''
+    const match = /language-(\w+)/.exec(className)
+    const language = match?.[1] ?? 'text'
+    const code = String(child.props.children ?? '').replace(/\n$/, '')
+
+    return (
+      <div className="my-3 rounded-md overflow-hidden border border-navy-600">
+        {match && (
+          <div className="flex items-center justify-between px-3 py-1 bg-navy-700 border-b border-navy-600">
+            <span className="text-[10px] text-navy-300 font-mono">{language}</span>
+          </div>
+        )}
+        <div className="overflow-x-auto">
+          <SyntaxHighlighter
+            language={language}
+            style={vscDarkPlus}
+            customStyle={codeStyle}
+            PreTag="div"
+            useInlineStyles
+          >
+            {code}
+          </SyntaxHighlighter>
+        </div>
+      </div>
+    )
+  },
+
+  // Inline code
+  code({ className, children }: { className?: string; children?: React.ReactNode }) {
+    // If className is present it's a block handled by <pre> above; render plain
+    if (className) return <code className={className}>{children}</code>
+    return (
+      <code className="bg-navy-800 text-ai-teal text-[11px] px-1.5 py-0.5 rounded font-mono border border-navy-600">
+        {children}
+      </code>
+    )
+  },
+
+  p({ children }: { children?: React.ReactNode }) {
+    return <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>
+  },
+
+  h1({ children }: { children?: React.ReactNode }) {
+    return <h1 className="text-base font-semibold text-gray-100 mb-2 mt-3 first:mt-0">{children}</h1>
+  },
+  h2({ children }: { children?: React.ReactNode }) {
+    return <h2 className="text-sm font-semibold text-gray-100 mb-1.5 mt-3 first:mt-0">{children}</h2>
+  },
+  h3({ children }: { children?: React.ReactNode }) {
+    return <h3 className="text-xs font-semibold text-gray-200 mb-1 mt-2 first:mt-0">{children}</h3>
+  },
+
+  ul({ children }: { children?: React.ReactNode }) {
+    return <ul className="list-disc list-outside ml-4 mb-2 space-y-0.5">{children}</ul>
+  },
+  ol({ children }: { children?: React.ReactNode }) {
+    return <ol className="list-decimal list-outside ml-4 mb-2 space-y-0.5">{children}</ol>
+  },
+  li({ children }: { children?: React.ReactNode }) {
+    return <li className="text-sm leading-relaxed">{children}</li>
+  },
+
+  blockquote({ children }: { children?: React.ReactNode }) {
+    return (
+      <blockquote className="border-l-2 border-ai-teal pl-3 my-2 text-navy-300 italic">
+        {children}
+      </blockquote>
+    )
+  },
+
+  a({ href, children }: { href?: string; children?: React.ReactNode }) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-drupal-blue-light hover:underline"
+      >
+        {children}
+      </a>
+    )
+  },
+
+  table({ children }: { children?: React.ReactNode }) {
+    return (
+      <div className="overflow-x-auto my-3">
+        <table className="w-full text-xs border-collapse border border-navy-600">{children}</table>
+      </div>
+    )
+  },
+  thead({ children }: { children?: React.ReactNode }) {
+    return <thead className="bg-navy-700">{children}</thead>
+  },
+  th({ children }: { children?: React.ReactNode }) {
+    return <th className="px-3 py-1.5 text-left font-medium text-gray-300 border border-navy-600">{children}</th>
+  },
+  td({ children }: { children?: React.ReactNode }) {
+    return <td className="px-3 py-1.5 text-gray-400 border border-navy-600">{children}</td>
+  },
+
+  hr() {
+    return <hr className="my-3 border-navy-500" />
+  },
+
+  strong({ children }: { children?: React.ReactNode }) {
+    return <strong className="font-semibold text-gray-100">{children}</strong>
+  },
+  em({ children }: { children?: React.ReactNode }) {
+    return <em className="italic text-gray-300">{children}</em>
+  },
+}
+
 function ReactMarkdownBlock({ content }: { content: string }) {
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        // Block code: react-markdown v10 wraps <code> in <pre> for fenced blocks.
-        // We intercept at <pre> level to pass the language to SyntaxHighlighter.
-        pre({ children }) {
-          const child = React.Children.toArray(children)[0] as React.ReactElement<{
-            className?: string
-            children?: React.ReactNode
-          }>
-          if (!child) return <pre>{children}</pre>
-
-          const className = child.props.className ?? ''
-          const match = /language-(\w+)/.exec(className)
-          const language = match?.[1] ?? 'text'
-          const code = String(child.props.children ?? '').replace(/\n$/, '')
-
-          return (
-            <div className="my-3 rounded-md overflow-hidden border border-navy-600">
-              {match && (
-                <div className="flex items-center justify-between px-3 py-1 bg-navy-700 border-b border-navy-600">
-                  <span className="text-[10px] text-navy-300 font-mono">{language}</span>
-                </div>
-              )}
-              <SyntaxHighlighter
-                language={language}
-                style={vscDarkPlus}
-                customStyle={codeStyle}
-                PreTag="div"
-                useInlineStyles
-              >
-                {code}
-              </SyntaxHighlighter>
-            </div>
-          )
-        },
-
-        // Inline code
-        code({ className, children }) {
-          // If className is present it's a block handled by <pre> above; render plain
-          if (className) return <code className={className}>{children}</code>
-          return (
-            <code className="bg-navy-800 text-ai-teal text-[11px] px-1.5 py-0.5 rounded font-mono border border-navy-600">
-              {children}
-            </code>
-          )
-        },
-
-        p({ children }) {
-          return <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>
-        },
-
-        h1({ children }) {
-          return <h1 className="text-base font-semibold text-gray-100 mb-2 mt-3 first:mt-0">{children}</h1>
-        },
-        h2({ children }) {
-          return <h2 className="text-sm font-semibold text-gray-100 mb-1.5 mt-3 first:mt-0">{children}</h2>
-        },
-        h3({ children }) {
-          return <h3 className="text-xs font-semibold text-gray-200 mb-1 mt-2 first:mt-0">{children}</h3>
-        },
-
-        ul({ children }) {
-          return <ul className="list-disc list-outside ml-4 mb-2 space-y-0.5">{children}</ul>
-        },
-        ol({ children }) {
-          return <ol className="list-decimal list-outside ml-4 mb-2 space-y-0.5">{children}</ol>
-        },
-        li({ children }) {
-          return <li className="text-sm leading-relaxed">{children}</li>
-        },
-
-        blockquote({ children }) {
-          return (
-            <blockquote className="border-l-2 border-ai-teal pl-3 my-2 text-navy-300 italic">
-              {children}
-            </blockquote>
-          )
-        },
-
-        a({ href, children }) {
-          return (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-drupal-blue-light hover:underline"
-            >
-              {children}
-            </a>
-          )
-        },
-
-        table({ children }) {
-          return (
-            <div className="overflow-x-auto my-3">
-              <table className="w-full text-xs border-collapse border border-navy-600">{children}</table>
-            </div>
-          )
-        },
-        thead({ children }) {
-          return <thead className="bg-navy-700">{children}</thead>
-        },
-        th({ children }) {
-          return <th className="px-3 py-1.5 text-left font-medium text-gray-300 border border-navy-600">{children}</th>
-        },
-        td({ children }) {
-          return <td className="px-3 py-1.5 text-gray-400 border border-navy-600">{children}</td>
-        },
-
-        hr() {
-          return <hr className="my-3 border-navy-500" />
-        },
-
-        strong({ children }) {
-          return <strong className="font-semibold text-gray-100">{children}</strong>
-        },
-        em({ children }) {
-          return <em className="italic text-gray-300">{children}</em>
-        },
-      }}
-    >
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
       {content}
     </ReactMarkdown>
   )

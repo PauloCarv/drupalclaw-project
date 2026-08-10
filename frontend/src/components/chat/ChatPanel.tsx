@@ -511,7 +511,7 @@ function MessageBubble({
       <div className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'} max-w-[80%] min-w-0`}>
         {(bubbleText || files.length > 0) && (
         <div
-          className={`rounded-lg px-3 py-2 ${isUser ? 'bg-drupal-blue text-white' : 'bg-navy-600 text-gray-200'} ${streaming ? 'border border-ai-teal/40 animate-pulse' : ''}`}
+          className={`rounded-lg px-3 py-2 min-w-0 max-w-full ${isUser ? 'bg-drupal-blue text-white' : 'bg-navy-600 text-gray-200'} ${streaming ? 'border border-ai-teal/40 animate-pulse' : ''}`}
           style={{ fontSize: 'var(--dc-font-size)' }}
         >
           {bubbleText && (
