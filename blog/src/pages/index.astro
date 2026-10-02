@@ -49,6 +49,9 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 
 				{featured && (
 					<a href={`/blog/${featured.id}/`} class="featured">
+						<div class="featured-art" aria-hidden="true">
+							<img src="/logo.png" alt="" width="120" height="120" />
+						</div>
 						<div class="featured-body">
 							<p class="meta">
 								{featured.data.tag && <span class="tag">{featured.data.tag}</span>}
@@ -337,7 +340,9 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 	}
 
 	.featured {
-		display: block;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+		overflow: hidden;
 		background: var(--navy-800);
 		border: 1px solid var(--border);
 		border-radius: 12px;
@@ -346,6 +351,18 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 	}
 	.featured:hover,
 	.card:hover { border-color: var(--accent); color: inherit; }
+	.featured-art {
+		min-height: 260px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: #0d1424;
+		background-image:
+			linear-gradient(#1a2035 1px, transparent 1px),
+			linear-gradient(90deg, #1a2035 1px, transparent 1px);
+		background-size: 28px 28px;
+	}
+	.featured-art img { border-radius: 0; }
 	.featured-body {
 		display: flex;
 		flex-direction: column;
@@ -355,7 +372,7 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 	}
 	.featured-body h3 {
 		margin: 0;
-		font-size: 1.9em;
+		font-size: 1.65em;
 		line-height: 1.2;
 		color: #fff;
 		text-wrap: balance;
