@@ -7,6 +7,8 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { getPosts } from '../lib/posts';
 
 const posts = await getPosts();
+const [featured, ...others] = posts;
+const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 ---
 
 <!doctype html>
@@ -18,57 +20,123 @@ const posts = await getPosts();
 		<a href="#main" class="skip-link">Skip to content</a>
 		<Header />
 
-		<section class="hero">
-			<div class="hero-inner">
-				<div class="hero-mark">
-					<img src="/logo.png" alt="" width="260" height="260" />
-				</div>
+		<main id="main" tabindex="-1">
+			<section class="hero wrap">
 				<div class="hero-copy">
-					<h1>Drupal<span>Claw</span></h1>
-					<p class="hero-tagline">An agent-first Drupal development environment</p>
+					<p class="eyebrow">Open source · Self-hosted · AI-first</p>
+					<h1>Agent-first Drupal development.</h1>
 					<p class="hero-text">
-						Self-hosted in Docker. Scaffold, serve and debug Drupal with an AI agent that does the work
-						and teaches as it goes.
+						A self-hosted workspace where an AI agent scaffolds, serves and debugs your Drupal project,
+						and shows you the commands it ran so you learn as it works.
 					</p>
-					<ul class="hero-pills">
-						<li>Drupal skills</li>
-						<li>Self-hosted</li>
-						<li>Multi-LLM</li>
-						<li>Flows &amp; Plans</li>
-						<li>Open source</li>
-					</ul>
-					<div class="hero-cta">
-						<a href="https://github.com/PauloCarv/drupalclaw-project" class="btn-primary" target="_blank" rel="noopener noreferrer">
-							★ Star on GitHub
-						</a>
-						<a href="/blog" class="btn-ghost">Read the blog →</a>
+					<div class="cta">
+						<a href={REPO} class="btn btn-primary" target="_blank" rel="noopener noreferrer">★ Star on GitHub</a>
+						{featured && <a href={`/blog/${featured.id}/`} class="btn btn-ghost">Read the latest update →</a>}
+					</div>
+					<div class="terminal" role="img" aria-label="Install: clone the repository, then run docker compose from the docker folder">
+						<div><span>$</span> git clone {REPO.replace('https://', '')}</div>
+						<div><span>$</span> cd drupalclaw-project/docker</div>
+						<div><span>$</span> docker compose pull &amp;&amp; docker compose up -d</div>
 					</div>
 				</div>
-			</div>
-		</section>
+				<div class="hero-mark">
+					<div class="glow">
+						<img src="/logo.png" alt="DrupalClaw logo: a claw holding the Drupal drop" width="300" height="300" />
+					</div>
+				</div>
+			</section>
 
-		<main id="main" tabindex="-1">
-			<section class="posts-section">
-				<h2 class="section-label">Latest articles</h2>
-				<ul class="post-list">
-					{posts.map((post) => (
-						<li>
-							<a href={`/blog/${post.id}/`} class="post-card">
-								<span class="post-meta">
-									{post.data.tag && <span class="post-tag">{post.data.tag}</span>}
-									<span class="post-date"><FormattedDate date={post.data.pubDate} /></span>
-									<span class="post-date">{post.readingTime} min read</span>
-								</span>
-								<h3>{post.data.title}</h3>
-								<p>{post.data.description}</p>
-								<span class="read-more">Read article →</span>
-							</a>
-						</li>
-					))}
-				</ul>
-				{posts.length === 0 && (
-					<p class="empty">No articles yet. Check back soon.</p>
+			<section class="glance" aria-label="At a glance">
+				<div class="wrap glance-grid">
+					<div>
+						<p class="label">Skills</p>
+						<p class="glance-title">24 Drupal workflows</p>
+						<p class="glance-note">From drupal-init to PHPStan, plus a Marketplace for your own.</p>
+					</div>
+					<div>
+						<p class="label">Providers</p>
+						<p class="glance-title">Copilot, OpenAI, Anthropic</p>
+						<p class="glance-note">Bring the subscription you already have.</p>
+					</div>
+					<div>
+						<p class="label">Runtime</p>
+						<p class="glance-title">Local, in Docker</p>
+						<p class="glance-note">Your code stays on your machine.</p>
+					</div>
+					<div>
+						<p class="label">Modes</p>
+						<p class="glance-title">Learning or Expert</p>
+						<p class="glance-note">Get the result, or the result plus how to do it by hand.</p>
+					</div>
+				</div>
+			</section>
+
+			<section class="wrap writing">
+				<div class="section-head">
+					<h2>Latest writing</h2>
+					<a href="/blog" class="more">All articles →</a>
+				</div>
+
+				{featured && (
+					<a href={`/blog/${featured.id}/`} class="featured">
+						<div class="featured-art" aria-hidden="true">
+							<img src="/logo.png" alt="" width="120" height="120" />
+						</div>
+						<div class="featured-body">
+							<p class="meta">
+								{featured.data.tag && <span class="tag">{featured.data.tag}</span>}
+								<span><FormattedDate date={featured.data.pubDate} /></span>
+								<span>{featured.readingTime} min read</span>
+							</p>
+							<h3>{featured.data.title}</h3>
+							<p class="featured-desc">{featured.data.description}</p>
+							<span class="read-more">Read article →</span>
+						</div>
+					</a>
 				)}
+
+				{others.map((post) => (
+					<a href={`/blog/${post.id}/`} class="card">
+						<p class="meta">
+							{post.data.tag && <span class="tag">{post.data.tag}</span>}
+							<span><FormattedDate date={post.data.pubDate} /></span>
+							<span>{post.readingTime} min read</span>
+						</p>
+						<h3>{post.data.title}</h3>
+						<p class="card-desc">{post.data.description}</p>
+					</a>
+				))}
+			</section>
+
+			<section class="wrap recognition" aria-label="Recognition">
+				<a
+					href="https://www.thedroptimes.com/interview/71976/drupalclaw-agent-first-development-boundaries"
+					class="panel panel-link"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					<p class="label">Featured in</p>
+					<p class="panel-title">The Drop Times</p>
+					<p class="panel-note">Interview: agent-first development and its boundaries ↗</p>
+				</a>
+				<div class="panel">
+					<p class="label">Recognition</p>
+					<p class="panel-title">2nd place · GenAI QuickWins</p>
+					<p class="panel-note">NTT DATA internal challenge, 2026</p>
+				</div>
+			</section>
+
+			<section class="wrap follow">
+				<div class="follow-box">
+					<div>
+						<h2>Follow the build</h2>
+						<p>New posts land in the RSS feed. Releases and changelogs live on GitHub.</p>
+					</div>
+					<div class="cta">
+						<a href="/rss.xml" class="btn btn-ghost">Subscribe via RSS</a>
+						<a href={`${REPO}/releases`} class="btn btn-primary" target="_blank" rel="noopener noreferrer">Watch releases</a>
+					</div>
+				</div>
 			</section>
 		</main>
 
@@ -77,199 +145,310 @@ const posts = await getPosts();
 </html>
 
 <style>
-	.hero {
-		background:
-			radial-gradient(60% 80% at 20% 50%, rgba(6, 120, 190, 0.18), transparent 70%),
-			radial-gradient(50% 70% at 90% 10%, rgba(45, 212, 191, 0.08), transparent 70%),
-			#0a0e1a;
-		border-bottom: 1px solid #1a2035;
-	}
-	.hero-inner {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-		align-items: center;
-		gap: clamp(1.5rem, 5vw, 4rem);
-		max-width: 1100px;
-		margin: 0 auto;
-		padding: clamp(2.5rem, 7vw, 5.5rem) 1.5em;
-	}
-	.hero-mark {
-		display: flex;
-		justify-content: center;
-	}
-	.hero-mark img {
-		width: clamp(11rem, 26vw, 17rem);
-		height: auto;
-		border-radius: 0;
-		filter: drop-shadow(0 0 40px rgba(6, 120, 190, 0.35));
-	}
-	.hero-copy h1 {
-		margin: 0;
-		font-size: clamp(2.75rem, 7vw, 4.5rem);
-		line-height: 1;
-		letter-spacing: -0.03em;
-		color: #fff;
-	}
-	.hero-copy h1 span { color: #1e90f0; }
-	.hero-tagline {
-		margin: 0.6em 0 0.4em;
-		font-size: clamp(1.15rem, 2.4vw, 1.5rem);
-		font-weight: 700;
-		color: #8ec5f2;
-	}
-	.hero-text {
-		max-width: 34rem;
-		margin: 0 0 1.25em;
-		color: var(--text-soft);
-		line-height: 1.6;
-	}
-	.hero-pills {
-		list-style: none;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5em;
-		margin: 0 0 1.75em;
+	main {
+		width: 100%;
+		max-width: none;
 		padding: 0;
 	}
-	.hero-pills li {
-		display: flex;
-		align-items: center;
-		gap: 0.5em;
-		padding: 0.3em 0.9em;
-		background: rgba(255, 255, 255, 0.04);
-		border: 1px solid var(--border-strong);
-		border-radius: 100px;
+
+	.wrap {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding-left: 24px;
+		padding-right: 24px;
+	}
+
+	.label {
+		margin: 0 0 0.4em;
 		font-family: var(--font-mono), monospace;
-		font-size: 0.8em;
-		color: #d4dded;
+		font-size: 0.72em;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #8899b8;
 	}
-	.hero-pills li::before {
-		content: '';
-		width: 0.5em;
-		height: 0.5em;
-		border-radius: 50%;
-		background: var(--accent-teal);
-	}
-	.hero-cta {
-		display: flex;
-		gap: 0.75em;
-		flex-wrap: wrap;
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		min-height: 48px;
+		padding: 0 22px;
+		border-radius: 6px;
+		font-size: 1em;
+		transition: background 0.15s, border-color 0.15s;
 	}
 	.btn-primary {
-		background: #0678be;
+		background: var(--accent);
 		color: #fff;
-		padding: 0.5em 1.25em;
-		border-radius: 6px;
-		font-weight: 600;
-		font-size: 0.88em;
-		transition: background 0.15s;
+		font-weight: 700;
 	}
 	.btn-primary:hover {
 		background: #0e90d9;
 		color: #fff;
 	}
 	.btn-ghost {
-		background: transparent;
-		color: #8899b8;
-		padding: 0.5em 1.25em;
-		border-radius: 6px;
-		border: 1px solid #667aa3;
-		font-size: 0.88em;
-		transition: border-color 0.15s, color 0.15s;
+		border: 1px solid var(--border-strong);
+		color: var(--text-primary);
 	}
 	.btn-ghost:hover {
-		color: #e2e8f4;
 		border-color: #8899b8;
+		color: #fff;
+	}
+	.cta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
 	}
 
-	main {
-		width: 1100px;
-		max-width: calc(100% - 2em);
-		margin: 0 auto;
-		padding: 3em 1em 4em;
+	.hero {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr));
+		gap: 48px;
+		align-items: center;
+		padding-top: clamp(40px, 7vw, 72px);
+		padding-bottom: clamp(40px, 6vw, 64px);
 	}
-
-	.section-label {
-		font-size: 0.75em;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: #7c8db0;
-		font-weight: 600;
-		margin-bottom: 1.5em;
-	}
-
-	.post-list {
-		list-style: none;
-		padding: 0;
-		margin: 0;
+	.hero-copy {
 		display: flex;
 		flex-direction: column;
-		gap: 1px;
+		gap: 24px;
 	}
-	.post-meta {
+	.hero-copy > * { margin: 0; }
+	.eyebrow {
+		font-family: var(--font-mono), monospace;
+		font-size: 0.72em;
+		letter-spacing: 0.04em;
+		color: var(--accent-teal);
+	}
+	.hero h1 {
+		margin: 0;
+		font-size: clamp(2.5rem, 5.2vw, 4.25rem);
+		line-height: 1.04;
+		letter-spacing: -0.02em;
+		text-wrap: balance;
+		color: #fff;
+	}
+	.hero-text {
+		max-width: 34em;
+		font-size: 1.1em;
+		color: var(--text-soft);
+		text-wrap: pretty;
+	}
+	.terminal {
+		max-width: 34em;
+		padding: 16px 20px;
+		background: var(--navy-800);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		font-family: var(--font-mono), monospace;
+		font-size: 0.78em;
+		line-height: 1.9;
+		color: #c3cde0;
+		overflow-x: auto;
+		white-space: nowrap;
+	}
+	.terminal span { color: var(--accent-teal); }
+	.hero-mark {
+		display: flex;
+		justify-content: center;
+	}
+	.glow {
+		width: min(380px, 80vw);
+		aspect-ratio: 1;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: radial-gradient(circle, rgba(6, 120, 190, 0.28) 0%, rgba(6, 120, 190, 0) 68%);
+	}
+	.glow img {
+		width: 72%;
+		height: 72%;
+		object-fit: contain;
+		border-radius: 0;
+	}
+
+	.glance {
+		border-top: 1px solid var(--border);
+		border-bottom: 1px solid var(--border);
+		background: #0d1220;
+	}
+	.glance-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+		gap: 28px;
+		padding-top: 32px;
+		padding-bottom: 32px;
+	}
+	.glance-grid p { margin: 0; }
+	.glance-title {
+		font-size: 1.1em;
+		font-weight: 700;
+		color: #fff;
+	}
+	.glance-note {
+		margin-top: 0.3em !important;
+		font-size: 0.83em;
+		line-height: 1.5;
+		color: var(--text-soft);
+	}
+
+	.writing {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		padding-top: 72px;
+		padding-bottom: 24px;
+	}
+	.section-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 16px;
+		margin-bottom: 8px;
+	}
+	.section-head h2 {
+		margin: 0;
+		font-size: 1.75em;
+		line-height: 1.2;
+		color: #fff;
+	}
+	.more {
+		padding: 10px 0;
+		color: var(--link);
+	}
+
+	.meta {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 0.5em 1em;
+		gap: 6px 12px;
+		margin: 0;
+		font-family: var(--font-mono), monospace;
+		font-size: 0.72em;
+		color: #8899b8;
 	}
-	.post-tag {
-		padding: 0.1em 0.7em;
-		border: 1px solid var(--border-strong);
-		border-radius: 100px;
-		font-size: 0.74em;
+	.tag {
+		padding: 2px 10px;
+		border: 1px solid rgba(79, 176, 236, 0.45);
+		border-radius: 999px;
 		color: var(--link);
 	}
-	.post-card {
+
+	.featured {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+		overflow: hidden;
+		background: var(--navy-800);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		color: inherit;
+		transition: border-color 0.15s;
+	}
+	.featured:hover,
+	.card:hover { border-color: var(--accent); color: inherit; }
+	.featured-art {
+		min-height: 260px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: #0d1424;
+		background-image:
+			linear-gradient(#1a2035 1px, transparent 1px),
+			linear-gradient(90deg, #1a2035 1px, transparent 1px);
+		background-size: 28px 28px;
+	}
+	.featured-art img { border-radius: 0; }
+	.featured-body {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5em;
-		padding: 2em 2.25em;
-		background: #111827;
-		border: 1px solid #1a2035;
-		border-radius: 10px;
+		justify-content: center;
+		gap: 14px;
+		padding: 32px;
+	}
+	.featured-body h3 {
+		margin: 0;
+		font-size: 1.65em;
+		line-height: 1.2;
+		color: #fff;
+		text-wrap: balance;
+	}
+	.featured-desc,
+	.card-desc {
+		margin: 0;
+		color: var(--text-soft);
+		text-wrap: pretty;
+	}
+	.read-more { color: var(--link); }
+
+	.card {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 28px 32px;
+		background: var(--navy-800);
+		border: 1px solid var(--border);
+		border-radius: 12px;
 		color: inherit;
-		transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-		margin-bottom: 0.75em;
+		transition: border-color 0.15s;
 	}
-	.post-card:hover {
-		border-color: #0678be;
-		background: #131e30;
-		box-shadow: 0 0 0 1px rgba(6,120,190,0.15), 0 4px 16px rgba(6,120,190,0.08);
-		color: inherit;
-	}
-	.post-date {
-		font-size: 0.78em;
-		color: #8899b8;
-		letter-spacing: 0.02em;
-	}
-	.post-card h3 {
+	.card h3 {
 		margin: 0;
 		font-size: 1.35em;
+		line-height: 1.25;
 		color: #fff;
-		font-weight: 700;
-		line-height: 1.3;
-	}
-	.post-card p {
-		margin: 0;
-		max-width: 70ch;
-		font-size: 0.98em;
-		color: #8899b8;
-		line-height: 1.6;
-	}
-	.read-more {
-		font-size: 0.82em;
-		color: #0e90d9;
-		margin-top: 0.25em;
-		font-weight: 500;
-	}
-	.post-card:hover .read-more {
-		color: #2dd4bf;
 	}
 
-	.empty {
-		color: #7c8db0;
-		font-style: italic;
-		text-align: center;
-		padding: 3em 0;
+	.recognition {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+		gap: 16px;
+		padding-top: 48px;
+		padding-bottom: 48px;
+	}
+	.panel {
+		padding: 24px 28px;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		color: inherit;
+	}
+	.panel p { margin: 0; }
+	.panel-link { transition: border-color 0.15s; }
+	.panel-link:hover { border-color: var(--accent); color: inherit; }
+	.panel-title {
+		font-size: 1.1em;
+		font-weight: 700;
+		color: #fff;
+	}
+	.panel-note {
+		margin-top: 0.4em !important;
+		font-size: 0.83em;
+		color: var(--text-soft);
+	}
+
+	.follow {
+		padding-top: 24px;
+		padding-bottom: 88px;
+	}
+	.follow-box {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		padding: 40px;
+		background: var(--navy-800);
+		border: 1px solid var(--border);
+		border-radius: 16px;
+	}
+	.follow-box h2 {
+		margin: 0 0 0.3em;
+		font-size: 1.55em;
+		line-height: 1.2;
+		color: #fff;
+	}
+	.follow-box p {
+		margin: 0;
+		max-width: 36em;
+		color: var(--text-soft);
 	}
 </style>
