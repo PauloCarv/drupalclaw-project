@@ -5,8 +5,17 @@
 set -e
 
 WORKSPACE="/workspace"
-SKILLS_SRC="/home/agent/.pi/skills"
-TEMPLATES_SRC="/home/agent/.pi/templates"
+# Sources baked into the image under /opt/drupalclaw (not hidden by the /config bind mount).
+# Falls back to /home/agent/.pi for images built before this layout.
+BAKED="/opt/drupalclaw"
+SKILLS_SRC="$BAKED/skills"
+TEMPLATES_SRC="$BAKED/templates"
+AGENT_CONFIG="$BAKED/agent"
+ICON_PATH="$BAKED/assets/drupal_claw_icon.png"
+[[ -d "$SKILLS_SRC" ]] || SKILLS_SRC="/home/agent/.pi/skills"
+[[ -d "$TEMPLATES_SRC" ]] || TEMPLATES_SRC="/home/agent/.pi/templates"
+[[ -d "$AGENT_CONFIG" ]] || AGENT_CONFIG="/home/agent/.pi/agent"
+[[ -f "$ICON_PATH" ]] || ICON_PATH="/home/agent/.pi/assets/drupal_claw_icon.png"
 
 # -- Sync Drupal skills to workspace (copy only if missing — never overwrite user changes) --
 if [[ -d "$SKILLS_SRC" ]]; then
@@ -34,14 +43,12 @@ if [[ -d "$TEMPLATES_SRC" ]]; then
 fi
 
 # -- Sync config (always overwrite — ensures DrupalClaw config is applied) --
-AGENT_CONFIG="/home/agent/.pi/agent"
 mkdir -p "$WORKSPACE/.piclaw"
 cp "$AGENT_CONFIG/AGENTS.md" "$WORKSPACE/AGENTS.md" 2>/dev/null || true
 cp "$AGENT_CONFIG/dev-panel.json" "$WORKSPACE/.piclaw/dev-panel.json" 2>/dev/null || true
 
 # -- Generate .env.sh with branding (only if missing) --
 if [[ ! -f "$WORKSPACE/.env.sh" ]]; then
-  ICON_PATH="/home/agent/.pi/assets/drupal_claw_icon.png"
   AVATAR_DATA=""
   if [[ -f "$ICON_PATH" ]]; then
     AVATAR_B64=$(base64 "$ICON_PATH" | tr -d '\n')

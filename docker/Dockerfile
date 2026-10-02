@@ -69,6 +69,15 @@ COPY skills/ /workspace/.pi/skills/
 # -- Copy stack templates --
 COPY templates/ /home/agent/.pi/templates/
 
+# -- Baked copies outside /home/agent/.pi --
+# /home/agent/.pi is a symlink to /config/.pi, and /config is bind-mounted at runtime, which hides
+# everything copied under it. The entrypoint reads from /opt/drupalclaw so new skills, templates and
+# config always propagate, whatever the host's config/ folder contains.
+COPY skills/ /opt/drupalclaw/skills/
+COPY templates/ /opt/drupalclaw/templates/
+COPY backend/config/dev-panel.json /opt/drupalclaw/agent/dev-panel.json
+COPY backend/config/AGENTS.md /opt/drupalclaw/agent/AGENTS.md
+
 # -- Copy config (stored outside /workspace volume so entrypoint can always apply) --
 RUN mkdir -p /home/agent/.pi/agent
 COPY backend/config/dev-panel.json /home/agent/.pi/agent/dev-panel.json
@@ -79,6 +88,7 @@ RUN mkdir -p /home/agent/.pi/assets
 COPY frontend/public/icon.png /tmp/drupal_claw_icon_full.png
 RUN apt-get update && apt-get install -y --no-install-recommends imagemagick && \
     convert /tmp/drupal_claw_icon_full.png -resize 64x64 /home/agent/.pi/assets/drupal_claw_icon.png && \
+    mkdir -p /opt/drupalclaw/assets && cp /home/agent/.pi/assets/drupal_claw_icon.png /opt/drupalclaw/assets/ && \
     rm /tmp/drupal_claw_icon_full.png && \
     apt-get purge -y imagemagick && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
