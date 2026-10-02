@@ -36,3 +36,18 @@ Automatically fixes code issues.
    echo "=== Modified files ==="
    git diff --name-only 2>/dev/null || echo "(no git)"
    ```
+
+4. Didactic block:
+   ```bash
+   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+   echo "INTERACTION_MODE=$INTERACTION_MODE"
+   ```
+
+   If INTERACTION_MODE is `learning`, output the following block. If `expert`, skip it entirely.
+
+   💡 **How to replicate manually:**
+   ```bash
+   vendor/bin/phpcbf --standard=Drupal web/modules/custom/
+   vendor/bin/phpcs --standard=Drupal web/modules/custom/  # verify remaining issues
+   ```
+   Want to understand which coding standards apply or configure exceptions? Just ask.

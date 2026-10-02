@@ -12,13 +12,26 @@ Internal UI skill for DrupalClaw. Writes `/workspace/.piclaw/watchdog.json` with
 
 1. Detect Drush and write JSON cache:
    ```bash
-   PHP_CONTAINER=$(docker ps --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -E "drupal.*(php|fpm)" | head -1)
+   STACK_STATE="/workspace/.piclaw/stack/state.json"
+   if [[ ! -f "$STACK_STATE" ]]; then
+     echo "ERROR: No Drupal stack configured for this workspace. Run 'drupal-serve' first."
+     exit 1
+   fi
+   PROJECT_NAME=$(jq -r '.project_name // empty' "$STACK_STATE")
+   if [[ -z "$PROJECT_NAME" ]]; then
+     echo "ERROR: Stack config invalid. Run 'drupal-serve' to reinitialize."
+     exit 1
+   fi
+   PHP_CONTAINER=$(docker ps \
+     --filter "status=running" \
+     --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
+     --format '{{.Names}}' 2>/dev/null | grep -iE "php|fpm" | head -1)
    if [[ -n "$PHP_CONTAINER" ]]; then
      DRUSH="docker exec -i -w /var/www/html $PHP_CONTAINER vendor/bin/drush"
    elif [[ -x "vendor/bin/drush" ]]; then
      DRUSH="vendor/bin/drush"
    else
-     echo "ERROR: stack not running"
+     echo "ERROR: Stack '${PROJECT_NAME}' is not running. Run 'drupal-serve' to start it."
      exit 1
    fi
 

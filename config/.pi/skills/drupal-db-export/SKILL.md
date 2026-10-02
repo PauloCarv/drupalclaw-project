@@ -12,15 +12,25 @@ Exports the Drupal DB to a SQL dump.
 
 1. Resolve drush and export dump:
    ```bash
-   PHP_CONTAINER=$(docker ps --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -E "drupal.*(php|fpm)" | head -1)
+   STACK_STATE="/workspace/.piclaw/stack/state.json"
+   if [[ ! -f "$STACK_STATE" ]]; then
+     echo "❌ No Drupal stack configured for this workspace."
+     echo "   Run 'drupal-serve' to initialize the stack."
+     exit 1
+   fi
+   PROJECT_NAME=$(jq -r '.project_name // empty' "$STACK_STATE")
+   PHP_CONTAINER=$(docker ps \
+     --filter "status=running" \
+     --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
+     --format '{{.Names}}' 2>/dev/null | grep -iE "php|fpm" | head -1)
    if [[ -n "$PHP_CONTAINER" ]]; then
-     echo "🐳 Active stack: $PHP_CONTAINER"
+     echo "🐳 Stack: ${PROJECT_NAME} ($PHP_CONTAINER)"
      DRUSH="docker exec -i -w /var/www/html $PHP_CONTAINER vendor/bin/drush"
    elif [[ -x "vendor/bin/drush" ]]; then
      DRUSH="vendor/bin/drush"
    else
-     echo "❌ Docker stack not active and local drush not found."
-     echo "   To start the stack: use drupal-serve"
+     echo "❌ Stack '${PROJECT_NAME}' is not running."
+     echo "   Run 'drupal-serve' to start it."
      exit 1
    fi
 
@@ -33,3 +43,19 @@ Exports the Drupal DB to a SQL dump.
    echo "✅ Exported to $DUMP_FILE"
    ls -lh "$DUMP_FILE"
    ```
+
+3. Didactic block:
+   ```bash
+   INTERACTION_MODE=$(jq -r '.interaction_mode // "learning"' /workspace/.piclaw/user-prefs.json 2>/dev/null || echo "learning")
+   echo "INTERACTION_MODE=$INTERACTION_MODE"
+   ```
+
+   If INTERACTION_MODE is `learning`, output the following block. If `expert`, skip it entirely.
+
+   💡 **How to replicate manually:**
+   ```bash
+   vendor/bin/drush sql:dump | gzip > backup.sql.gz
+   # or via docker:
+   docker exec -i <php-container> vendor/bin/drush sql:dump | gzip > backup.sql.gz
+   ```
+   Want to learn about backup strategies or automating exports? Just ask.
