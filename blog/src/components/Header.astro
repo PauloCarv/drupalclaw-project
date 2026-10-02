@@ -5,8 +5,8 @@ import HeaderLink from './HeaderLink.astro';
 <header>
 	<nav>
 		<a href="/" class="site-title">
-			<img src="/logo.png" alt="DrupalClaw" class="logo-icon" />
-			DrupalClaw
+			<img src="/logo.png" alt="" class="logo-icon" />
+			<span>DrupalClaw <span class="site-suffix">Blog</span></span>
 		</a>
 		<div class="links">
 			<HeaderLink href="/blog">Blog</HeaderLink>
@@ -44,6 +44,10 @@ import HeaderLink from './HeaderLink.astro';
 		text-decoration: none;
 	}
 	.site-title:hover { color: #2dd4bf; }
+	.site-suffix {
+		font-weight: 400;
+		color: var(--text-soft);
+	}
 	.logo-icon {
 		width: 28px;
 		height: 28px;
