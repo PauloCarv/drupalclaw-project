@@ -1,19 +1,40 @@
 ---
 import { Image } from 'astro:assets';
+import type { MarkdownHeading } from 'astro';
 import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 
-type Props = CollectionEntry<'blog'>['data'];
+type Neighbour = { id: string; title: string };
+type Props = CollectionEntry<'blog'>['data'] & {
+	slug?: string;
+	readingTime?: number;
+	headings?: MarkdownHeading[];
+	older?: Neighbour;
+	newer?: Neighbour;
+};
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	heroImage,
+	tag,
+	slug = 'default',
+	readingTime,
+	headings = [],
+	older,
+	newer,
+} = Astro.props;
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
 <html lang="en">
 	<head>
-		<BaseHead title={title} description={description} />
+		<BaseHead title={title} description={description} image={`/og/${slug}.png`} />
 	</head>
 
 	<body>
@@ -21,17 +42,34 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		<Header />
 
 		<main id="main" tabindex="-1">
-			<article>
-				{heroImage && (
-					<div class="hero-image">
-						<Image src={heroImage} alt="" width={1020} height={400} />
-					</div>
+			{heroImage && (
+				<div class="hero-image">
+					<Image src={heroImage} alt="" width={1020} height={400} />
+				</div>
+			)}
+
+			<div class="layout">
+				{toc.length > 1 && (
+					<aside class="toc">
+						<nav aria-label="On this page">
+							<p class="toc-title">On this page</p>
+							<ul>
+								{toc.map((h) => (
+									<li class={`depth-${h.depth}`}>
+										<a href={`#${h.slug}`}>{h.text}</a>
+									</li>
+								))}
+							</ul>
+						</nav>
+					</aside>
 				)}
 
-				<div class="prose">
+				<article class="post">
 					<header class="post-header">
 						<div class="post-meta">
-							<span class="post-date"><FormattedDate date={pubDate} /></span>
+							{tag && <span class="post-tag">{tag}</span>}
+							<span><FormattedDate date={pubDate} /></span>
+							{readingTime && <span>{readingTime} min read</span>}
 							{updatedDate && (
 								<span class="post-updated">Updated <FormattedDate date={updatedDate} /></span>
 							)}
@@ -44,12 +82,43 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 					<div class="post-content">
 						<slot />
 					</div>
-				</div>
-			</article>
 
-			<nav class="post-nav">
-				<a href="/blog" class="back-link">← All articles</a>
-			</nav>
+					<aside class="author">
+						<img src="/logo.png" alt="" width="48" height="48" />
+						<div>
+							<p class="author-name">Paulo Carvalho</p>
+							<p class="author-bio">
+								Creator of DrupalClaw, an open source, agent-first development environment for Drupal.
+							</p>
+							<p class="author-links">
+								<a href="https://github.com/PauloCarv" target="_blank" rel="noopener noreferrer">GitHub</a>
+								<a href="https://www.linkedin.com/in/paulomaiacarvalho" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+							</p>
+						</div>
+					</aside>
+
+					{(older || newer) && (
+						<nav class="pager" aria-label="More articles">
+							{newer ? (
+								<a href={`/blog/${newer.id}/`} class="pager-link">
+									<span class="pager-label">← Newer</span>
+									<span class="pager-title">{newer.title}</span>
+								</a>
+							) : <span />}
+							{older ? (
+								<a href={`/blog/${older.id}/`} class="pager-link pager-older">
+									<span class="pager-label">Older →</span>
+									<span class="pager-title">{older.title}</span>
+								</a>
+							) : <span />}
+						</nav>
+					)}
+
+					<nav class="post-nav">
+						<a href="/blog" class="back-link">← All articles</a>
+					</nav>
+				</article>
+			</div>
 		</main>
 
 		<Footer />
@@ -65,10 +134,10 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 	}
 
 	.hero-image {
-		width: calc(100% + 2em);
-		margin: -3em -1em 2.5em;
+		margin: 0 auto 2.5em;
+		max-width: 60rem;
 		overflow: hidden;
-		border-radius: 0 0 12px 12px;
+		border-radius: 12px;
 	}
 	.hero-image img {
 		width: 100%;
@@ -78,9 +147,48 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		display: block;
 	}
 
-	.prose {
+	.layout {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: flex-start;
+		gap: 2rem 3rem;
+	}
+
+	.toc {
+		flex: 1 1 12rem;
+		max-width: 14rem;
+		position: sticky;
+		top: 1.5rem;
+	}
+	.toc-title {
+		margin: 0 0 0.75em;
+		font-size: 0.75em;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+	.toc ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		border-left: 1px solid var(--border-strong);
+	}
+	.toc li a {
+		display: block;
+		padding: 0.35em 0 0.35em 1em;
+		font-size: 0.88em;
+		line-height: 1.4;
+		color: var(--text-soft);
+	}
+	.toc li.depth-3 a { padding-left: 2em; }
+	.toc li a:hover { color: #fff; }
+
+	.post {
+		flex: 999 1 min(100%, var(--column));
 		max-width: var(--column);
-		margin: 0 auto;
+		min-width: 0;
 	}
 
 	.post-header {
@@ -89,26 +197,28 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 
 	.post-meta {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: 1em;
+		gap: 0.5em 1em;
 		margin-bottom: 1em;
-	}
-
-	.post-date {
 		font-size: 0.82em;
-		color: var(--text-secondary);
 		font-weight: 500;
-		letter-spacing: 0.03em;
+		color: var(--text-soft);
 	}
-
+	.post-tag {
+		padding: 0.15em 0.75em;
+		border: 1px solid var(--border-strong);
+		border-radius: 100px;
+		color: var(--link);
+		font-size: 0.95em;
+	}
 	.post-updated {
-		font-size: 0.78em;
-		color: #7c8db0;
 		font-style: italic;
+		color: var(--text-muted);
 	}
 
 	.post-header h1 {
-		font-size: 2.25em;
+		font-size: clamp(1.75em, 4vw, 2.25em);
 		line-height: 1.2;
 		color: #fff;
 		margin: 0 0 0.6em;
@@ -117,7 +227,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 
 	.post-description {
 		font-size: 1.05em;
-		color: #8899b8;
+		color: var(--text-soft);
 		margin: 0 0 1.5em;
 		line-height: 1.6;
 	}
@@ -129,7 +239,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 	}
 
 	.post-content {
-		font-size: 1.12em;
+		font-size: clamp(1em, 1.4vw + 0.7em, 1.12em);
 		line-height: 1.8;
 		color: #c8d4e8;
 		text-align: left;
@@ -142,23 +252,25 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		margin: 1.5em 0 0.75em;
 		padding-top: 0.75em;
 		border-top: 1px solid #1a2035;
+		scroll-margin-top: 1.5rem;
 	}
 
 	.post-content :global(h3) {
 		font-size: 1.2em;
 		color: #e2e8f4;
 		margin: 1.5em 0 0.5em;
+		scroll-margin-top: 1.5rem;
 	}
 
 	.post-content :global(a) {
-		color: #0e90d9;
+		color: var(--link);
 		text-decoration: underline;
-		text-decoration-color: rgba(14,144,217,0.3);
+		text-decoration-color: rgba(79, 176, 236, 0.35);
 		text-underline-offset: 3px;
 	}
 	.post-content :global(a:hover) {
-		color: #2dd4bf;
-		text-decoration-color: rgba(45,212,191,0.5);
+		color: var(--accent-teal);
+		text-decoration-color: rgba(45, 212, 191, 0.5);
 	}
 
 	.post-content :global(ul),
@@ -178,9 +290,73 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		margin: 1.5em 0;
 	}
 
-	.post-nav {
+	.author {
+		display: flex;
+		gap: 1em;
+		align-items: flex-start;
 		margin-top: 3em;
-		padding-top: 1.5em;
+		padding: 1.25em 1.5em;
+		background: var(--navy-800);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+	}
+	.author img {
+		flex: none;
+		border-radius: 0;
+		object-fit: contain;
+	}
+	.author p { margin: 0; }
+	.author-name { font-weight: 700; color: #fff; }
+	.author-bio {
+		margin-top: 0.25em !important;
+		font-size: 0.92em;
+		line-height: 1.6;
+		color: var(--text-soft);
+	}
+	.author-links {
+		display: flex;
+		gap: 1em;
+		margin-top: 0.5em !important;
+		font-size: 0.88em;
+	}
+	.author-links a {
+		display: inline-block;
+		padding: 0.3em 0;
+		color: var(--link);
+	}
+
+	.pager {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+		gap: 1em;
+		margin-top: 1.5em;
+	}
+	.pager-link {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25em;
+		padding: 1em 1.25em;
+		background: var(--navy-800);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		transition: border-color 0.15s;
+	}
+	.pager-link:hover { border-color: var(--accent); }
+	.pager-older { text-align: right; }
+	.pager-label {
+		font-size: 0.78em;
+		letter-spacing: 0.04em;
+		color: var(--text-muted);
+	}
+	.pager-title {
+		font-weight: 700;
+		line-height: 1.35;
+		color: #fff;
+	}
+
+	.post-nav {
+		margin-top: 2em;
+		padding-top: 1em;
 		border-top: 1px solid #1a2035;
 	}
 
@@ -188,14 +364,8 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		display: inline-block;
 		padding: 0.75em 0;
 		font-size: 0.88em;
-		color: #7c8db0;
+		color: var(--text-muted);
 		transition: color 0.15s;
 	}
 	.back-link:hover { color: #e2e8f4; }
-
-	@media (max-width: 720px) {
-		.post-header h1 { font-size: 1.75em; }
-		.hero-image { margin: -2em -1em 2em; }
-		.post-content { font-size: 1em; }
-	}
 </style>
