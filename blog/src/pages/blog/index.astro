@@ -1,5 +1,4 @@
 ---
-import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
@@ -16,99 +15,91 @@ const posts = (await getCollection('blog')).sort(
 <html lang="en">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-		<style>
-			main {
-				width: 960px;
-			}
-			ul {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
-				margin: 0;
-				padding: 0;
-			}
-			ul li {
-				width: calc(50% - 1rem);
-			}
-			ul li * {
-				text-decoration: none;
-				transition: 0.2s ease;
-			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
-			}
-			ul li:first-child img {
-				width: 100%;
-			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
-			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
-			}
-			ul li a {
-				display: block;
-			}
-			.title {
-				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
-			}
-			.date {
-				margin: 0;
-				color: rgb(var(--gray));
-			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
-			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
-			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
-				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
-				}
-			}
-		</style>
 	</head>
 	<body>
+		<a href="#main" class="skip-link">Skip to content</a>
 		<Header />
-		<main>
-			<section>
-				<ul>
-					{
-						posts.map((post) => (
-							<li>
-								<a href={`/blog/${post.id}/`}>
-									{post.data.heroImage && (
-										<Image width={720} height={360} src={post.data.heroImage} alt="" />
-									)}
-									<h4 class="title">{post.data.title}</h4>
-									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
-								</a>
-							</li>
-						))
-					}
-				</ul>
-			</section>
+		<main id="main" tabindex="-1">
+			<h1>Articles</h1>
+			<ul class="post-list">
+				{posts.map((post) => (
+					<li>
+						<a href={`/blog/${post.id}/`} class="post-card">
+							<span class="post-date"><FormattedDate date={post.data.pubDate} /></span>
+							<h2>{post.data.title}</h2>
+							<p>{post.data.description}</p>
+							<span class="read-more">Read article →</span>
+						</a>
+					</li>
+				))}
+			</ul>
 		</main>
 		<Footer />
 	</body>
 </html>
+
+<style>
+	main {
+		width: 1100px;
+		max-width: calc(100% - 2em);
+		margin: 0 auto;
+		padding: 3em 1em 4em;
+	}
+	h1 {
+		font-size: 2em;
+		margin: 0 auto 1.25em;
+		max-width: var(--column);
+	}
+	.post-list {
+		list-style: none;
+		padding: 0;
+		margin: 0 auto;
+		max-width: var(--column);
+		display: flex;
+		flex-direction: column;
+		gap: 0.75em;
+	}
+	.post-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5em;
+		padding: 1.75em 2em;
+		background: #111827;
+		border: 1px solid #1a2035;
+		border-radius: 10px;
+		color: inherit;
+		transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+	}
+	.post-card:hover {
+		border-color: #0678be;
+		background: #131e30;
+		box-shadow: 0 0 0 1px rgba(6, 120, 190, 0.15), 0 4px 16px rgba(6, 120, 190, 0.08);
+		color: inherit;
+	}
+	.post-date {
+		font-size: 0.78em;
+		color: #8899b8;
+		letter-spacing: 0.02em;
+	}
+	.post-card h2 {
+		margin: 0;
+		font-size: 1.35em;
+		color: #fff;
+		line-height: 1.3;
+	}
+	.post-card p {
+		margin: 0;
+		font-size: 0.98em;
+		color: #8899b8;
+		line-height: 1.6;
+	}
+	.read-more {
+		font-size: 0.82em;
+		color: #0e90d9;
+		margin-top: 0.25em;
+		font-weight: 500;
+	}
+	.post-card:hover .read-more {
+		color: #2dd4bf;
+	}
+</style>
