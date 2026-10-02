@@ -17,11 +17,13 @@ const posts = (await getCollection('blog')).sort(
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 	</head>
 	<body>
+		<a href="#main" class="skip-link">Skip to content</a>
 		<Header />
 
 		<section class="hero">
+			<h1 class="sr-only">DrupalClaw: an agent-first Drupal development environment</h1>
 			<div class="hero-image-wrap">
-				<img src="/banner.png" alt="DrupalClaw — AI-powered Drupal IDE" />
+				<img src="/banner.png" alt="DrupalClaw logo: a claw holding the Drupal drop" />
 			</div>
 			<div class="hero-caption">
 				<div class="hero-badge">Open source · Self-hosted · AI-first</div>
@@ -34,7 +36,7 @@ const posts = (await getCollection('blog')).sort(
 			</div>
 		</section>
 
-		<main>
+		<main id="main" tabindex="-1">
 			<section class="posts-section">
 				<h2 class="section-label">Latest articles</h2>
 				<ul class="post-list">
@@ -119,13 +121,13 @@ const posts = (await getCollection('blog')).sort(
 		color: #8899b8;
 		padding: 0.5em 1.25em;
 		border-radius: 6px;
-		border: 1px solid #2e3f5c;
+		border: 1px solid #667aa3;
 		font-size: 0.88em;
 		transition: border-color 0.15s, color 0.15s;
 	}
 	.btn-ghost:hover {
 		color: #e2e8f4;
-		border-color: #4a5980;
+		border-color: #8899b8;
 	}
 
 	main {
@@ -139,7 +141,7 @@ const posts = (await getCollection('blog')).sort(
 		font-size: 0.75em;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		color: #4a5980;
+		color: #7c8db0;
 		font-weight: 600;
 		margin-bottom: 1.5em;
 	}
@@ -172,7 +174,7 @@ const posts = (await getCollection('blog')).sort(
 	}
 	.post-date {
 		font-size: 0.78em;
-		color: #2dd4bf;
+		color: #8899b8;
 		letter-spacing: 0.02em;
 	}
 	.post-card h3 {
@@ -191,16 +193,16 @@ const posts = (await getCollection('blog')).sort(
 	}
 	.read-more {
 		font-size: 0.82em;
-		color: #0678be;
+		color: #0e90d9;
 		margin-top: 0.25em;
 		font-weight: 500;
 	}
 	.post-card:hover .read-more {
-		color: #0e90d9;
+		color: #2dd4bf;
 	}
 
 	.empty {
-		color: #4a5980;
+		color: #7c8db0;
 		font-style: italic;
 		text-align: center;
 		padding: 3em 0;

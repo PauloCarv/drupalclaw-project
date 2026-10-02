@@ -9,9 +9,10 @@
 	--navy-500: #2e3f5c;
 	--text-primary: #e2e8f4;
 	--text-secondary: #8899b8;
-	--text-muted: #4a5980;
+	--text-muted: #7c8db0;
 	--border: #1a2035;
 	--border-hover: #0678be;
+	--column: 44rem;
 	/* keep legacy vars for Astro template compat */
 	--black: 226, 232, 244;
 	--gray: 136, 153, 184;
@@ -100,7 +101,7 @@ code {
 	border: 1px solid var(--navy-500);
 	border-radius: 4px;
 	font-size: 0.875em;
-	color: var(--accent-teal);
+	color: var(--text-primary);
 	font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 }
 
@@ -139,6 +140,33 @@ hr {
 	body { font-size: 16px; }
 	main { padding: 1.5em 1em; }
 	h1 { font-size: 1.875em; }
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent-teal);
+	outline-offset: 3px;
+	border-radius: 4px;
+}
+
+.skip-link {
+	position: absolute;
+	left: 1em;
+	top: -4em;
+	z-index: 10;
+	padding: 0.6em 1em;
+	background: var(--navy-700);
+	color: #fff;
+	border: 1px solid var(--accent-teal);
+	border-radius: 6px;
+}
+.skip-link:focus { top: 1em; }
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }
 
 .sr-only {

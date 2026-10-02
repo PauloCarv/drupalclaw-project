@@ -18,11 +18,11 @@ const today = new Date();
 		padding: 1.5em;
 		background: #0a0e1a;
 		border-top: 1px solid #1a2035;
-		color: #4a5980;
+		color: #7c8db0;
 		font-size: 0.85em;
 	}
 	.footer-inner {
-		max-width: 760px;
+		max-width: var(--column);
 		margin: 0 auto;
 		display: flex;
 		align-items: center;
@@ -31,7 +31,9 @@ const today = new Date();
 		gap: 0.75em;
 	}
 	a {
-		color: #4a5980;
+		display: inline-block;
+		padding: 0.4em 0;
+		color: #7c8db0;
 		text-decoration: none;
 		transition: color 0.2s;
 	}
