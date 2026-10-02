@@ -4,11 +4,9 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import { getCollection } from 'astro:content';
+import { getPosts } from '../lib/posts';
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+const posts = await getPosts();
 ---
 
 <!doctype html>
@@ -21,17 +19,30 @@ const posts = (await getCollection('blog')).sort(
 		<Header />
 
 		<section class="hero">
-			<h1 class="sr-only">DrupalClaw: an agent-first Drupal development environment</h1>
-			<div class="hero-image-wrap">
-				<img src="/banner.png" alt="DrupalClaw logo: a claw holding the Drupal drop" />
-			</div>
-			<div class="hero-caption">
-				<div class="hero-badge">Open source · Self-hosted · AI-first</div>
-				<div class="hero-cta">
-					<a href="https://github.com/PauloCarv/drupalclaw-project" class="btn-primary" target="_blank" rel="noopener noreferrer">
-						★ Star on GitHub
-					</a>
-					<a href="/blog" class="btn-ghost">Read the blog →</a>
+			<div class="hero-inner">
+				<div class="hero-mark">
+					<img src="/logo.png" alt="" width="260" height="260" />
+				</div>
+				<div class="hero-copy">
+					<h1>Drupal<span>Claw</span></h1>
+					<p class="hero-tagline">An agent-first Drupal development environment</p>
+					<p class="hero-text">
+						Self-hosted in Docker. Scaffold, serve and debug Drupal with an AI agent that does the work
+						and teaches as it goes.
+					</p>
+					<ul class="hero-pills">
+						<li>Drupal skills</li>
+						<li>Self-hosted</li>
+						<li>Multi-LLM</li>
+						<li>Flows &amp; Plans</li>
+						<li>Open source</li>
+					</ul>
+					<div class="hero-cta">
+						<a href="https://github.com/PauloCarv/drupalclaw-project" class="btn-primary" target="_blank" rel="noopener noreferrer">
+							★ Star on GitHub
+						</a>
+						<a href="/blog" class="btn-ghost">Read the blog →</a>
+					</div>
 				</div>
 			</div>
 		</section>
@@ -43,7 +54,11 @@ const posts = (await getCollection('blog')).sort(
 					{posts.map((post) => (
 						<li>
 							<a href={`/blog/${post.id}/`} class="post-card">
-								<span class="post-date"><FormattedDate date={post.data.pubDate} /></span>
+								<span class="post-meta">
+									{post.data.tag && <span class="post-tag">{post.data.tag}</span>}
+									<span class="post-date"><FormattedDate date={post.data.pubDate} /></span>
+									<span class="post-date">{post.readingTime} min read</span>
+								</span>
 								<h3>{post.data.title}</h3>
 								<p>{post.data.description}</p>
 								<span class="read-more">Read article →</span>
@@ -63,40 +78,77 @@ const posts = (await getCollection('blog')).sort(
 
 <style>
 	.hero {
-		width: 100%;
-		background: #0a0e1a;
+		background:
+			radial-gradient(60% 80% at 20% 50%, rgba(6, 120, 190, 0.18), transparent 70%),
+			radial-gradient(50% 70% at 90% 10%, rgba(45, 212, 191, 0.08), transparent 70%),
+			#0a0e1a;
 		border-bottom: 1px solid #1a2035;
 	}
-	.hero-image-wrap {
-		width: 100%;
-		line-height: 0;
+	.hero-inner {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+		align-items: center;
+		gap: clamp(1.5rem, 5vw, 4rem);
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: clamp(2.5rem, 7vw, 5.5rem) 1.5em;
 	}
-	.hero-image-wrap img {
-		width: 100%;
+	.hero-mark {
+		display: flex;
+		justify-content: center;
+	}
+	.hero-mark img {
+		width: clamp(11rem, 26vw, 17rem);
 		height: auto;
-		display: block;
 		border-radius: 0;
+		filter: drop-shadow(0 0 40px rgba(6, 120, 190, 0.35));
 	}
-	.hero-caption {
+	.hero-copy h1 {
+		margin: 0;
+		font-size: clamp(2.75rem, 7vw, 4.5rem);
+		line-height: 1;
+		letter-spacing: -0.03em;
+		color: #fff;
+	}
+	.hero-copy h1 span { color: #1e90f0; }
+	.hero-tagline {
+		margin: 0.6em 0 0.4em;
+		font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+		font-weight: 700;
+		color: #8ec5f2;
+	}
+	.hero-text {
+		max-width: 34rem;
+		margin: 0 0 1.25em;
+		color: var(--text-soft);
+		line-height: 1.6;
+	}
+	.hero-pills {
+		list-style: none;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5em;
+		margin: 0 0 1.75em;
+		padding: 0;
+	}
+	.hero-pills li {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		flex-wrap: wrap;
-		gap: 1em;
-		padding: 1em 2em;
-		background: #0a0e1a;
-		max-width: 1200px;
-		margin: 0 auto;
-	}
-	.hero-badge {
-		display: inline-block;
+		gap: 0.5em;
 		padding: 0.3em 0.9em;
-		border: 1px solid rgba(45, 212, 191, 0.35);
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid var(--border-strong);
 		border-radius: 100px;
-		font-size: 0.78em;
-		color: #2dd4bf;
-		letter-spacing: 0.04em;
-		background: rgba(45, 212, 191, 0.05);
+		font-family: var(--font-mono), monospace;
+		font-size: 0.8em;
+		color: #d4dded;
+	}
+	.hero-pills li::before {
+		content: '';
+		width: 0.5em;
+		height: 0.5em;
+		border-radius: 50%;
+		background: var(--accent-teal);
 	}
 	.hero-cta {
 		display: flex;
@@ -154,6 +206,19 @@ const posts = (await getCollection('blog')).sort(
 		flex-direction: column;
 		gap: 1px;
 	}
+	.post-meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5em 1em;
+	}
+	.post-tag {
+		padding: 0.1em 0.7em;
+		border: 1px solid var(--border-strong);
+		border-radius: 100px;
+		font-size: 0.74em;
+		color: var(--link);
+	}
 	.post-card {
 		display: flex;
 		flex-direction: column;
@@ -206,17 +271,5 @@ const posts = (await getCollection('blog')).sort(
 		font-style: italic;
 		text-align: center;
 		padding: 3em 0;
-	}
-
-	@media (max-width: 640px) {
-		.hero-image-wrap img {
-			height: 260px;
-		}
-		.hero-caption {
-			padding: 0.75em 1em;
-		}
-		main {
-			padding: 2em 1em;
-		}
 	}
 </style>

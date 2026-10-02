@@ -13,6 +13,9 @@
 	--border: #1a2035;
 	--border-hover: #0678be;
 	--column: 44rem;
+	--link: #4fb0ec;
+	--text-soft: #a9b6cf;
+	--border-strong: #2e3f5c;
 	/* keep legacy vars for Astro template compat */
 	--black: 226, 232, 244;
 	--gray: 136, 153, 184;
@@ -102,7 +105,7 @@ code {
 	border-radius: 4px;
 	font-size: 0.875em;
 	color: var(--text-primary);
-	font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+	font-family: var(--font-mono), 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 }
 
 pre {
@@ -114,7 +117,7 @@ pre {
 }
 pre > code {
 	all: unset;
-	font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+	font-family: var(--font-mono), 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 	font-size: 0.875em;
 	color: var(--text-primary);
 	line-height: 1.6;

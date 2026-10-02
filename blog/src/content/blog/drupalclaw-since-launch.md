@@ -2,6 +2,7 @@
 title: 'DrupalClaw, Since Launch: What Happened Next'
 description: 'DrupalClaw launched in June as a bet on agent-first Drupal development. Here is what got validated and what shipped.'
 pubDate: '2026-09-23'
+tag: 'Update'
 ---
 
 DrupalClaw launched in June with a simple claim: Drupal development can be agent-first, not just assisted. A self-hosted workspace where an AI agent runs your stack, scaffolds modules and debugs errors while you stay in control.
@@ -39,4 +40,5 @@ If you tried DrupalClaw in June, the Marketplace and the Usage panel are worth a
 Clone it, run it, break it, and tell me what's missing. Issues and PRs are welcome, and if you build a skill worth sharing, the Marketplace is where it belongs.
 
 **Repo:** [github.com/PauloCarv/drupalclaw-project](https://github.com/PauloCarv/drupalclaw-project)
+
 **Read the launch story:** [DrupalClaw: Bringing Agent-First Development to Drupal](/blog/drupalclaw-launch)
