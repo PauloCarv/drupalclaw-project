@@ -17,9 +17,10 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 	</head>
 
 	<body>
+		<a href="#main" class="skip-link">Skip to content</a>
 		<Header />
 
-		<main>
+		<main id="main" tabindex="-1">
 			<article>
 				{heroImage && (
 					<div class="hero-image">
@@ -78,7 +79,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 	}
 
 	.prose {
-		max-width: 860px;
+		max-width: var(--column);
 		margin: 0 auto;
 	}
 
@@ -95,14 +96,14 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 
 	.post-date {
 		font-size: 0.82em;
-		color: #2dd4bf;
+		color: var(--text-secondary);
 		font-weight: 500;
 		letter-spacing: 0.03em;
 	}
 
 	.post-updated {
 		font-size: 0.78em;
-		color: #4a5980;
+		color: #7c8db0;
 		font-style: italic;
 	}
 
@@ -131,15 +132,15 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		font-size: 1.12em;
 		line-height: 1.8;
 		color: #c8d4e8;
-		text-align: justify;
-		hyphens: auto;
+		text-align: left;
+		hyphens: manual;
 	}
 
 	.post-content :global(h2) {
 		font-size: 1.5em;
 		color: #fff;
-		margin: 2em 0 0.75em;
-		padding-top: 1em;
+		margin: 1.5em 0 0.75em;
+		padding-top: 0.75em;
 		border-top: 1px solid #1a2035;
 	}
 
@@ -184,11 +185,13 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 	}
 
 	.back-link {
+		display: inline-block;
+		padding: 0.75em 0;
 		font-size: 0.88em;
-		color: #4a5980;
+		color: #7c8db0;
 		transition: color 0.15s;
 	}
-	.back-link:hover { color: #8899b8; }
+	.back-link:hover { color: #e2e8f4; }
 
 	@media (max-width: 720px) {
 		.post-header h1 { font-size: 1.75em; }
