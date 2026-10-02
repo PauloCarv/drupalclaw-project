@@ -23,45 +23,20 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 		<main id="main" tabindex="-1">
 			<section class="hero wrap">
 				<div class="hero-copy">
-					<p class="eyebrow">Open source · Self-hosted · AI-first</p>
-					<h1>Agent-first Drupal development.</h1>
+					<p class="eyebrow">The DrupalClaw blog</p>
+					<h1>Building agent-first Drupal tooling, in the open.</h1>
 					<p class="hero-text">
-						A self-hosted workspace where an AI agent scaffolds, serves and debugs your Drupal project,
-						and shows you the commands it ran so you learn as it works.
+						Notes from building DrupalClaw, an open source workspace where an AI agent scaffolds, serves and
+						debugs your Drupal project: what shipped, what got validated, and what I learned.
 					</p>
 					<div class="cta">
-						<a href={REPO} class="btn btn-primary" target="_blank" rel="noopener noreferrer">★ Star on GitHub</a>
-						{featured && <a href={`/blog/${featured.id}/`} class="btn btn-ghost">Read the latest update →</a>}
+						{featured && <a href={`/blog/${featured.id}/`} class="btn btn-primary">Read the latest article →</a>}
+						<a href="/rss.xml" class="btn btn-ghost">Subscribe via RSS</a>
 					</div>
 				</div>
 				<div class="hero-mark">
 					<div class="glow">
 						<img src="/logo.png" alt="DrupalClaw logo: a claw holding the Drupal drop" width="300" height="300" />
-					</div>
-				</div>
-			</section>
-
-			<section class="glance" aria-label="At a glance">
-				<div class="wrap glance-grid">
-					<div>
-						<p class="label">Skills</p>
-						<p class="glance-title">24 Drupal workflows</p>
-						<p class="glance-note">From drupal-init to PHPStan, plus a Marketplace for your own.</p>
-					</div>
-					<div>
-						<p class="label">Providers</p>
-						<p class="glance-title">Copilot, OpenAI, Anthropic</p>
-						<p class="glance-note">Bring the subscription you already have.</p>
-					</div>
-					<div>
-						<p class="label">Runtime</p>
-						<p class="glance-title">Local, in Docker</p>
-						<p class="glance-note">Your code stays on your machine.</p>
-					</div>
-					<div>
-						<p class="label">Modes</p>
-						<p class="glance-title">Learning or Expert</p>
-						<p class="glance-note">Get the result, or the result plus how to do it by hand.</p>
 					</div>
 				</div>
 			</section>
@@ -74,9 +49,6 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 
 				{featured && (
 					<a href={`/blog/${featured.id}/`} class="featured">
-						<div class="featured-art" aria-hidden="true">
-							<img src="/logo.png" alt="" width="120" height="120" />
-						</div>
 						<div class="featured-body">
 							<p class="meta">
 								{featured.data.tag && <span class="tag">{featured.data.tag}</span>}
@@ -103,7 +75,51 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 				))}
 			</section>
 
-			<section class="wrap recognition" aria-label="Recognition">
+			<section class="wrap follow">
+				<div class="follow-box">
+					<div>
+						<h2>Follow the build</h2>
+						<p>New posts land in the RSS feed. Releases and changelogs live on GitHub.</p>
+					</div>
+					<div class="cta">
+						<a href="/rss.xml" class="btn btn-primary">Subscribe via RSS</a>
+						<a href={`${REPO}/releases`} class="btn btn-ghost" target="_blank" rel="noopener noreferrer">Watch releases</a>
+					</div>
+				</div>
+			</section>
+			<section class="project" aria-labelledby="project-title">
+				<div class="wrap project-head">
+					<div>
+						<h2 id="project-title">About the project</h2>
+						<p>DrupalClaw is open source. Everything the blog talks about lives in one repository.</p>
+					</div>
+					<a href={REPO} class="btn btn-primary" target="_blank" rel="noopener noreferrer">★ Star on GitHub</a>
+				</div>
+			<div class="glance">
+				<div class="wrap glance-grid">
+					<div>
+						<p class="label">Skills</p>
+						<p class="glance-title">24 Drupal workflows</p>
+						<p class="glance-note">From drupal-init to PHPStan, plus a Marketplace for your own.</p>
+					</div>
+					<div>
+						<p class="label">Providers</p>
+						<p class="glance-title">Copilot, OpenAI, Anthropic</p>
+						<p class="glance-note">Bring the subscription you already have.</p>
+					</div>
+					<div>
+						<p class="label">Runtime</p>
+						<p class="glance-title">Local, in Docker</p>
+						<p class="glance-note">Your code stays on your machine.</p>
+					</div>
+					<div>
+						<p class="label">Modes</p>
+						<p class="glance-title">Learning or Expert</p>
+						<p class="glance-note">Get the result, or the result plus how to do it by hand.</p>
+					</div>
+				</div>
+			</div>
+			<div class="wrap recognition">
 				<a
 					href="https://www.thedroptimes.com/interview/71976/drupalclaw-agent-first-development-boundaries"
 					class="panel panel-link"
@@ -119,20 +135,8 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 					<p class="panel-title">2nd place · GenAI QuickWins</p>
 					<p class="panel-note">NTT DATA internal challenge, 2026</p>
 				</div>
-			</section>
-
-			<section class="wrap follow">
-				<div class="follow-box">
-					<div>
-						<h2>Follow the build</h2>
-						<p>New posts land in the RSS feed. Releases and changelogs live on GitHub.</p>
-					</div>
-					<div class="cta">
-						<a href="/rss.xml" class="btn btn-ghost">Subscribe via RSS</a>
-						<a href={`${REPO}/releases`} class="btn btn-primary" target="_blank" rel="noopener noreferrer">Watch releases</a>
-					</div>
-				</div>
-			</section>
+			</div>
+		</section>
 		</main>
 
 		<Footer />
@@ -215,7 +219,7 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 	}
 	.hero h1 {
 		margin: 0;
-		font-size: clamp(2.5rem, 5.2vw, 4.25rem);
+		font-size: clamp(2.1rem, 4vw, 3.25rem);
 		line-height: 1.04;
 		letter-spacing: -0.02em;
 		text-wrap: balance;
@@ -247,10 +251,27 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 		border-radius: 0;
 	}
 
-	.glance {
+	.project {
 		border-top: 1px solid var(--border);
-		border-bottom: 1px solid var(--border);
 		background: #0d1220;
+		padding-bottom: 8px;
+	}
+	.project-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		padding-top: 56px;
+	}
+	.project-head h2 {
+		margin: 0 0 0.3em;
+		font-size: 1.55em;
+		color: #fff;
+	}
+	.project-head p {
+		margin: 0;
+		color: var(--text-soft);
 	}
 	.glance-grid {
 		display: grid;
@@ -316,9 +337,7 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 	}
 
 	.featured {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
-		overflow: hidden;
+		display: block;
 		background: var(--navy-800);
 		border: 1px solid var(--border);
 		border-radius: 12px;
@@ -327,28 +346,16 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 	}
 	.featured:hover,
 	.card:hover { border-color: var(--accent); color: inherit; }
-	.featured-art {
-		min-height: 260px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background-color: #0d1424;
-		background-image:
-			linear-gradient(#1a2035 1px, transparent 1px),
-			linear-gradient(90deg, #1a2035 1px, transparent 1px);
-		background-size: 28px 28px;
-	}
-	.featured-art img { border-radius: 0; }
 	.featured-body {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		gap: 14px;
-		padding: 32px;
+		padding: 32px 36px;
 	}
 	.featured-body h3 {
 		margin: 0;
-		font-size: 1.65em;
+		font-size: 1.9em;
 		line-height: 1.2;
 		color: #fff;
 		text-wrap: balance;
@@ -365,7 +372,7 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-		padding: 28px 32px;
+		padding: 32px 36px;
 		background: var(--navy-800);
 		border: 1px solid var(--border);
 		border-radius: 12px;
@@ -407,8 +414,8 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 	}
 
 	.follow {
-		padding-top: 24px;
-		padding-bottom: 88px;
+		padding-top: 48px;
+		padding-bottom: 64px;
 	}
 	.follow-box {
 		display: flex;
