@@ -33,11 +33,6 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 						<a href={REPO} class="btn btn-primary" target="_blank" rel="noopener noreferrer">★ Star on GitHub</a>
 						{featured && <a href={`/blog/${featured.id}/`} class="btn btn-ghost">Read the latest update →</a>}
 					</div>
-					<div class="terminal" role="img" aria-label="Install: clone the repository, then run docker compose from the docker folder">
-						<div><span>$</span> git clone {REPO.replace('https://', '')}</div>
-						<div><span>$</span> cd drupalclaw-project/docker</div>
-						<div><span>$</span> docker compose pull &amp;&amp; docker compose up -d</div>
-					</div>
 				</div>
 				<div class="hero-mark">
 					<div class="glow">
@@ -232,20 +227,6 @@ const REPO = 'https://github.com/PauloCarv/drupalclaw-project';
 		color: var(--text-soft);
 		text-wrap: pretty;
 	}
-	.terminal {
-		max-width: 34em;
-		padding: 16px 20px;
-		background: var(--navy-800);
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		font-family: var(--font-mono), monospace;
-		font-size: 0.78em;
-		line-height: 1.9;
-		color: #c3cde0;
-		overflow-x: auto;
-		white-space: nowrap;
-	}
-	.terminal span { color: var(--accent-teal); }
 	.hero-mark {
 		display: flex;
 		justify-content: center;
