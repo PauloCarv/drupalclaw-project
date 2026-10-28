@@ -13,6 +13,10 @@ const SSE_QUIET_AFTER_STREAM_MS = 4_000
 // commands mid-conversation), use a longer threshold to survive Composer installs etc.
 const SSE_QUIET_BACKGROUND_MS = 30_000
 
+// Minimum SSE silence before PiClaw's own idle status is trusted. Idle can be reported
+// briefly between tool calls, so this plus two consecutive idle checks guards against it.
+const AGENT_IDLE_QUIET_MS = 3_000
+
 // Watchdog: if streaming is true for this long with zero SSE activity, force-clear.
 const STREAMING_WATCHDOG_MS = 10 * 60 * 1000 // 10 minutes
 
@@ -129,6 +133,35 @@ export function useChat() {
   const messages: chatApi.ChatMessage[] = (timeline ?? [])
     .map((post: TimelinePost) => chatApi.normalizeTimelinePost(post))
     .filter((m): m is chatApi.ChatMessage => m !== null)
+
+  // Fast path: once a reply is in the timeline and PiClaw itself reports idle on two
+  // consecutive checks, stop waiting for the SSE quiet period. Covers replies that never
+  // emit 'done' (command responses) and runs where the server finished before the timers.
+  const messagesRef = useRef(messages)
+  messagesRef.current = messages
+  const agentActive = store.isStreaming || store.isAgentRunning
+  useEffect(() => {
+    if (!agentActive) return
+    let idleChecks = 0
+    const id = setInterval(async () => {
+      const startedAt = useChatStore.getState().streamingStartedAt
+      if (!startedAt) return
+      const hasReply = messagesRef.current.some((m) => m.role === 'assistant' && m.timestamp >= startedAt)
+      if (!hasReply || Date.now() - lastSseActivityAt.current < AGENT_IDLE_QUIET_MS) {
+        idleChecks = 0
+        return
+      }
+      idleChecks = (await chatApi.isAgentIdle()) ? idleChecks + 1 : 0
+      // A new send during the request changes the anchor; leave that run alone.
+      if (idleChecks < 2 || useChatStore.getState().streamingStartedAt !== startedAt) return
+      clearWatchdog()
+      store.setStreaming(false)
+      store.setAgentRunning(false)
+      store.setStreamingStartedAt(null)
+      store.clearActivity()
+    }, 2000)
+    return () => clearInterval(id)
+  }, [agentActive, clearWatchdog, store])
 
   // Auto-clear when a new agent message appears in the timeline.
   // Guards:
