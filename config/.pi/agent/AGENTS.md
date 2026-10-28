@@ -97,6 +97,8 @@ The workspace uses sibling Docker containers for the development environment:
 | `drupal-cr` | Cache rebuild (drush cr) |
 | `drupal-status` | Project status: modules, DB, config |
 | `drupal-module [name]` | Scaffold a custom module |
+| `drupal-contrib [module]` | Prepare a module for drupal.org (composer.json, README, GitLab CI, PHPCS) and guide publication |
+| `drupal-theme [name]` | Create a custom theme from the core Starterkit and enable it |
 | `drupal-analyze` | PHPStan + PHPCS on custom code |
 | `drupal-fix` | Auto-fix PHPCS/PHPCBF |
 | `drupal-install [module]` | Install a contrib module |
@@ -280,6 +282,7 @@ Want a step-by-step explanation of what happened? Just ask.
 - Project initialisation (`drupal-init`)
 - Module install (`drupal-install`)
 - Custom module scaffold (`drupal-module`)
+- Contrib preparation and theme scaffold (`drupal-contrib`, `drupal-theme`)
 - DB export/import (`drupal-db-export`, `drupal-db-import`)
 - Code analysis or fixes (`drupal-analyze`, `drupal-fix`)
 - Any bash command that creates, moves, or removes significant files

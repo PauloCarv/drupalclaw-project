@@ -234,6 +234,8 @@ Plans are plain Markdown and can be read and edited directly in any text editor 
 | `drupal-cr` | Cache rebuild (drush cr) |
 | `drupal-status` | Full Drupal status report |
 | `drupal-module [name]` | Scaffold a custom module |
+| `drupal-contrib [module]` | Prepare a custom module for drupal.org and guide its publication |
+| `drupal-theme [name]` | Create a custom theme from the core Starterkit |
 | `drupal-install [module]` | Install a contrib module via Composer + Drush |
 | `drupal-analyze` | PHPStan + PHPCS analysis |
 | `drupal-fix` | Auto-fix code style (PHPCBF) |
