@@ -79,24 +79,50 @@ export function stripPlans(content: string): string {
   return content.replace(/\[PLAN:\s*([^\]]+)\]([\s\S]*?)\[\/PLAN\]/g, '').trim()
 }
 
+// Splits a [PLAN] body into the sections createPlan lays out itself, so they are not written twice.
+function parsePlanBody(body: string): { context: string; steps: string[]; verification: string[] } {
+  const sections: Record<string, string[]> = { context: [], steps: [], verification: [] }
+  let current = 'context'
+  for (const line of body.split('\n')) {
+    const h = line.match(/^##\s+(\w+)/)
+    if (h) {
+      const name = h[1].toLowerCase()
+      if (name in sections) { current = name; continue }
+    }
+    sections[current].push(line)
+  }
+  const items = (lines: string[]) => lines
+    .filter((l) => /^\s*[-*]\s+\S/.test(l))
+    .map((l) => l.replace(/^\s*[-*]\s+(\[[ x]\]\s*)?/i, '').trim())
+  return {
+    context: sections.context.join('\n').trim(),
+    steps: items(sections.steps),
+    verification: items(sections.verification),
+  }
+}
+
 export function PlanSaveCard({ title, body }: { title: string; body: string }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { loadPlans, selectPlan, addOrUpdateSummary } = usePlansStore()
   const { setMainTab } = useLayoutStore()
 
   const handleSave = async () => {
     if (saving || saved) return
     setSaving(true)
+    setError(null)
     try {
-      const steps = (body.match(/^- \[[ x]\] .+/gm) ?? []).map((l) => l.replace(/^- \[[ x]\] /, ''))
-      const id = await createPlan({ title, source: 'chat', context: body, steps })
+      const { context, steps, verification } = parsePlanBody(body)
+      const id = await createPlan({ title, source: 'chat', context, steps, verification })
       const now = new Date().toISOString()
       addOrUpdateSummary({ id, title, status: 'draft', source: 'chat', created: now, updated: now })
       setMainTab('plans')
       setSaved(true)
       await selectPlan(id)
       setTimeout(() => loadPlans(), 1500)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save the plan')
     } finally {
       setSaving(false)
     }
@@ -109,6 +135,7 @@ export function PlanSaveCard({ title, body }: { title: string; body: string }) {
         <p className="text-[10px] text-navy-400 truncate">
           {body.split('\n').find((l) => l.trim() && !l.startsWith('#')) ?? 'Save to Plans tab'}
         </p>
+        {error && <p className="text-[10px] text-accent-red truncate">{error}</p>}
       </div>
       <button
         type="button"

@@ -185,13 +185,14 @@ export async function createPlan(opts: {
     steps: opts.steps ?? [],
     verification: opts.verification ?? [],
   })
-  const b64 = btoa(unescape(encodeURIComponent(md)))
   const key = `piclaw_plans_write_${Date.now().toString(36)}`
+  // The PTY drops shell lines longer than ~4KB, so the content goes through PUT; the file must exist first.
   await runWorkspaceCommand(
-    `mkdir -p /workspace/.piclaw/plans/runs && printf '%s' '${b64}' | base64 -d > /workspace/.piclaw/plans/${id}.md`,
+    `mkdir -p /workspace/${PLANS_DIR}/runs && touch /workspace/${PLANS_DIR}/${id}.md`,
     20000,
     key,
   )
+  await apiPut('/workspace/file', { path: `${PLANS_DIR}/${id}.md`, content: md })
   return id
 }
 
