@@ -34,7 +34,11 @@ export function MarketplacePanel() {
 
   const removeMutation = useMutation({
     mutationFn: (slug: string) => removeMarketplace(slug),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['marketplace-registry'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['marketplace-registry'] })
+      qc.invalidateQueries({ queryKey: ['commands'] })
+      qc.invalidateQueries({ queryKey: ['skills'] })
+    },
   })
 
   const doFetch = async (url: string, token?: string) => {
@@ -60,18 +64,22 @@ export function MarketplacePanel() {
   const handleInstallSkill = async (
     manifest: MarketplaceManifest,
     url: string,
-    skillName: string
+    skillName: string,
+    update = false,
   ) => {
     const skill = manifest.skills.find((s) => s.name === skillName)
     if (!skill) return
     const key = `skill:${skillName}`
-    if (installed.has(key)) return  // already installed — ignore click
+    if (installed.has(key) && !update) return
     setInstalling((prev) => new Set([...prev, key]))
     setInstallError(null)
     try {
       await installMarketplaceSkill(skill, manifest.slug, tokenInput.trim() || undefined)
       await registerMarketplace(manifest, url, skillName)
       qc.invalidateQueries({ queryKey: ['marketplace-registry'] })
+      // The chat autocomplete and the Skills list cache PiClaw's command list.
+      qc.invalidateQueries({ queryKey: ['commands'] })
+      qc.invalidateQueries({ queryKey: ['skills'] })
       setInstalled((prev) => new Set([...prev, key]))
     } catch (err) {
       setInstallError(err instanceof Error ? err.message : 'Install failed')
@@ -152,7 +160,7 @@ export function MarketplacePanel() {
             installed={installed}
             installing={installing}
             installError={installError}
-            onInstallSkill={(name) => handleInstallSkill(view.manifest, view.url, name)}
+            onInstallSkill={(name, update) => handleInstallSkill(view.manifest, view.url, name, update)}
             onInstallMcp={(id) => handleInstallMcp(view.manifest, view.url, id)}
             onBack={() => { setView({ mode: 'list' }); setInstalled(new Set()); setInstallError(null) }}
           />
@@ -191,7 +199,7 @@ function CatalogView({
   installed: Set<string>
   installing: Set<string>
   installError: string | null
-  onInstallSkill: (name: string) => void
+  onInstallSkill: (name: string, update?: boolean) => void
   onInstallMcp: (id: string) => void
   onBack: () => void
 }) {
@@ -241,7 +249,7 @@ function CatalogView({
       {newlyInstalled > 0 && (
         <div className="p-2 rounded-lg bg-accent-green/10 border border-accent-green/20 text-[11px] text-accent-green flex items-center gap-1.5">
           <CheckCircle size={11} />
-          {newlyInstalled} skill{newlyInstalled > 1 ? 's' : ''} instalada{newlyInstalled > 1 ? 's' : ''}. Corre <code className="font-mono mx-0.5">/restart</code> no chat para activar.
+          {newlyInstalled} skill{newlyInstalled > 1 ? 's' : ''} installed. Run <code className="font-mono mx-0.5">/restart</code> in the chat to activate.
         </div>
       )}
 
@@ -262,7 +270,7 @@ function CatalogView({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filtrar skills..."
+                placeholder="Filter skills..."
                 className="w-full text-[11px] bg-navy-700 border border-navy-600 rounded-lg pl-7 pr-3 py-1.5 text-gray-300 placeholder-navy-400 focus:outline-none focus:border-ai-teal"
               />
             </div>
@@ -289,12 +297,13 @@ function CatalogView({
                     installed={isInstalled}
                     installing={isInstalling}
                     onClick={() => onInstallSkill(skill.name)}
+                    onUpdate={() => onInstallSkill(skill.name, true)}
                   />
                 </div>
               )
             })}
             {filteredSkills.length === 0 && (
-              <div className="text-center py-4 text-navy-400 text-[11px]">Sem resultados para "{search}"</div>
+              <div className="text-center py-4 text-navy-400 text-[11px]">No results for "{search}"</div>
             )}
           </div>
         </section>
@@ -346,15 +355,27 @@ function InstallButton({
   installed,
   installing,
   onClick,
+  onUpdate,
 }: {
   installed: boolean
   installing: boolean
   onClick: () => void
+  onUpdate?: () => void
 }) {
   if (installed) {
     return (
-      <span className="flex items-center gap-1 text-[10px] text-accent-green flex-shrink-0">
-        <CheckCircle size={11} /> Instalada
+      <span className="flex items-center gap-2 text-[10px] text-accent-green flex-shrink-0">
+        <span className="flex items-center gap-1"><CheckCircle size={11} /> Installed</span>
+        {onUpdate && (
+          <button
+            onClick={onUpdate}
+            disabled={installing}
+            title="Download the current version from the catalog again"
+            className="px-1.5 py-0.5 bg-navy-600 hover:bg-navy-500 disabled:opacity-50 text-gray-300 rounded"
+          >
+            {installing ? <Loader size={10} className="animate-spin" /> : 'Update'}
+          </button>
+        )}
       </span>
     )
   }
@@ -365,7 +386,7 @@ function InstallButton({
       className="flex items-center gap-1 px-2 py-1 text-[10px] bg-drupal-blue hover:bg-drupal-blue-light disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors flex-shrink-0"
     >
       {installing ? <Loader size={10} className="animate-spin" /> : <Download size={10} />}
-      {installing ? 'A instalar...' : 'Instalar'}
+      {installing ? 'Installing...' : 'Install'}
     </button>
   )
 }
