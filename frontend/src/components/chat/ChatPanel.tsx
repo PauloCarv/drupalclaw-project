@@ -246,6 +246,14 @@ export function ChatPanel() {
     ? messages.reduce<string | undefined>((last, m) => m.role === 'user' ? m.id : last, undefined)
     : undefined
 
+  // The agent can post an intermediate reply to the timeline while it keeps working, and the
+  // draft behind the streaming bubble still holds that same text until 'done' clears it.
+  const norm = (s: string) => s.replace(/\s+/g, ' ').trim()
+  const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant')
+  const streamAlreadyPosted = !!streamingContent && !!lastAssistant &&
+    (streamingStartedAt == null || lastAssistant.timestamp >= streamingStartedAt) &&
+    norm(lastAssistant.content).startsWith(norm(streamingContent))
+
   const getMsgStatus = (id: string, role: string): MsgStatus | undefined => {
     if (role !== 'user') return undefined
     if (failedMsgs.has(id)) return 'error'
@@ -350,7 +358,7 @@ export function ChatPanel() {
           })
         })()}
 
-        {isStreaming && streamingContent && (
+        {isStreaming && streamingContent && !streamAlreadyPosted && (
           <MessageBubble role="assistant" content={streamingContent} streaming />
         )}
 
