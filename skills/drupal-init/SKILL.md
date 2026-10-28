@@ -437,6 +437,11 @@ if [[ "$STACK_RUNNING" == "true" ]]; then
     --site-name="My Drupal Site" \
     --locale=en \
     -y 2>&1 | tail -5
+  mkdir -p /workspace/.piclaw
+  printf '{"installed":true,"admin_user":"%s","admin_pass":"%s","admin_email":"%s"}' \
+    "$ADMIN_USER" "$ADMIN_PASS" "$ADMIN_EMAIL" \
+    > /workspace/.piclaw/pending-install.json
+  chmod 600 /workspace/.piclaw/pending-install.json
   echo "DRUPAL_INSTALLED=true"
   echo "ADMIN_USER=$ADMIN_USER"
   echo "ADMIN_PASS=$ADMIN_PASS"
@@ -445,9 +450,10 @@ else
   # Save credentials for later reference
   ADMIN_PASS=$(cat /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 8)$(cat /dev/urandom | tr -dc '0-9' | head -c 2)$(cat /dev/urandom | tr -dc '!@#' | head -c 2)
   mkdir -p /workspace/.piclaw
-  printf '{"admin_user":"%s","admin_pass":"%s","admin_email":"%s"}' \
+  printf '{"installed":false,"admin_user":"%s","admin_pass":"%s","admin_email":"%s"}' \
     "$ADMIN_USER" "$ADMIN_PASS" "$ADMIN_EMAIL" \
     > /workspace/.piclaw/pending-install.json
+  chmod 600 /workspace/.piclaw/pending-install.json
   echo "DRUPAL_INSTALLED=false"
   echo "ADMIN_USER=$ADMIN_USER"
   echo "ADMIN_PASS=$ADMIN_PASS"
@@ -507,6 +513,10 @@ echo "📦 Docker stack structure prepared in .piclaw/stack/"
 
 ## Step 7 — Final report
 
+The final message to the user MUST show the site URL, the username and the password in plain text,
+copied from this report. Never omit them or say "see above": each step runs in its own shell, so the
+credentials from Step 4 are only available here through `/workspace/.piclaw/pending-install.json`.
+
 ```bash
 STATE_FILE="/workspace/.piclaw/stack/state.json"
 STACK_URL=$(jq -r '.drupal_url // ""' "$STATE_FILE" 2>/dev/null)
@@ -514,7 +524,9 @@ STACK_URL=$(jq -r '.drupal_url // ""' "$STATE_FILE" 2>/dev/null)
 # Read install credentials if available
 ADMIN_USER=""
 ADMIN_PASS=""
+DRUPAL_INSTALLED="false"
 if [[ -f "/workspace/.piclaw/pending-install.json" ]]; then
+  DRUPAL_INSTALLED=$(jq -r '.installed // false' /workspace/.piclaw/pending-install.json 2>/dev/null)
   ADMIN_USER=$(jq -r '.admin_user // ""' /workspace/.piclaw/pending-install.json 2>/dev/null)
   ADMIN_PASS=$(jq -r '.admin_pass // ""' /workspace/.piclaw/pending-install.json 2>/dev/null)
 fi
@@ -541,19 +553,18 @@ if [[ "$DRUPAL_INSTALLED" == "true" ]]; then
   echo "   👤  Username:  $ADMIN_USER"
   echo "   🔑  Password:  $ADMIN_PASS"
   echo ""
-  echo "   Save these credentials — they will not be shown again."
+  echo "   Saved in /workspace/.piclaw/pending-install.json (local only)."
   echo "═══════════════════════════════════════════════════"
 elif [[ -n "$ADMIN_USER" ]]; then
   echo "═══════════════════════════════════════════════════"
   echo "👉  Next: start the stack, then install Drupal"
   echo ""
   echo "   1. Run: drupal-serve"
-  echo "   2. Drupal will install automatically with these credentials:"
+  echo "   2. Install Drupal with these credentials:"
   echo ""
   echo "   👤  Username:  $ADMIN_USER"
   echo "   🔑  Password:  $ADMIN_PASS"
   echo ""
-  echo "   Or install manually after the stack starts:"
   echo "   vendor/bin/drush site:install standard --account-name=$ADMIN_USER --account-pass='$ADMIN_PASS' -y"
   echo "═══════════════════════════════════════════════════"
 else
