@@ -16,7 +16,7 @@ RUN npm run build
 # -----------------------------------------------------------------------------
 # Stage 2: Final runtime image — based on working PiClaw
 # -----------------------------------------------------------------------------
-FROM ghcr.io/rcarmo/piclaw:latest
+FROM ghcr.io/rcarmo/piclaw:v3.2.5
 
 # Detect where piclaw is installed (path varies by platform/version)
 ARG PICLAW_DIR=/usr/local/lib/bun/install/global/node_modules/piclaw
