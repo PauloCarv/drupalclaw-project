@@ -76,6 +76,16 @@ export async function getAgentStatus(): Promise<{ status: string }> {
   }
 }
 
+// Unlike getAgentStatus, a failed request counts as "not idle" so it can never clear the spinner.
+export async function isAgentIdle(): Promise<boolean> {
+  try {
+    const s = await apiGet<{ status?: string; state?: string }>('/agent/status')
+    return s.state === 'idle' && s.status === 'idle'
+  } catch {
+    return false
+  }
+}
+
 export async function getSessions(): Promise<ChatSession[]> {
   const data = await apiGet<any>('/agent/session-tree')
   if (Array.isArray(data)) return data
