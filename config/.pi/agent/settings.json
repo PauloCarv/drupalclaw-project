@@ -1,6 +1,6 @@
 {
   "defaultProvider": "github-copilot",
-  "defaultModel": "claude-sonnet-4.6",
+  "defaultModel": "claude-sonnet-5",
   "defaultThinkingLevel": "medium",
   "compaction": {
     "enabled": true

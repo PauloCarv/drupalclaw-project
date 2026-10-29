@@ -339,7 +339,7 @@ export function WatchdogPanel() {
         <div className="px-4 py-1.5 border-t border-navy-500 text-[10px] text-navy-400 flex items-center gap-2 flex-shrink-0">
           <span>{visible.length} de {entries.length} registos</span>
           {entries.length > 0 && (
-            <span className="opacity-50">· clica numa linha para analisar no chat</span>
+            <span className="opacity-50">· click a line to analyse it in the chat</span>
           )}
         </div>
       )}

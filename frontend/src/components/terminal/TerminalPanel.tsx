@@ -87,7 +87,7 @@ export function TerminalPanel() {
             </button>
           )
         })}
-        <span className="ml-auto text-[9px] text-navy-500">clica para entrar no contexto</span>
+        <span className="ml-auto text-[9px] text-navy-500">click to enter the context</span>
       </div>
 
       {/* Terminal */}

@@ -111,7 +111,7 @@ function TurnRow({ turn, index }: { turn: TurnStats; index: number }) {
       >
         <div className="flex items-center gap-2">
           {open ? <ChevronDown size={11} className="text-navy-400" /> : <ChevronRight size={11} className="text-navy-400" />}
-          <span className="text-[11px] text-navy-300">Turn {index + 1}</span>
+          <span className="text-[11px] text-navy-300">Call {index + 1}</span>
           <span className={`text-[10px] font-mono font-semibold ${cacheHitColor(turn.cacheHitRate)}`}>
             {fmtRate(turn.cacheHitRate)} cache
           </span>
@@ -219,7 +219,7 @@ export function UsagePanel() {
           <div>
             <h2 className="text-sm font-semibold text-gray-200">Usage & Performance</h2>
             <p className="text-[10px] text-navy-400 mt-0.5">
-              Session totals since container start · refreshes every 30s
+              Totals for the current chat session (flows not included) · refreshes every 30s
             </p>
           </div>
           <button
@@ -240,13 +240,13 @@ export function UsagePanel() {
             sub={`${fmtTokens(totals.inputTokens + totals.outputTokens)} fresh · ${fmtTokens(totals.cacheReadTokens)} cached`}
           />
           <StatCard
-            label="Session Cost"
+            label="Estimated Cost"
             value={fmtCost(totals.costTotal)}
-            sub="as reported by PiClaw"
+            sub="list-price estimate, not your bill"
             accent="text-amber-400"
           />
           <StatCard
-            label="Agent Turns"
+            label="Model Calls"
             value={String(totals.runs)}
             sub="since container start"
           />
@@ -273,7 +273,7 @@ export function UsagePanel() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Clock size={13} className="text-navy-400" />
-                <span className="text-[11px] uppercase tracking-wider text-navy-300 font-semibold">Last Turn</span>
+                <span className="text-[11px] uppercase tracking-wider text-navy-300 font-semibold">Last Call</span>
               </div>
               <span className="text-[10px] text-navy-400">{fmtRelative(latest.runAt)}</span>
             </div>
@@ -295,7 +295,7 @@ export function UsagePanel() {
               </span>
             </div>
 
-            {/* Last turn token bar */}
+            {/* Last call token bar */}
             <TokenBar totals={{
               ...totals,
               inputTokens: latest.inputTokens,
@@ -435,9 +435,9 @@ export function UsagePanel() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Total cost', value: fmtCost(totals.costTotal), accent: 'text-amber-400' },
-              { label: 'Per turn avg', value: totals.runs > 0 ? fmtCost(totals.costTotal / totals.runs) : '—', accent: 'text-amber-300' },
+              { label: 'Per call avg', value: totals.runs > 0 ? fmtCost(totals.costTotal / totals.runs) : '—', accent: 'text-amber-300' },
               { label: 'Per 1K tokens', value: totals.totalTokens > 0 ? fmtCost((totals.costTotal / totals.totalTokens) * 1000) : '—', accent: 'text-navy-300' },
-              { label: 'Last turn', value: latest ? fmtCost(latest.costTotal) : '—', accent: 'text-navy-300' },
+              { label: 'Last call', value: latest ? fmtCost(latest.costTotal) : '—', accent: 'text-navy-300' },
             ].map(({ label, value, accent }) => (
               <div key={label} className="bg-navy-700 rounded p-2.5">
                 <span className="text-[9px] uppercase tracking-wide text-navy-400 block">{label}</span>
@@ -446,8 +446,8 @@ export function UsagePanel() {
             ))}
           </div>
           <p className="text-[9px] text-navy-500">
-            Cost as reported by PiClaw — reflects actual provider billing (e.g. GitHub Copilot subscription: $0 marginal).
-            Figures are informational.
+            Estimated from the model list prices in PiClaw's catalogue, not from your invoice. With a GitHub Copilot
+            plan, usage is counted in premium requests (see GitHub billing), so the real cost is usually much lower.
           </p>
         </div>
 
@@ -464,7 +464,7 @@ export function UsagePanel() {
                 <thead>
                   <tr className="text-navy-400 text-[9px] uppercase tracking-wider border-b border-navy-600">
                     <th className="text-left pb-1.5 pr-3 font-medium">Provider / Model</th>
-                    <th className="text-right pb-1.5 px-3 font-medium">Turns</th>
+                    <th className="text-right pb-1.5 px-3 font-medium">Calls</th>
                     <th className="text-right pb-1.5 px-3 font-medium">Tokens</th>
                     <th className="text-right pb-1.5 px-3 font-medium">Avg Cache</th>
                     <th className="text-right pb-1.5 pl-3 font-medium">Cost</th>
@@ -498,14 +498,14 @@ export function UsagePanel() {
               <div className="flex items-center gap-2">
                 <Clock size={13} className="text-navy-400" />
                 <span className="text-[11px] uppercase tracking-wider text-navy-300 font-semibold">
-                  Turn History
+                  Call History
                 </span>
-                <span className="text-[10px] text-navy-500">persists across refreshes · {turns.length} turns</span>
+                <span className="text-[10px] text-navy-500">this browser only, mixes sessions · {turns.length} calls</span>
               </div>
               <button
                 onClick={clearTurns}
                 className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-navy-400 hover:text-accent-red border border-navy-600 hover:border-accent-red/40 rounded transition-colors"
-                title="Clear turn history"
+                title="Clear call history"
               >
                 <Trash2 size={9} />
                 Clear
@@ -516,7 +516,7 @@ export function UsagePanel() {
                 <TurnRow key={turn.runAt + i} turn={turn} index={i} />
               ))}
             </div>
-            <p className="text-[9px] text-navy-500">Saved to localStorage · survives page refresh · max 50 turns.</p>
+            <p className="text-[9px] text-navy-500">Each entry is one model call (an agent turn makes several). Saved to localStorage, survives page refresh, max 50 calls.</p>
           </div>
         )}
 
