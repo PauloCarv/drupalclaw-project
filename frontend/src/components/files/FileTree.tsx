@@ -203,7 +203,7 @@ export function FileTree() {
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={handleCreateKeyDown}
             onBlur={() => { if (!creating) cancelCreate() }}
-            placeholder={creatingType === 'folder' ? 'nome-pasta ou pasta/sub' : 'nome.ext ou pasta/nome.ext'}
+            placeholder={creatingType === 'folder' ? 'folder-name or folder/sub' : 'name.ext or folder/name.ext'}
             className="flex-1 bg-transparent text-xs text-gray-200 outline-none placeholder:text-navy-400 min-w-0"
           />
           {creating && <Loader2 size={9} className="animate-spin text-navy-400 flex-shrink-0" />}
@@ -476,7 +476,7 @@ function TreeNode({ node, depth, isHidden = false, onRefresh, onSiblingDelete, o
             disabled={deleting}
             className="text-[9px] font-medium text-accent-red hover:bg-accent-red/20 px-1.5 py-0.5 rounded transition-colors disabled:opacity-50"
           >
-            {deleting ? <Loader2 size={8} className="animate-spin" /> : 'Sim'}
+            {deleting ? <Loader2 size={8} className="animate-spin" /> : 'Yes'}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setConfirmDelete(false) }}
@@ -519,14 +519,14 @@ function TreeNode({ node, depth, isHidden = false, onRefresh, onSiblingDelete, o
                 <button
                   onClick={(e) => { e.stopPropagation(); expandAndCreate('file') }}
                   className="p-0.5 rounded text-gray-400 hover:text-white transition-colors"
-                  title={`Novo ficheiro em ${node.name}`}
+                  title={`New file in ${node.name}`}
                 >
                   <FilePlus size={9} />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); expandAndCreate('folder') }}
                   className="p-0.5 rounded text-gray-400 hover:text-white transition-colors"
-                  title={`Nova pasta em ${node.name}`}
+                  title={`New folder in ${node.name}`}
                 >
                   <FolderPlus size={9} />
                 </button>
@@ -579,7 +579,7 @@ function TreeNode({ node, depth, isHidden = false, onRefresh, onSiblingDelete, o
                 onChange={(e) => setNewChildName(e.target.value)}
                 onKeyDown={handleCreateChildKeyDown}
                 onBlur={() => { if (!creatingChildInProgress) cancelChildCreate() }}
-                placeholder={creatingChildType === 'folder' ? 'nova-pasta' : 'ficheiro.ext'}
+                placeholder={creatingChildType === 'folder' ? 'new-folder' : 'file.ext'}
                 className="flex-1 bg-transparent text-xs text-gray-200 outline-none placeholder:text-navy-400 min-w-0"
               />
               {creatingChildInProgress && <Loader2 size={9} className="animate-spin text-navy-400 flex-shrink-0" />}

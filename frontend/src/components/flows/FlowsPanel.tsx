@@ -46,7 +46,7 @@ export function FlowsPanel() {
             onClick={() => setEditing('new')}
             className="ml-auto flex items-center gap-1.5 px-3 py-1 text-xs bg-drupal-blue hover:bg-drupal-blue-light text-white rounded-lg transition-colors mb-1"
           >
-            <Plus size={12} /> Novo flow
+            <Plus size={12} /> New flow
           </button>
         )}
       </div>
