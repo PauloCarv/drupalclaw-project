@@ -101,9 +101,9 @@ function buildFlowPrompt(flow: Flow): string {
   const steps = flow.steps.map((s, i) => {
     if (s.type === 'skill') return `Step ${i + 1} (skill): ${s.command}`
     if (s.type === 'mcp') return `Step ${i + 1} (MCP ${s.mcpServer ?? ''}): ${s.content}`
-    return `Step ${i + 1} (mensagem): ${s.content}`
+    return `Step ${i + 1} (instruction): ${s.content}`
   }).join('\n')
-  return `${flowMarker(flow.id)}\nExecuta o flow "${flow.name}" com os seguintes steps sequencialmente:\n\n${steps}\n\nExecuta cada step por ordem. Se um step falhar, reporta o erro e continua.`
+  return `${flowMarker(flow.id)}\nRun the flow "${flow.name}" sequentially:\n\n${steps}\n\nExecute each step in order. If a step fails, report the error and continue.`
 }
 
 export async function registerFlowSchedule(flow: Flow): Promise<void> {

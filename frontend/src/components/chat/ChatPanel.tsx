@@ -210,7 +210,7 @@ export function ChatPanel() {
 
     const rawContent = trimmed || attachments.map((a) => a.file.name).join(', ')
     const content = planMode
-      ? `[PLAN MODE] Before executing anything, analyse the request carefully and produce a structured plan using the [PLAN: title]...[/PLAN] format (with ## Context, ## Steps as unchecked checkboxes - [ ], ## Verification as unchecked checkboxes - [ ]). Do NOT execute any steps yet. Do NOT mention file paths or internal storage details. After presenting the plan, ask the user (in Portuguese) whether they want to: save it to Plans, execute it directly, or modify it first.\n\nUser request: ${rawContent}`
+      ? `[PLAN MODE] Before executing anything, analyse the request carefully and produce a structured plan using the [PLAN: title]...[/PLAN] format (with ## Context, ## Steps as unchecked checkboxes - [ ], ## Verification as unchecked checkboxes - [ ]). Do NOT execute any steps yet. Do NOT mention file paths or internal storage details. After presenting the plan, ask the user whether they want to: save it to Plans, execute it directly, or modify it first.\n\nUser request: ${rawContent}`
       : rawContent
     setInput('')
     await doSend(content, mediaUploads)
