@@ -50,7 +50,7 @@ function RunStatusBadge({ run, flowName, onSendToChat, onCreatePlan }: RunStatus
 
   const handleSendToChat = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const output = run.error ? `ERRO:\n${run.error}\n\n${run.result ?? ''}` : (run.result ?? '')
+    const output = run.error ? `ERROR:\n${run.error}\n\n${run.result ?? ''}` : (run.result ?? '')
     onSendToChat(`Analyse the results of flow "${flowName}":\n\n${output}`)
   }
 

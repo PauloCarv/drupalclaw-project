@@ -93,7 +93,7 @@ export function DrushPanel() {
         ))}
 
         <span className="ml-auto text-[9px] text-navy-500 flex-shrink-0">
-          {inPhp ? 'PHP activo' : 'entra em PHP primeiro'}
+          {inPhp ? 'PHP active' : 'enter the PHP container first'}
         </span>
       </div>
 

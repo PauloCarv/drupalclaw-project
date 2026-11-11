@@ -112,7 +112,7 @@ export function TopBar() {
           {open && (
             <div className="absolute right-0 top-full mt-1 w-72 bg-navy-700 border border-navy-500 rounded-lg shadow-xl z-50 overflow-hidden">
               <div className="px-3 py-2 border-b border-navy-600">
-                <span className="text-[10px] uppercase tracking-wider text-navy-400">Seleccionar modelo</span>
+                <span className="text-[10px] uppercase tracking-wider text-navy-400">Select model</span>
               </div>
               <div className="max-h-80 overflow-y-auto">
                 {Object.entries(grouped).map(([provider, models]) => (

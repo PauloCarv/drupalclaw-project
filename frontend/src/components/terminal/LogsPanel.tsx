@@ -70,7 +70,7 @@ export function LogsPanel() {
 
         {/* Follow toggle */}
         <button
-          title="Seguir logs em tempo real (docker logs -f)"
+          title="Follow logs in real time (docker logs -f)"
           onClick={() => {
             if (active) showLogs(active, !following)
             else setFollowing((f) => !f)
@@ -95,7 +95,7 @@ export function LogsPanel() {
         )}
 
         <span className="ml-auto text-[9px] text-navy-500 truncate">
-          {active ? active.name : 'selecciona um container'}
+          {active ? active.name : 'select a container'}
         </span>
       </div>
 
