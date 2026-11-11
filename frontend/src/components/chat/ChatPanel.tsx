@@ -32,10 +32,10 @@ function formatTimestamp(ts: number): string {
   const yesterday = new Date(now)
   yesterday.setDate(now.getDate() - 1)
   const isYesterday = d.toDateString() === yesterday.toDateString()
-  const time = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   if (isToday) return time
-  if (isYesterday) return `ontem ${time}`
-  return d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) + ' ' + time
+  if (isYesterday) return `yesterday ${time}`
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + time
 }
 
 export function ChatPanel() {
