@@ -61,7 +61,7 @@ export function SettingsPanel() {
 
         {/* ── Model & Provider ─────────────────────────── */}
         <section>
-          <h4 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Modelo</h4>
+          <h4 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Model</h4>
 
           {/* Current model card */}
           {currentModel ? (
@@ -117,13 +117,13 @@ export function SettingsPanel() {
             onClick={() => setShowProvider(true)}
             className="mt-2 w-full text-[11px] text-navy-300 hover:text-ai-teal py-1.5 border border-navy-500 rounded transition-colors"
           >
-            Mudar Provider
+            Change provider
           </button>
         </section>
 
         {/* ── Identity ─────────────────────────────────── */}
         <section>
-          <h4 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Identidade</h4>
+          <h4 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Identity</h4>
           <div className="flex items-center justify-between py-1 gap-3">
             <div className="flex-1 min-w-0">
               <span className="text-[11px] text-navy-300 block">Display name</span>
@@ -142,7 +142,7 @@ export function SettingsPanel() {
 
         {/* ── Agent behaviour ──────────────────────────── */}
         <section>
-          <h4 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Agente</h4>
+          <h4 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Agent</h4>
 
           <div className="flex items-center justify-between py-1">
             <div className="flex-1 min-w-0 pr-2">
@@ -189,7 +189,7 @@ export function SettingsPanel() {
           <h4 className="text-[10px] uppercase tracking-wider text-navy-400 mb-2">Editor / Terminal</h4>
 
           <div className="flex items-center justify-between py-1">
-            <span className="text-[11px] text-navy-300">Tamanho do texto</span>
+            <span className="text-[11px] text-navy-300">Text size</span>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setFontSize(Math.max(10, fontSize - 1))}

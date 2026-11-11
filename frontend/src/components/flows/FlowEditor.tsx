@@ -407,7 +407,7 @@ export function FlowEditor({ initial, onSave, onClose }: Props) {
             </div>
 
             {steps.length === 0 && (
-              <p className="text-[10px] text-navy-400 italic">Adiciona pelo menos um step.</p>
+              <p className="text-[10px] text-navy-400 italic">Add at least one step.</p>
             )}
 
             <div className="space-y-2">

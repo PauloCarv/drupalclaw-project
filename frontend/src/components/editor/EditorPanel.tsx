@@ -142,7 +142,7 @@ export function EditorPanel() {
       <div className="flex-1 min-h-0 flex flex-col">
         {!activeFile ? (
           <div className="flex-1 flex items-center justify-center text-navy-300 text-sm">
-            Abre um ficheiro no explorador
+            Open a file in the explorer
           </div>
         ) : activeFile.loading ? (
           <div className="flex-1 flex items-center justify-center text-navy-300 text-sm gap-2">

@@ -25,7 +25,7 @@ function relativeTime(mtime: string | undefined): string {
   if (!mtime) return ''
   const diff = Date.now() - new Date(mtime).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'agora'
+  if (mins < 1) return 'just now'
   if (mins < 60) return `${mins}m`
   const hours = Math.floor(mins / 60)
   if (hours < 24) return `${hours}h`

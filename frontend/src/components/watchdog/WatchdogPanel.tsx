@@ -148,12 +148,8 @@ export function WatchdogPanel() {
   }, [sendMessage, isAgentRunning, updating, stopPolling])
 
   const handleRowClick = useCallback((entry: WatchdogEntry) => {
-    const lang = navigator.language?.split('-')[0] ?? 'en'
-    const header = lang === 'pt' ? 'Analisa este registo do watchdog Drupal:'
-                 : lang === 'es' ? 'Analiza este registro del watchdog de Drupal:'
-                 : lang === 'fr' ? 'Analyse cette entrée watchdog Drupal :'
-                 : lang === 'de' ? 'Analysiere diesen Drupal-Watchdog-Eintrag:'
-                 : 'Analyze this Drupal watchdog entry:'
+    // Always English: the agent answers in the language of the user's latest message.
+    const header = 'Analyze this Drupal watchdog entry:'
     const msg = [
       header,
       '',
@@ -199,7 +195,7 @@ export function WatchdogPanel() {
         {updating && (
           <span className="flex items-center gap-1 text-[10px] text-ai-teal">
             <Loader2 size={10} className="animate-spin" />
-            A actualizar...
+            Updating...
           </span>
         )}
 
@@ -337,7 +333,7 @@ export function WatchdogPanel() {
       {/* Footer */}
       {!loading && entries !== null && (
         <div className="px-4 py-1.5 border-t border-navy-500 text-[10px] text-navy-400 flex items-center gap-2 flex-shrink-0">
-          <span>{visible.length} de {entries.length} registos</span>
+          <span>{visible.length} of {entries.length} entries</span>
           {entries.length > 0 && (
             <span className="opacity-50">· click a line to analyse it in the chat</span>
           )}

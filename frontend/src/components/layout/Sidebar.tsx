@@ -173,7 +173,7 @@ function ContextStats() {
     <div className="p-2.5 space-y-2.5">
       {/* Context window */}
       <div>
-        <span className="text-[10px] uppercase tracking-wider text-navy-400">Contexto</span>
+        <span className="text-[10px] uppercase tracking-wider text-navy-400">Context</span>
         <div className="mt-1.5 flex items-center gap-2.5">
           <ArcGauge percent={percent} />
           <div className="min-w-0">
