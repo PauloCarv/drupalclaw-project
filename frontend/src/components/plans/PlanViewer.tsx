@@ -149,7 +149,7 @@ export function PlanViewer({ plan }: { plan: PlanDetail }) {
         <div className="flex items-center gap-1 flex-wrap">
           <span className="text-[10px] text-navy-400 bg-navy-600 px-1.5 py-0.5 rounded">{plan.meta.source}</span>
           {plan.meta.created && (
-            <span className="text-[10px] text-navy-500">{new Date(plan.meta.created).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <span className="text-[10px] text-navy-500">{new Date(plan.meta.created).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
           )}
         </div>
       </div>
@@ -239,7 +239,7 @@ export function PlanViewer({ plan }: { plan: PlanDetail }) {
                     run.status === 'failed' ? 'bg-accent-red/15 text-accent-red' :
                     'bg-ai-teal/15 text-ai-teal'
                   }`}>{run.status}</span>
-                  <span className="text-navy-400">{new Date(run.startedAt).toLocaleString('pt-PT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-navy-400">{new Date(run.startedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                   {run.completedAt && (
                     <span className="text-navy-500">
                       {Math.round((new Date(run.completedAt).getTime() - new Date(run.startedAt).getTime()) / 1000)}s
