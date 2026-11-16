@@ -8,6 +8,8 @@ services:
       - "8090:8080"
     volumes:
       - ../config:/config
+      - drupalclaw_agent:/config/.pi/agent
+      - ../config/.pi/agent:/legacy-agent:ro
       - ../workspace:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
@@ -17,3 +19,6 @@ services:
     group_add:
       - "0"
     restart: unless-stopped
+
+volumes:
+  drupalclaw_agent:

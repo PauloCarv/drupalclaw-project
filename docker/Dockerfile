@@ -16,7 +16,7 @@ RUN npm run build
 # -----------------------------------------------------------------------------
 # Stage 2: Final runtime image — based on working PiClaw
 # -----------------------------------------------------------------------------
-FROM ghcr.io/rcarmo/piclaw:v3.2.5
+FROM ghcr.io/rcarmo/piclaw:v3.3.4@sha256:2106ba6e7421053095e7092d81adabf962e5b5336be61fffe916569fc03e6d57
 
 # Detect where piclaw is installed (path varies by platform/version)
 ARG PICLAW_DIR=/usr/local/lib/bun/install/global/node_modules/piclaw
@@ -77,6 +77,8 @@ COPY skills/ /opt/drupalclaw/skills/
 COPY templates/ /opt/drupalclaw/templates/
 COPY backend/config/dev-panel.json /opt/drupalclaw/agent/dev-panel.json
 COPY backend/config/AGENTS.md /opt/drupalclaw/agent/AGENTS.md
+COPY config/.pi/agent/settings.json /opt/drupalclaw/agent/settings.json
+COPY config/.pi/agent/skills/ /opt/drupalclaw/agent/skills/
 
 # -- Copy config (stored outside /workspace volume so entrypoint can always apply) --
 RUN mkdir -p /home/agent/.pi/agent

@@ -289,12 +289,16 @@ DrupalClaw uses [semantic versioning](https://semver.org). Docker images are pub
 
 **Your data is safe.** The Drupal project, chat history, flows, plans, and provider credentials all live in Docker volumes — they are never touched by an image update.
 
-To update to the latest version:
+To update to the latest version, pull the repository first (the compose file can change between releases), then the image:
 
 ```bash
+git pull
+cd docker
 docker compose pull
 docker compose up -d
 ```
+
+> **Upgrading to 1.6.0 or later from an earlier version:** provider credentials and agent state now live in the `drupalclaw_agent` Docker volume instead of `config/.pi/agent`. On the first start, DrupalClaw copies your existing login and sessions into the volume once, so you do not need to log in again. The old folder is left untouched.
 
 To pin to a specific version, edit `docker-compose.yml`:
 
