@@ -26,6 +26,19 @@ interface ProviderInfo {
   methods: string
 }
 
+interface RuntimePrompt {
+  type: 'secret' | 'text' | 'manual_code' | 'select'
+  message?: string
+  placeholder?: string
+}
+
+interface RuntimeAuth {
+  postId: number
+  cardId: string
+  actionData: Record<string, string>
+  prompt: RuntimePrompt | null
+}
+
 interface OobeSetupProps {
   onComplete: () => void
   /** When true, renders without fullscreen wrapper (for embedding in dialogs) */
@@ -75,6 +88,13 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
 
   const [statusMsg, setStatusMsg] = useState('')
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // PiClaw 3.3.x runtime auth: device codes and prompts are only returned in the
+  // direct /agent/card-action response (never in the timeline), and every
+  // response rotates the card id and action id that the next call must use.
+  const runtimeRef = useRef<RuntimeAuth | null>(null)
+  const [promptLabel, setPromptLabel] = useState('')
+  const activationIdRef = useRef('')
 
   useEffect(() => {
     if (reconfigure) {
@@ -248,6 +268,13 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
       return
     }
 
+    // PiClaw 3.3.x runtime auth card — opaque, details come from the private response
+    const presentAction = actions.find((a: any) => a.type === 'Action.Submit' && a.data?.method === 'runtime_present')
+    if (presentAction) {
+      startRuntimeAuth(card.card_id, presentAction.data, providerId)
+      return
+    }
+
     // API key card
     const apiKeyField = body.find((b: any) => b.type === 'Input.Text' && b.id === 'api_key')
     if (apiKeyField) {
@@ -313,6 +340,7 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
     // Model picker card (ChoiceSet with id="model")
     const modelChoice = body.find((b: any) => b.type === 'Input.ChoiceSet' && b.id === 'model')
     if (modelChoice?.choices) {
+      activationIdRef.current = actions.find((a: any) => a.data?.activation_id)?.data.activation_id ?? ''
       setModels(modelChoice.choices.map((c: any) => ({ id: c.value, name: c.title })))
       setSelectedModel(modelChoice.choices[0]?.value || '')
       setStep('pick-model')
@@ -434,7 +462,106 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
   }
 
   const manualOAuthCheck = () => {
-    if (selectedProvider) checkOAuth(selectedProvider)
+    if (!selectedProvider) return
+    if (runtimeRef.current) checkRuntime(selectedProvider)
+    else checkOAuth(selectedProvider)
+  }
+
+  // ── PiClaw 3.3.x runtime auth ──
+
+  const stopPolling = () => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+  }
+
+  const runtimeAction = async (method: string, authValue?: string) => {
+    const rt = runtimeRef.current
+    if (!rt) throw new Error('No active authentication flow. Start again.')
+    return providersApi.submitCardAction(rt.postId, rt.cardId, {
+      ...rt.actionData,
+      method,
+      ...(authValue !== undefined ? { auth_value: authValue } : {}),
+    })
+  }
+
+  const startRuntimeAuth = async (cardId: string, presentData: Record<string, string>, providerId: string) => {
+    setStep('loading')
+    setStatusMsg('Starting authentication...')
+    try {
+      const postId = await providersApi.findPostIdForCard(cardId)
+      if (!postId) throw new Error('Authentication card not found. Start again.')
+      const res = await providersApi.submitCardAction(postId, cardId, presentData)
+      await handleRuntimeResponse(res, providerId)
+    } catch (err: any) {
+      stopPolling()
+      setError(err.message || 'Authentication failed')
+      setStep('error')
+    }
+  }
+
+  const handleRuntimeResponse = async (res: any, providerId: string): Promise<void> => {
+    if (!res || res.__httpStatus || res.status !== 'ok') {
+      stopPolling()
+      runtimeRef.current = null
+      throw new Error(res?.error || 'Authentication flow unavailable. Start again.')
+    }
+
+    const presentation = res.auth_presentation
+    if (!presentation) {
+      // Flow completed: PiClaw posts the model picker card to the timeline.
+      stopPolling()
+      runtimeRef.current = null
+      const modelCard = await providersApi.findLatestActiveCard('login-3-activate-')
+      if (modelCard?.payload) processCard(modelCard, providerId)
+      else proceedToModelPickerForProvider(providerId)
+      return
+    }
+
+    const prompt: RuntimePrompt | null = presentation.prompt ?? null
+    runtimeRef.current = {
+      postId: res.source_post_id,
+      cardId: res.card_id,
+      actionData: presentation.action_data,
+      prompt,
+    }
+    for (const ev of presentation.events ?? []) {
+      if (ev.type === 'device_code') {
+        setDeviceCode(ev.userCode || '')
+        setAuthUrl(ev.verificationUri || '')
+      } else if (ev.type === 'auth_url') {
+        setAuthUrl(ev.url || '')
+      }
+    }
+
+    if (prompt) {
+      // GitHub Copilot first asks for an optional Enterprise domain; blank means github.com.
+      if (prompt.type === 'text' && prompt.placeholder?.includes('ghe.com')) {
+        await handleRuntimeResponse(await runtimeAction('runtime_continue', ''), providerId)
+        return
+      }
+      if (prompt.type === 'select') throw new Error('This provider needs a choice the setup cannot show yet. Use /login in the chat.')
+      stopPolling()
+      setPromptLabel(prompt.message || '')
+      setApiKeyHint(prompt.placeholder || 'Enter value...')
+      setStep('api-key')
+      return
+    }
+
+    setStep('waiting-oauth')
+    if (!pollRef.current) pollRef.current = setInterval(() => checkRuntime(providerId), 5000)
+  }
+
+  const checkRuntime = async (providerId: string) => {
+    if (checkInFlightRef.current) return
+    checkInFlightRef.current = true
+    try {
+      await handleRuntimeResponse(await runtimeAction('runtime_check'), providerId)
+    } catch (err: any) {
+      stopPolling()
+      setError(err.message || 'Authentication failed')
+      setStep('error')
+    } finally {
+      checkInFlightRef.current = false
+    }
   }
 
   // ── Submit API key via __step2 ──
@@ -443,6 +570,17 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
     if (!apiKeyInput.trim()) return
     setStep('loading')
     setStatusMsg('Saving API key...')
+    if (runtimeRef.current?.prompt) {
+      try {
+        const res = await runtimeAction('runtime_continue', apiKeyInput.trim())
+        setApiKeyInput('')
+        await handleRuntimeResponse(res, selectedProvider)
+      } catch (err: any) {
+        setError(err.message || 'Authentication failed')
+        setStep('error')
+      }
+      return
+    }
     try {
       const result = await providersApi.sendAgentMessage(
         `/login __step2 ${JSON.stringify({
@@ -498,6 +636,7 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
         `/login __step3 ${JSON.stringify({
           provider: selectedProvider,
           model: selectedModel,
+          ...(activationIdRef.current ? { activation_id: activationIdRef.current } : {}),
         })}`
       )
       handleCommandMessage(result?.command)
@@ -663,7 +802,7 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => { if (pollRef.current) clearInterval(pollRef.current); setStep('pick-provider') }}
+                  onClick={() => { stopPolling(); runtimeRef.current = null; setStep('pick-provider') }}
                   className="flex-1 py-2 bg-navy-600 hover:bg-navy-500 text-sm text-gray-300 rounded-lg"
                 >
                   Back
@@ -675,7 +814,7 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
 
               <div className="flex items-center justify-center gap-2 mt-3">
                 <Loader2 size={10} className="text-navy-300 animate-spin" />
-                <span className="text-[10px] text-navy-300">Auto-checking every 4s...</span>
+                <span className="text-[10px] text-navy-300">Checking automatically...</span>
               </div>
             </div>
           )}
@@ -684,7 +823,16 @@ export function OobeSetup({ onComplete, embedded = false, reconfigure = false }:
           {step === 'api-key' && (
             <div className="p-5">
               <h2 className="text-sm font-medium text-white mb-1">{providerName} — API Key</h2>
-              <p className="text-[11px] text-navy-300 mb-4">Enter your API key to authenticate.</p>
+              <p className="text-[11px] text-navy-300 mb-4">{promptLabel || 'Enter your API key to authenticate.'}</p>
+              {authUrl && (
+                <button
+                  onClick={() => window.open(authUrl, '_blank', 'noopener,noreferrer')}
+                  className="w-full flex items-center justify-center gap-2 py-2 bg-navy-600 hover:bg-navy-500 text-sm text-gray-200 rounded-lg mb-3"
+                >
+                  <ExternalLink size={14} />
+                  Open Login Page
+                </button>
+              )}
               <input
                 type="password" value={apiKeyInput} onChange={(e) => setApiKeyInput(e.target.value)}
                 placeholder={apiKeyHint} autoFocus

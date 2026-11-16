@@ -189,16 +189,55 @@ export async function sendAgentMessage(content: string): Promise<any> {
 export async function submitCardAction(
   postId: number,
   cardId: string,
-  actionData: Record<string, unknown>
+  actionData: Record<string, unknown>,
+  chatJid = 'web:default'
 ): Promise<any> {
   return apiPost('/agent/card-action', {
     post_id: postId,
     card_id: cardId,
+    // PiClaw 3.3.x rejects login card actions without their initiating chat.
+    chat_jid: chatJid,
     action: {
       type: 'Action.Submit',
+      title: 'Authentication action',
       data: actionData,
     },
   })
+}
+
+export interface AdaptiveCardBlock {
+  type?: string
+  card_id?: string
+  state?: string
+  payload?: { body?: any[]; actions?: any[] }
+  fallback_text?: string
+}
+
+interface CardPost {
+  id: number
+  data?: { content_blocks?: AdaptiveCardBlock[] }
+}
+
+// /agent/default/message does not return the agent_response post id, so login
+// cards have to be located in the timeline (ascending by id).
+async function recentCardPosts(): Promise<CardPost[]> {
+  const res = await apiGet<{ posts?: CardPost[] }>('/timeline?limit=30')
+  return res.posts ?? []
+}
+
+export async function findPostIdForCard(cardId: string): Promise<number | null> {
+  const posts = await recentCardPosts()
+  const post = [...posts].reverse().find(p => p.data?.content_blocks?.some(b => b.card_id === cardId))
+  return post?.id ?? null
+}
+
+export async function findLatestActiveCard(cardIdPrefix: string): Promise<AdaptiveCardBlock | null> {
+  const posts = await recentCardPosts()
+  for (const post of [...posts].reverse()) {
+    const card = post.data?.content_blocks?.find(b => b.card_id?.startsWith(cardIdPrefix) && b.state === 'active')
+    if (card) return card
+  }
+  return null
 }
 
 /** Mark OOBE as complete */

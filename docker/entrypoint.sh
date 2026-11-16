@@ -17,6 +17,76 @@ ICON_PATH="$BAKED/assets/drupal_claw_icon.png"
 [[ -d "$AGENT_CONFIG" ]] || AGENT_CONFIG="/home/agent/.pi/agent"
 [[ -f "$ICON_PATH" ]] || ICON_PATH="/home/agent/.pi/assets/drupal_claw_icon.png"
 
+# -- Initialize PiClaw agent config on the native Docker volume --
+AGENT_DIR="/config/.pi/agent"
+LEGACY_AGENT_DIR="/legacy-agent"
+MIGRATION_MARKER="$AGENT_DIR/.drupalclaw-migrated"
+
+mkdir -p "$AGENT_DIR"
+echo "[drupalclaw] ensured agent directory: $AGENT_DIR"
+
+if [[ ! -e "$MIGRATION_MARKER" ]]; then
+  if [[ -d "$LEGACY_AGENT_DIR" ]]; then
+    for runtime_file in \
+      auth.json \
+      models-store.json \
+      mcp-cache.json \
+      messages.db \
+      messages.db-wal \
+      messages.db-shm; do
+      if [[ -f "$LEGACY_AGENT_DIR/$runtime_file" && ! -e "$AGENT_DIR/$runtime_file" ]]; then
+        cp -p "$LEGACY_AGENT_DIR/$runtime_file" "$AGENT_DIR/$runtime_file"
+        echo "[drupalclaw] migrated agent file: $runtime_file"
+      fi
+    done
+
+    for runtime_dir in sessions prompts themes extensions; do
+      if [[ -d "$LEGACY_AGENT_DIR/$runtime_dir" ]]; then
+        mkdir -p "$AGENT_DIR/$runtime_dir"
+        cp -a -n "$LEGACY_AGENT_DIR/$runtime_dir/." "$AGENT_DIR/$runtime_dir/"
+        echo "[drupalclaw] migrated missing agent directory contents: $runtime_dir"
+      fi
+    done
+    touch "$MIGRATION_MARKER"
+    echo "[drupalclaw] marked legacy agent migration complete"
+  else
+    echo "[drupalclaw] legacy agent directory not found; migration deferred"
+  fi
+fi
+
+for managed_file in AGENTS.md dev-panel.json; do
+  if [[ -f "$AGENT_CONFIG/$managed_file" ]]; then
+    cp "$AGENT_CONFIG/$managed_file" "$AGENT_DIR/$managed_file"
+    echo "[drupalclaw] refreshed managed agent file: $managed_file"
+  fi
+done
+
+if [[ ! -e "$AGENT_DIR/settings.json" && -f "$AGENT_CONFIG/settings.json" ]]; then
+  cp "$AGENT_CONFIG/settings.json" "$AGENT_DIR/settings.json"
+  echo "[drupalclaw] seeded agent settings.json"
+fi
+
+if [[ -d "$AGENT_CONFIG/skills" ]]; then
+  mkdir -p "$AGENT_DIR/skills"
+  for skill_group in "$AGENT_CONFIG/skills"/*/; do
+    [[ -d "$skill_group" ]] || continue
+    skill_group_name=$(basename "$skill_group")
+    mkdir -p "$AGENT_DIR/skills/$skill_group_name"
+
+    for skill_dir in "$skill_group"*/; do
+      [[ -d "$skill_dir" ]] || continue
+      skill_name=$(basename "$skill_dir")
+      if [[ ! -e "$AGENT_DIR/skills/$skill_group_name/$skill_name" ]]; then
+        cp -a "$skill_dir" "$AGENT_DIR/skills/$skill_group_name/"
+        echo "[drupalclaw] seeded agent skill: $skill_group_name/$skill_name"
+      fi
+    done
+  done
+fi
+
+chown -R agent:agent "$AGENT_DIR"
+echo "[drupalclaw] set agent directory ownership to agent:agent"
+
 # -- Sync Drupal skills to workspace (copy only if missing — never overwrite user changes) --
 if [[ -d "$SKILLS_SRC" ]]; then
   mkdir -p "$WORKSPACE/.pi/skills"
